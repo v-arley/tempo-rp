@@ -1,0 +1,8 @@
+# Artefactos de compilación de .NET
+bin/
+obj/
+
+# Archivos de usuario/estado de Visual Studio
+.vs/
+*.user
+*.suo
