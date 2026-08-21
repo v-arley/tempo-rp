@@ -4,5 +4,39 @@ obj/
 
 # Archivos de usuario/estado de Visual Studio
 .vs/
+.vscode/*
+
 *.user
 *.suo
+.userosscache
+.sln.docstate
+.userprefs
+
+#Nuget
+packages/
+*.nupkg
+*.snupkg
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# Resultados de pruebas
+*.trx
+*.coverage
+*.coveragexml
+
+# Simbolos de depuracion sueltos
+*.pdb
+
+# Resharper / Rider
+_ReSharper*/
+*.DotSettings.user
+.idea/
+
+# Sistema operativo
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Logs
+*.log

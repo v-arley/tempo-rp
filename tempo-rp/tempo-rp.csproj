@@ -4,8 +4,9 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{895A2B8D-7833-4AB2-839E-D3AF4E03AB09}</ProjectGuid>
-    <OutputType>WinExe</OutputType>
+    <ProjectGuid>{067FDAA4-D470-60D9-691D-23A97F5446FA}</ProjectGuid>
+    <!-- <OutputType>WinExe</OutputType> -->
+    <OutputType>Exe</OutputType>
     <RootNamespace>tempo_rp</RootNamespace>
     <AssemblyName>tempo-rp</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
@@ -43,14 +44,14 @@
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="System.Net.Http" />
-    <Reference Include="System.Xaml">
+    <!-- <Reference Include="System.Xaml">
       <RequiredTargetFramework>4.0</RequiredTargetFramework>
-    </Reference>
-    <Reference Include="WindowsBase" />
-    <Reference Include="PresentationCore" />
-    <Reference Include="PresentationFramework" />
+    </Reference> -->
+    <!-- <Reference Include="WindowsBase" /> -->
+    <!-- <Reference Include="PresentationCore" /> -->
+    <!-- <Reference Include="PresentationFramework" /> -->
   </ItemGroup>
-  <ItemGroup>
+  <!-- <ItemGroup>
     <ApplicationDefinition Include="App.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -65,6 +66,11 @@
     </Compile>
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+  </ItemGroup> -->
+  <ItemGroup>
+    <Compile Include="Program.cs">
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>
