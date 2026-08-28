@@ -1,3 +1,8 @@
 <Solution>
-  <Project Path="tempo-rp/tempo-rp.csproj" />
+  <Project Path="src/TmCompiler/TmCompiler.Domain/TmCompiler.Domain.csproj" />
+  <Project Path="src/TmCompiler/TmCompiler.Application/TmCompiler.Application.csproj" />
+  <Project Path="src/TmCompiler/TmCompiler.Infrastructure/TmCompiler.Infrastructure.csproj" />
+  <Project Path="src/TmCompiler/TmCompiler.Cli/TmCompiler.Cli.csproj" />
+  <Project Path="src/TmIde/TmIde.csproj" />
+  <Project Path="tests/TmCompiler.Tests/TmCompiler.Tests.csproj" />
 </Solution>

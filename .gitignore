@@ -24,6 +24,7 @@ artifacts/
 *.trx
 *.coverage
 *.coveragexml
+TestResults/
 
 # Simbolos de depuracion sueltos
 *.pdb
