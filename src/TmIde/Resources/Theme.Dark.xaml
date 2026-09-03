@@ -1,0 +1,37 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!--
+        Tema OSCURO — se activa vía ThemeService / menú VER.
+        Las 15 claves y sus roles son idénticos a Theme.Light.xaml (ver ese
+        archivo para la descripción de cada rol); solo cambian los colores.
+
+        Rampa de fondo, de más oscuro a más claro: PanelHeaderBrush (cabecera del
+        explorador) < WindowBackgroundBrush (marco / título) < PanelOverlayBrush
+        (cuerpo del explorador) < InputBackgroundBrush (campo de búsqueda) <
+        SurfaceBackgroundBrush (editor / terminal / barra de estado, la superficie
+        de trabajo más clara).
+
+        DividerBrush es negro e InputBorderBrush transparente: en oscuro los
+        bordes se apoyan en el contraste tonal de la rampa, no en una línea.
+
+        AccentBrush y CloseButtonHoverBrush son iguales en ambos temas.
+    -->
+
+    <SolidColorBrush x:Key="WindowBackgroundBrush"      Color="#1B212A" />
+    <SolidColorBrush x:Key="SurfaceBackgroundBrush"     Color="#262D36" />
+    <SolidColorBrush x:Key="PanelOverlayBrush"          Color="#20262E" />
+    <SolidColorBrush x:Key="PanelHeaderBrush"           Color="#1A1F26" />
+    <SolidColorBrush x:Key="InputBackgroundBrush"       Color="#23282F" />
+    <SolidColorBrush x:Key="DividerBrush"               Color="#000000" />
+    <SolidColorBrush x:Key="InputBorderBrush"           Color="#00000000" />
+    <SolidColorBrush x:Key="HoverBackgroundBrush"       Color="#3C4552" />
+    <SolidColorBrush x:Key="ScrollbarThumbBrush"        Color="#5A6672" />
+    <SolidColorBrush x:Key="AccentBrush"                Color="#BF3B2C" />
+    <SolidColorBrush x:Key="PrimaryForegroundBrush"     Color="#E7EBEF" />
+    <SolidColorBrush x:Key="SecondaryForegroundBrush"   Color="#A8B3BF" />
+    <SolidColorBrush x:Key="TertiaryForegroundBrush"    Color="#6F7B87" />
+    <SolidColorBrush x:Key="CloseButtonHoverBrush"      Color="#E81123" />
+    <SolidColorBrush x:Key="TitleMenuForegroundBrush"   Color="#A0B2D6" />
+
+</ResourceDictionary>

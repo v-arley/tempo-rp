@@ -1,0 +1,41 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!--
+        Tema CLARO — diccionario por defecto (se mergea estáticamente en App.xaml).
+        Las 15 claves y sus roles son idénticos en Theme.Dark.xaml; solo cambian
+        los colores. Se consumen siempre con {DynamicResource}.
+
+        Roles de fondo:
+          WindowBackgroundBrush  marco de la ventana y barra de título
+          SurfaceBackgroundBrush editor, panel inferior (terminal) y barra de estado
+          PanelOverlayBrush      cuerpo del explorador (área del árbol)
+          PanelHeaderBrush       cabecera del explorador (sección de búsqueda)
+          InputBackgroundBrush   fondo de los campos de texto (caja de búsqueda)
+          HoverBackgroundBrush   realce al pasar el cursor
+
+        Bordes:
+          DividerBrush           líneas que enmarcan la ventana y los paneles
+          InputBorderBrush       borde en reposo de los campos de texto
+
+        AccentBrush y CloseButtonHoverBrush son iguales en ambos temas
+        (identidad de marca / convención de Windows).
+    -->
+
+    <SolidColorBrush x:Key="WindowBackgroundBrush"      Color="#A4B1C7" />
+    <SolidColorBrush x:Key="SurfaceBackgroundBrush"     Color="#A4B1C7" />
+    <SolidColorBrush x:Key="PanelOverlayBrush"          Color="#747A87" />
+    <SolidColorBrush x:Key="PanelHeaderBrush"           Color="#585C66" />
+    <SolidColorBrush x:Key="InputBackgroundBrush"       Color="#464A52" />
+    <SolidColorBrush x:Key="DividerBrush"               Color="#1B212A" />
+    <SolidColorBrush x:Key="InputBorderBrush"           Color="#1B212A" />
+    <SolidColorBrush x:Key="HoverBackgroundBrush"       Color="#C2CBD2" />
+    <SolidColorBrush x:Key="ScrollbarThumbBrush"        Color="#7C8890" />
+    <SolidColorBrush x:Key="AccentBrush"                Color="#BF3B2C" />
+    <SolidColorBrush x:Key="PrimaryForegroundBrush"     Color="#23303A" />
+    <SolidColorBrush x:Key="SecondaryForegroundBrush"   Color="#4E5B65" />
+    <SolidColorBrush x:Key="TertiaryForegroundBrush"    Color="#7C8890" />
+    <SolidColorBrush x:Key="CloseButtonHoverBrush"      Color="#E81123" />
+    <SolidColorBrush x:Key="TitleMenuForegroundBrush"   Color="#4F5E7C" />
+
+</ResourceDictionary>

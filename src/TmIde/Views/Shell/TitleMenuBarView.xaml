@@ -1,0 +1,243 @@
+<UserControl x:Class="TmIde.Views.Shell.TitleMenuBarView"
+            xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+            xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+            xmlns:vm="clr-namespace:TmIde.ViewModels"
+            xmlns:design="clr-namespace:TmIde.Design"
+            mc:Ignorable="d"
+            d:DataContext="{x:Static design:DesignData.MainWindow}"
+            d:DesignWidth="900"
+            Height="34">
+
+    <UserControl.Resources>
+        <Style x:Key="MenuEntryStyle" TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}">
+            <Setter Property="Header" Value="{Binding Header}" />
+            <Setter Property="ItemsSource" Value="{Binding Items}" />
+            <Setter Property="Command" Value="{Binding Command}" />
+            <Setter Property="ItemContainerStyle" Value="{DynamicResource MenuEntryStyle}" />
+        </Style>
+
+        <!-- Botón de operación de ventana dentro del grupo en pastilla recesada -->
+        <Style x:Key="CaptionGroupButton" TargetType="Button">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Width" Value="32" />
+            <Setter Property="Height" Value="26" />
+            <Setter Property="Margin" Value="1,0" />
+            <Setter Property="Cursor" Value="Arrow" />
+            <Setter Property="SnapsToDevicePixels" Value="True" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Chrome" Background="{TemplateBinding Background}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Chrome" Property="Background" Value="#33000000" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Chrome" Property="Background" Value="#4A000000" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="CaptionGroupCloseButton" TargetType="Button" BasedOn="{StaticResource CaptionGroupButton}">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Chrome" Background="{TemplateBinding Background}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Chrome" Property="Background" Value="{DynamicResource CloseButtonHoverBrush}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="CaptionGlyph" TargetType="Path">
+            <Setter Property="StrokeThickness" Value="1" />
+            <Setter Property="Stretch" Value="None" />
+            <Setter Property="SnapsToDevicePixels" Value="True" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Stroke" Value="{DynamicResource SecondaryForegroundBrush}" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=Button}}" Value="True">
+                    <Setter Property="Stroke" Value="{DynamicResource PrimaryForegroundBrush}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="CloseGlyph" TargetType="Path">
+            <Setter Property="StrokeThickness" Value="1" />
+            <Setter Property="Stretch" Value="None" />
+            <Setter Property="SnapsToDevicePixels" Value="True" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Stroke" Value="{DynamicResource SecondaryForegroundBrush}" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=Button}}" Value="True">
+                    <Setter Property="Stroke" Value="White" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </UserControl.Resources>
+
+    <!-- Barra de título: menús a la izquierda, título al centro, botones de
+            ventana a la derecha -->
+    <Border Padding="3 0 3 3"
+            Background="{DynamicResource WindowBackgroundBrush}"
+            BorderBrush="{DynamicResource DividerBrush}"
+            BorderThickness="0 2 0 0">
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Título centrado sobre una placa trapezoidal decorativa (no interactiva) -->
+            <Grid Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="top"
+                    Width="212" Height="27" IsHitTestVisible="False">
+                <Path Stretch="Fill"
+                        Fill="{DynamicResource DividerBrush}"
+                        Stroke="{DynamicResource DividerBrush}"
+                        StrokeThickness="2"
+                        Data="M0,0 L212,0 L198,34 L14,34 Z" />
+                <TextBlock Text="{Binding Title}"
+                            HorizontalAlignment="Center" VerticalAlignment="Center"
+                            FontFamily="{DynamicResource HeaderFontFamily}"
+                            FontSize="11" FontWeight="Medium"
+                            Foreground="#A4B1C7" />
+            </Grid>
+
+            <!-- Menús raíz separados por "|" (MENU / TOOLS / VER / OTROS) -->
+            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                <StackPanel.Resources>
+                    <Style x:Key="MenuSep" TargetType="Rectangle">
+                        <Setter Property="Width" Value="1" />
+                        <Setter Property="Height" Value="14" />
+                        <Setter Property="Margin" Value="10,0" />
+                        <Setter Property="VerticalAlignment" Value="Center" />
+                        <Setter Property="Fill" Value="{DynamicResource TitleMenuForegroundBrush}" />
+                        <Setter Property="Opacity" Value="0.7" />
+                        <Setter Property="SnapsToDevicePixels" Value="True" />
+                    </Style>
+                    <Style x:Key="RootMenuItem" TargetType="MenuItem" BasedOn="{StaticResource MenuEntryStyle}">
+                        <Setter Property="FontFamily" Value="{DynamicResource CodeFontFamily}" />
+                        <Setter Property="FontWeight" Value="Medium" />
+                        <Setter Property="FontSize" Value="11" />
+                        <Setter Property="Foreground" Value="{DynamicResource TitleMenuForegroundBrush}" />
+                        <Setter Property="Padding" Value="8,3" />
+                        <!-- Hover: subrayado inferior que crece de izquierda a derecha,
+                            sin relleno de fondo. -->
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="MenuItem">
+                                    <Grid x:Name="Chrome" Background="Transparent">
+                                        <ContentPresenter ContentSource="Header"
+                                                            Margin="{TemplateBinding Padding}"
+                                                            VerticalAlignment="Center"
+                                                            RecognizesAccessKey="True" />
+                                        <Border x:Name="Underline"
+                                                Height="2"
+                                                VerticalAlignment="Bottom"
+                                                Background="{DynamicResource AccentBrush}"
+                                                RenderTransformOrigin="0,0.5">
+                                            <Border.RenderTransform>
+                                                <ScaleTransform x:Name="UnderlineScale" ScaleX="0" ScaleY="1" />
+                                            </Border.RenderTransform>
+                                        </Border>
+                                        <Popup x:Name="PART_Popup"
+                                                Placement="Bottom"
+                                                IsOpen="{TemplateBinding IsSubmenuOpen}"
+                                                AllowsTransparency="True"
+                                                Focusable="False"
+                                                PopupAnimation="Fade">
+                                            <Border Background="{DynamicResource SurfaceBackgroundBrush}"
+                                                    Padding="4"
+                                                    SnapsToDevicePixels="True">
+                                                <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Cycle" />
+                                            </Border>
+                                        </Popup>
+                                    </Grid>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsHighlighted" Value="True">
+                                            <Trigger.EnterActions>
+                                                <BeginStoryboard>
+                                                    <Storyboard>
+                                                        <DoubleAnimation Storyboard.TargetName="UnderlineScale"
+                                                                            Storyboard.TargetProperty="ScaleX"
+                                                                            To="1" Duration="0:0:0.18">
+                                                            <DoubleAnimation.EasingFunction>
+                                                                <CubicEase EasingMode="EaseOut" />
+                                                            </DoubleAnimation.EasingFunction>
+                                                        </DoubleAnimation>
+                                                    </Storyboard>
+                                                </BeginStoryboard>
+                                            </Trigger.EnterActions>
+                                            <Trigger.ExitActions>
+                                                <BeginStoryboard>
+                                                    <Storyboard>
+                                                        <DoubleAnimation Storyboard.TargetName="UnderlineScale"
+                                                                            Storyboard.TargetProperty="ScaleX"
+                                                                            To="0" Duration="0:0:0.12" />
+                                                    </Storyboard>
+                                                </BeginStoryboard>
+                                            </Trigger.ExitActions>
+                                        </Trigger>
+                                        <Trigger Property="IsEnabled" Value="False">
+                                            <Setter Property="Opacity" Value="0.4" />
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </StackPanel.Resources>
+
+                <Menu Background="Transparent" VerticalAlignment="Center" Padding="0">
+                    <MenuItem DataContext="{Binding MenuBar.Roots[0]}" Style="{StaticResource RootMenuItem}" />
+                </Menu>
+                <Rectangle Style="{StaticResource MenuSep}" />
+                <Menu Background="Transparent" VerticalAlignment="Center" Padding="0">
+                    <MenuItem DataContext="{Binding MenuBar.Roots[1]}" Style="{StaticResource RootMenuItem}" />
+                </Menu>
+                <Rectangle Style="{StaticResource MenuSep}" />
+                <Menu Background="Transparent" VerticalAlignment="Center" Padding="0">
+                    <MenuItem DataContext="{Binding MenuBar.Roots[2]}" Style="{StaticResource RootMenuItem}" />
+                </Menu>
+                <Rectangle Style="{StaticResource MenuSep}" />
+                <Menu Background="Transparent" VerticalAlignment="Center" Padding="0">
+                    <MenuItem DataContext="{Binding MenuBar.Roots[3]}" Style="{StaticResource RootMenuItem}" />
+                </Menu>
+            </StackPanel>
+
+            <!-- Operaciones de ventana: grupo en pastilla recesada -->
+            <Border Grid.Column="2" VerticalAlignment="Center" Padding="3">
+                <StackPanel Orientation="Horizontal">
+                    <Button Style="{StaticResource CaptionGroupButton}" Click="OnMinimize" ToolTip="Minimizar">
+                        <Path Style="{StaticResource CaptionGlyph}" Width="10" Height="10"
+                                Data="{StaticResource IconCaptionMin}" />
+                    </Button>
+                    <Button x:Name="MaximizeButton" Style="{StaticResource CaptionGroupButton}" Click="OnMaximizeRestore" ToolTip="Maximizar / restaurar">
+                        <Path x:Name="MaximizeGlyph" Style="{StaticResource CaptionGlyph}" Width="11" Height="11"
+                                Data="{StaticResource IconCaptionMax}" />
+                    </Button>
+                    <Button x:Name="CloseButton" Style="{StaticResource CaptionGroupCloseButton}" Click="OnClose" ToolTip="Cerrar">
+                        <Path Style="{StaticResource CloseGlyph}" Width="10" Height="10"
+                                Data="{StaticResource IconCaptionClose}" />
+                    </Button>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Border>
+</UserControl>
