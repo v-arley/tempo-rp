@@ -5,13 +5,16 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>disable</Nullable>
         <IsPackable>false</IsPackable>
+        <!-- CA1707: los nombres de test llevan guion bajo (Metodo_Escenario_Resultado). -->
+        <NoWarn>$(NoWarn);CA1707</NoWarn>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
-        <PackageReference Include="xunit" Version="2.9.2" />
-        <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
-        <PackageReference Include="coverlet.collector" Version="6.0.2" />
+        <!-- La versión de cada paquete la fija Directory.Packages.props. -->
+        <PackageReference Include="Microsoft.NET.Test.Sdk" />
+        <PackageReference Include="xunit" />
+        <PackageReference Include="xunit.runner.visualstudio" />
+        <PackageReference Include="coverlet.collector" />
     </ItemGroup>
 
     <ItemGroup>

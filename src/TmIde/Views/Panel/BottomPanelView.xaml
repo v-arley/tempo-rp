@@ -1,0 +1,125 @@
+<UserControl x:Class="TmIde.Views.Panel.BottomPanelView"
+            xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+            xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+            xmlns:design="clr-namespace:TmIde.Design"
+            mc:Ignorable="d"
+            d:DataContext="{x:Static design:DesignData.BottomPanel}"
+            d:DesignWidth="700" d:DesignHeight="180">
+
+    <TabControl ItemsSource="{Binding Panes}"
+                SelectedItem="{Binding SelectedPane, Mode=TwoWay}"
+                Background="Transparent">
+        <TabControl.Resources>
+            <!-- Pestañas Terminal / Output / Debug Console. El hover despliega un
+                subrayado inferior de izquierda a derecha. -->
+            <Style TargetType="TabItem" BasedOn="{StaticResource {x:Type TabItem}}">
+                <Setter Property="Margin" Value="0,0,4,0" />
+                <Setter Property="Padding" Value="12,4" />
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="TabItem">
+                            <Grid x:Name="Chrome" Background="{DynamicResource SurfaceBackgroundBrush}">
+                                <ContentPresenter ContentSource="Header" VerticalAlignment="Center"
+                                                    Margin="{TemplateBinding Padding}" />
+                                <!-- Subrayado de la pestaña activa -->
+                                <Border x:Name="ActiveUnderline"
+                                        Height="1" VerticalAlignment="Bottom"
+                                        Background="{DynamicResource PrimaryForegroundBrush}" Visibility="Collapsed" />
+                                <!-- Subrayado del hover (se despliega de izquierda a derecha) -->
+                                <Border x:Name="Underline"
+                                        Height="1" VerticalAlignment="Bottom"
+                                        Background="#BF3B2C"
+                                        RenderTransformOrigin="0,0.5">
+                                    <Border.RenderTransform>
+                                        <ScaleTransform x:Name="UnderlineScale" ScaleX="0" ScaleY="1" />
+                                    </Border.RenderTransform>
+                                </Border>
+                            </Grid>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsSelected" Value="True">
+                                    <Setter TargetName="ActiveUnderline" Property="Visibility" Value="Visible" />
+                                </Trigger>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Trigger.EnterActions>
+                                        <BeginStoryboard>
+                                            <Storyboard>
+                                                <DoubleAnimation Storyboard.TargetName="UnderlineScale"
+                                                                    Storyboard.TargetProperty="ScaleX"
+                                                                    To="1" Duration="0:0:0.18">
+                                                    <DoubleAnimation.EasingFunction>
+                                                        <CubicEase EasingMode="EaseOut" />
+                                                    </DoubleAnimation.EasingFunction>
+                                                </DoubleAnimation>
+                                            </Storyboard>
+                                        </BeginStoryboard>
+                                    </Trigger.EnterActions>
+                                    <Trigger.ExitActions>
+                                        <BeginStoryboard>
+                                            <Storyboard>
+                                                <DoubleAnimation Storyboard.TargetName="UnderlineScale"
+                                                                    Storyboard.TargetProperty="ScaleX"
+                                                                    To="0" Duration="0:0:0.12" />
+                                            </Storyboard>
+                                        </BeginStoryboard>
+                                    </Trigger.ExitActions>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+        </TabControl.Resources>
+        <TabControl.Template>
+            <ControlTemplate TargetType="TabControl">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <!-- Fila de pestañas -->
+                    <Border Grid.Row="0" Background="{DynamicResource SurfaceBackgroundBrush}" Padding="10,5"
+                            BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,1,0,1">
+                        <TabPanel x:Name="HeaderPanel" Panel.ZIndex="1" IsItemsHost="True" />
+                    </Border>
+                    <ContentPresenter Grid.Row="1" ContentSource="SelectedContent" />
+                </Grid>
+            </ControlTemplate>
+        </TabControl.Template>
+        <TabControl.ItemTemplate>
+            <DataTemplate>
+                <TextBlock Text="{Binding Header}" FontSize="11" Foreground="{DynamicResource PrimaryForegroundBrush}" />
+            </DataTemplate>
+        </TabControl.ItemTemplate>
+        <TabControl.ContentTemplate>
+            <DataTemplate>
+                <!-- Cuerpo del panel: prompt abajo, líneas emitidas arriba -->
+                <Border Background="{DynamicResource SurfaceBackgroundBrush}">
+                    <DockPanel Margin="10,8">
+                        <TextBlock DockPanel.Dock="Bottom"
+                                    Text="{Binding Prompt}"
+                                    Margin="0,4,0,0"
+                                    FontFamily="{DynamicResource CodeFontFamily}"
+                                    FontSize="{DynamicResource CodeFontSize}"
+                                    Foreground="{DynamicResource AccentBrush}"
+                                    Visibility="{Binding HasPrompt, Converter={StaticResource BoolToVisibility}}" />
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
+                            <ItemsControl ItemsSource="{Binding Lines}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding}"
+                                                    FontFamily="{DynamicResource CodeFontFamily}"
+                                                    FontSize="{DynamicResource CodeFontSize}"
+                                                    Foreground="{DynamicResource SecondaryForegroundBrush}"
+                                                    TextWrapping="NoWrap" />
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </DockPanel>
+                </Border>
+            </DataTemplate>
+        </TabControl.ContentTemplate>
+    </TabControl>
+</UserControl>

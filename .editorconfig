@@ -1,0 +1,121 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = crlf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+
+[*.cs]
+indent_size = 4
+
+[*.{axaml,xaml,xml,csproj,sln,slnx}]
+indent_size = 2
+
+[*.md]
+trim_trailing_whitespace = false
+
+# C# — Estilo de código 
+
+[*.cs]
+
+# Llaves en línea propia (Allman), un tipo por archivo, namespaces con ámbito de archivo.
+csharp_new_line_before_open_brace = all
+csharp_style_namespace_declarations = file_scoped:warning
+csharp_prefer_braces = true:warning
+dotnet_style_qualification_for_field = false:warning
+dotnet_style_qualification_for_property = false:warning
+dotnet_style_qualification_for_method = false:warning
+dotnet_style_qualification_for_event = false:warning
+dotnet_style_require_accessibility_modifiers = for_non_interface_members:warning
+csharp_style_var_for_built_in_types = true:suggestion
+csharp_style_var_when_type_is_apparent = true:suggestion
+csharp_style_expression_bodied_methods = false:suggestion
+csharp_style_expression_bodied_properties = true:suggestion
+
+# C# — Convenciones de nomenclatura (dotnet_naming_*)
+# Estándar oficial de Microsoft. Sin notación húngara (fn/i/s/b...).
+# Referencia: docs/CONVENTIONS.md
+
+# --- Símbolos ---
+
+dotnet_naming_symbols.interfaces.applicable_kinds = interface
+dotnet_naming_symbols.interfaces.applicable_accessibilities = *
+
+dotnet_naming_symbols.types_and_namespaces.applicable_kinds = class, struct, enum, delegate
+dotnet_naming_symbols.types_and_namespaces.applicable_accessibilities = *
+
+dotnet_naming_symbols.public_members.applicable_kinds = method, property, event
+dotnet_naming_symbols.public_members.applicable_accessibilities = public, internal, protected, protected_internal, private_protected
+
+dotnet_naming_symbols.constants.applicable_kinds = field
+dotnet_naming_symbols.constants.applicable_accessibilities = *
+dotnet_naming_symbols.constants.required_modifiers = const
+
+dotnet_naming_symbols.public_fields.applicable_kinds = field
+dotnet_naming_symbols.public_fields.applicable_accessibilities = public, internal, protected, protected_internal, private_protected
+
+dotnet_naming_symbols.private_fields.applicable_kinds = field
+dotnet_naming_symbols.private_fields.applicable_accessibilities = private
+
+dotnet_naming_symbols.static_private_fields.applicable_kinds = field
+dotnet_naming_symbols.static_private_fields.applicable_accessibilities = private
+dotnet_naming_symbols.static_private_fields.required_modifiers = static
+
+dotnet_naming_symbols.parameters_and_locals.applicable_kinds = parameter, local
+
+dotnet_naming_symbols.type_parameters.applicable_kinds = type_parameter
+
+# --- Estilos ---
+
+dotnet_naming_style.pascal_case.capitalization = pascal_case
+
+dotnet_naming_style.camel_case.capitalization = camel_case
+
+dotnet_naming_style.interface_style.capitalization = pascal_case
+dotnet_naming_style.interface_style.required_prefix = I
+
+dotnet_naming_style.private_field_style.capitalization = camel_case
+dotnet_naming_style.private_field_style.required_prefix = _
+
+dotnet_naming_style.type_parameter_style.capitalization = pascal_case
+dotnet_naming_style.type_parameter_style.required_prefix = T
+
+# --- Reglas ---
+
+dotnet_naming_rule.interfaces_start_with_i.symbols = interfaces
+dotnet_naming_rule.interfaces_start_with_i.style = interface_style
+dotnet_naming_rule.interfaces_start_with_i.severity = warning
+
+dotnet_naming_rule.types_and_namespaces_pascal_case.symbols = types_and_namespaces
+dotnet_naming_rule.types_and_namespaces_pascal_case.style = pascal_case
+dotnet_naming_rule.types_and_namespaces_pascal_case.severity = warning
+
+dotnet_naming_rule.public_members_pascal_case.symbols = public_members
+dotnet_naming_rule.public_members_pascal_case.style = pascal_case
+dotnet_naming_rule.public_members_pascal_case.severity = warning
+
+dotnet_naming_rule.constants_pascal_case.symbols = constants
+dotnet_naming_rule.constants_pascal_case.style = pascal_case
+dotnet_naming_rule.constants_pascal_case.severity = warning
+
+dotnet_naming_rule.public_fields_pascal_case.symbols = public_fields
+dotnet_naming_rule.public_fields_pascal_case.style = pascal_case
+dotnet_naming_rule.public_fields_pascal_case.severity = warning
+
+dotnet_naming_rule.private_fields_underscore_camel_case.symbols = private_fields
+dotnet_naming_rule.private_fields_underscore_camel_case.style = private_field_style
+dotnet_naming_rule.private_fields_underscore_camel_case.severity = warning
+
+dotnet_naming_rule.static_private_fields_underscore_camel_case.symbols = static_private_fields
+dotnet_naming_rule.static_private_fields_underscore_camel_case.style = private_field_style
+dotnet_naming_rule.static_private_fields_underscore_camel_case.severity = warning
+
+dotnet_naming_rule.parameters_and_locals_camel_case.symbols = parameters_and_locals
+dotnet_naming_rule.parameters_and_locals_camel_case.style = camel_case
+dotnet_naming_rule.parameters_and_locals_camel_case.severity = warning
+
+dotnet_naming_rule.type_parameters_start_with_t.symbols = type_parameters
+dotnet_naming_rule.type_parameters_start_with_t.style = type_parameter_style
+dotnet_naming_rule.type_parameters_start_with_t.severity = warning

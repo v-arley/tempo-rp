@@ -1,0 +1,59 @@
+<UserControl x:Class="TmIde.Views.StatusBarView"
+            xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+            xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+            xmlns:design="clr-namespace:TmIde.Design"
+            mc:Ignorable="d"
+            d:DataContext="{x:Static design:DesignData.StatusBar}"
+            d:DesignWidth="900"
+            Height="36">
+
+    <!-- Barra de estado. Las acciones COMPILE / RUN / DEBUG usan una paleta
+        teal propia y fija (segundo acento de marca, no sigue el tema). -->
+    <Border Background="{DynamicResource SurfaceBackgroundBrush}"
+            BorderBrush="{DynamicResource DividerBrush}"
+            BorderThickness="0,1,0,0"
+            Padding="4,3">
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+        <!-- Botones decorativos: sin acción asociada -->
+        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="3,0,0,0">
+            <Button Style="{StaticResource StatusActionButton}">
+                <StackPanel Orientation="Horizontal">
+                    <Path Style="{StaticResource IconPath}" Width="12" Height="12" Data="{StaticResource IconCompile}"
+                            Fill="#063F48" />
+                    <TextBlock Text="COMPILE" Margin="6,0,0,0" Foreground="#063F48" />
+                </StackPanel>
+            </Button>
+            <Button Style="{StaticResource StatusRunButton}">
+                <StackPanel Orientation="Horizontal">
+                    <Path Style="{StaticResource IconPath}" Width="12" Height="12" Data="{StaticResource IconRun}"
+                            Fill="#A4B1C7" />
+                    <TextBlock Text="RUN" Margin="6,0,0,0" Foreground="#A4B1C7" />
+                </StackPanel>
+            </Button>
+            <Button Style="{StaticResource StatusActionButton}">
+                <StackPanel Orientation="Horizontal">
+                    <Path Style="{StaticResource IconPath}" Width="12" Height="12" Data="{StaticResource IconDebug}"
+                            Fill="#063F48" />
+                    <TextBlock Text="DEBUG" Margin="6,0,0,0" Foreground="#063F48" />
+                </StackPanel>
+            </Button>
+        </StackPanel>
+
+        <!-- Posición del cursor y codificación del documento activo -->
+        <TextBlock Grid.Column="2" VerticalAlignment="Center" Margin="0,0,14,0"
+                    FontSize="10.5" Foreground="{DynamicResource SecondaryForegroundBrush}">
+            <Run Text="{Binding CaretPosition, Mode=OneWay}" />
+            <Run Text="   " />
+            <Run Text="{Binding Encoding, Mode=OneWay}" />
+        </TextBlock>
+        </Grid>
+    </Border>
+</UserControl>

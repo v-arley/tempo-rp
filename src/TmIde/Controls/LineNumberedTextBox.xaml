@@ -1,0 +1,73 @@
+<UserControl x:Class="TmIde.Controls.LineNumberedTextBox"
+            xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+            xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+            mc:Ignorable="d"
+            d:DesignHeight="240" d:DesignWidth="480"
+            Background="{DynamicResource SurfaceBackgroundBrush}">
+
+    <!--
+        TextBox multilínea monoespaciado con una canaleta de números de línea
+        sincronizada por scroll. No aplica resaltado de sintaxis ni plegado de
+        código.
+    -->
+    <UserControl.Resources>
+        <!-- Plantilla del editor: sin borde y sin realce de foco; el fondo es
+             el de la superficie del tema. -->
+        <Style x:Key="EditorTextBox" TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border x:Name="Chrome"
+                                Background="{TemplateBinding Background}"
+                                Padding="{TemplateBinding Padding}">
+                            <ScrollViewer x:Name="PART_ContentHost" />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <Border Grid.Column="0"
+                BorderBrush="{DynamicResource DividerBrush}"
+                BorderThickness="0,0,1,0">
+            <ScrollViewer x:Name="GutterScroll"
+                            VerticalScrollBarVisibility="Hidden"
+                            HorizontalScrollBarVisibility="Disabled"
+                            Padding="10,8,8,8"
+                            Background="{DynamicResource SurfaceBackgroundBrush}">
+                <TextBlock x:Name="GutterText"
+                            TextAlignment="Right"
+                            Foreground="{DynamicResource TertiaryForegroundBrush}"
+                            FontFamily="{DynamicResource CodeFontFamily}"
+                            FontSize="{DynamicResource CodeFontSize}"
+                            LineStackingStrategy="BlockLineHeight" />
+            </ScrollViewer>
+        </Border>
+
+        <TextBox x:Name="Editor"
+                    Grid.Column="1"
+                    Style="{StaticResource EditorTextBox}"
+                    AcceptsReturn="True"
+                    AcceptsTab="True"
+                    TextWrapping="NoWrap"
+                    VerticalScrollBarVisibility="Auto"
+                    HorizontalScrollBarVisibility="Auto"
+                    Background="{DynamicResource SurfaceBackgroundBrush}"
+                    Foreground="{DynamicResource PrimaryForegroundBrush}"
+                    CaretBrush="{DynamicResource PrimaryForegroundBrush}"
+                    FontFamily="{DynamicResource CodeFontFamily}"
+                    FontSize="{DynamicResource CodeFontSize}"
+                    Padding="8"
+                    TextChanged="OnEditorTextChanged"
+                    SelectionChanged="OnEditorSelectionChanged" />
+    </Grid>
+</UserControl>
