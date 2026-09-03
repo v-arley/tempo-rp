@@ -1,0 +1,34 @@
+<Project>
+
+  <!--
+    Propiedades comunes a TODOS los proyectos de la solución.
+    Cada .csproj puede sobrescribir una propiedad declarándola de nuevo en su
+    propio <PropertyGroup> (se aplica después de importar este archivo).
+
+    Nota: los proyectos de TmCompiler declaran <Nullable>disable</Nullable> de
+    forma explícita y, por tanto, conservan ese valor; solo TmIde (nuevo) nace
+    con nullable habilitado. Migrar TmCompiler a nullable enable es una tarea
+    aparte (ver docs).
+  -->
+
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AnalysisLevel>latest-Recommended</AnalysisLevel>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+
+    <!--
+      Las reglas de estilo de .editorconfig (namespaces de archivo, Allman,
+      _camelCase, etc.) se elevan a error por TreatWarningsAsErrors.
+      Los diagnósticos de los analizadores (CAxxxx) quedan como advertencia
+      para no bloquear el build por hallazgos preexistentes ajenos a esta
+      iteración; se pueden endurecer proyecto por proyecto más adelante.
+    -->
+    <CodeAnalysisTreatWarningsAsErrors>false</CodeAnalysisTreatWarningsAsErrors>
+
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+
+</Project>
