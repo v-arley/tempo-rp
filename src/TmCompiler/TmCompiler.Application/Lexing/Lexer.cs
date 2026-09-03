@@ -4,24 +4,24 @@ using TmCompiler.Domain.Lexical;
 namespace TmCompiler.Application.Lexing;
 
 /// <summary>
-/// Implementación del analizador léxico para el lenguaje TM.
-/// 
-/// Responsabilidades principales (SRP):
-/// 1. Consumir la fuente carácter por carácter.
-/// 2. Descartar comentarios y espacios en blanco no significativos.
-/// 3. Reconocer tokens según las reglas léxicas de TM v1.1.
-/// 4. Reportar errores léxicos con ubicación precisa.
+/// Analizador léxico del lenguaje TM: convierte el texto fuente en una
+/// secuencia de <see cref="Token"/>.
 ///
-/// Diseño:
-/// - Se implementa como clase sellada (<c>sealed</c>) para evitar
-///   derivación no controlada que pudiera violar invariantes internas.
-/// - El estado del lexer (posición, línea, columna) se encapsula;
-///   no es expuesto directamente a consumidores externos.
+/// Recorre la fuente carácter por carácter, descarta los comentarios y el
+/// espacio en blanco no significativo, agrupa el resto en tokens según las
+/// reglas léxicas de TM v1.1 y cierra la secuencia con un token
+/// <see cref="TokenType.EndOfFile"/>. Un carácter que no encaja en ninguna
+/// regla produce una <see cref="LexerException"/> con la línea y la columna
+/// donde aparece.
+///
+/// La clase es <c>sealed</c> y mantiene su cursor de lectura (posición, línea
+/// y columna) en campos privados; el único punto de interacción es
+/// <see cref="Tokenize"/>.
 /// </summary>
 
 public sealed class Lexer : ILexer
 {
-    // Campos privados (encapsulación del estado interno)
+    // Texto fuente y el nombre de archivo que acompaña a los errores.
     private readonly string _source;
     private readonly string _fileName;
     private readonly int _length;
@@ -30,12 +30,12 @@ public sealed class Lexer : ILexer
     private int _line;       // Línea actual (1-based)
     private int _column;     // Columna actual (1-based)
 
-    // Mapa estático de palabras reservadas para lookup O(1).
-    // Se inicializa una única vez gracias al constructor estático,
-    // reduciendo la complejidad de reconocimiento de keywords.
+    // Palabras reservadas de TM indexadas por su lexema. Permite decidir en
+    // tiempo constante si una secuencia de letras es una keyword o un
+    // identificador de usuario.
     private static readonly Dictionary<string, TokenType> ReservedWords;
 
-    // Constructor estático: pobla el diccionario de palabras reservadas.
+    // Puebla la tabla de palabras reservadas una sola vez para toda la clase.
     static Lexer()
     {
         ReservedWords = new Dictionary<string, TokenType>(StringComparer.Ordinal)
@@ -69,13 +69,14 @@ public sealed class Lexer : ILexer
             };
     }
 
-    // Constructor de instancia
-
     /// <summary>
-    /// Inicializa una nueva instancia del analizador léxico.
+    /// Crea un analizador léxico posicionado al inicio de <paramref name="source"/>.
     /// </summary>
     /// <param name="source">Contenido completo del archivo fuente TM.</param>
-    /// <param name="fileName">Nombre del archivo para reportes de error.</param>
+    /// <param name="fileName">
+    /// Nombre del archivo que aparecerá en los mensajes de error; si es null se
+    /// usa <c>&lt;unknown&gt;</c>.
+    /// </param>
     /// <exception cref="ArgumentNullException">Si <paramref name="source"/> es null.</exception>
     public Lexer(string source, string fileName)
     {
@@ -87,15 +88,18 @@ public sealed class Lexer : ILexer
         _column = 1;
     }
 
-    // MÉTODO PÚBLICO: Tokenize (cumple contrato ILexer)
-    
+    // Punto de entrada público (contrato ILexer).
+
     /// <summary>
-    /// Ejecuta el análisis léxico completo. Es el único punto de entrada
-    /// público para obtener la lista de tokens, cumpliendo con el principio
-    /// de Responsabilidad Única (SRP): este método orquesta el pipeline
-    /// de tokenización sin realizar él mismo el reconocimiento de patrones.
+    /// Recorre toda la fuente y devuelve sus tokens en orden de aparición.
+    /// Alterna entre saltar espacio y comentarios y leer un token, delegando
+    /// el reconocimiento de cada uno en el método especializado que le
+    /// corresponde.
     /// </summary>
-    /// <returns>Secuencia de tokens, terminada obligatoriamente con EOF.</returns>
+    /// <returns>
+    /// La secuencia de tokens, cerrada siempre con un token
+    /// <see cref="TokenType.EndOfFile"/>.
+    /// </returns>
     public IEnumerable<Token> Tokenize()
     {
         var tokens = new List<Token>();
@@ -105,11 +109,13 @@ public sealed class Lexer : ILexer
             SkipWhitespaceAndComments();
 
             if (IsAtEnd())
+            {
                 break;
+            }
 
-            // ReadNextToken() nunca retorna TokenType.Error: todo error léxico
-            // se reporta lanzando LexerException. Tokenize() por tanto o completa
-            // el recorrido, o propaga la excepción — no hay estado intermedio de error.
+            // Un error léxico se señala lanzando LexerException, nunca con un
+            // token de tipo Error: o se obtiene la secuencia completa, o la
+            // excepción se propaga al llamador.
             Token token = ReadNextToken();
             tokens.Add(token);
         }
@@ -118,10 +124,10 @@ public sealed class Lexer : ILexer
         return tokens;
     }
 
-    // SECCIÓN PRIVADA: Máquina de estados léxica
+    // Lectura de la fuente
 
     /// <summary>
-    /// Determina si se ha consumido todo el fuente.
+    /// Indica si el cursor ya pasó el último carácter de la fuente.
     /// </summary>
     private bool IsAtEnd() => _position >= _length;
 
@@ -131,8 +137,9 @@ public sealed class Lexer : ILexer
     private char Peek() => IsAtEnd() ? '\0' : _source[_position];
 
     /// <summary>
-    /// Retorna el carácter siguiente al actual sin avanzar.
-    /// Útil para lookahead de 2 caracteres (ej. >=, <=, ==, !=, >>, <<).
+    /// Retorna el carácter que sigue al actual sin avanzar. Da el segundo
+    /// carácter que necesitan los operadores compuestos (>=, <=, ==, !=, >>,
+    /// <<, ++, --) y la decisión de si un punto abre la parte decimal.
     /// </summary>
     private char PeekNext() => (_position + 1 >= _length) ? '\0' : _source[_position + 1];
 
@@ -143,7 +150,9 @@ public sealed class Lexer : ILexer
     private char Advance()
     {
         if (IsAtEnd())
+        {
             return '\0';
+        }
 
         char current = _source[_position];
         _position++;
@@ -168,9 +177,10 @@ public sealed class Lexer : ILexer
         new Token(type, lexeme, _line + lineOffset, _column + colOffset);
 
     /// <summary>
-    /// Descarta secuencias de espacios en blanco y comentarios (línea y bloque).
-    /// Según la especificación TM §2.3, el whitespace NO es significativo;
-    /// según §2.2, los comentarios deben ignorarse completamente.
+    /// Avanza el cursor sobre todo el espacio en blanco y los comentarios (de
+    /// línea <c>#</c> y de bloque <c>## ##</c>) hasta el siguiente carácter
+    /// significativo o el fin de la fuente. Ni el espacio en blanco ni los
+    /// comentarios producen tokens (especificación TM §2.2 y §2.3).
     /// </summary>
     private void SkipWhitespaceAndComments()
     {
@@ -204,40 +214,39 @@ public sealed class Lexer : ILexer
     }
 
     /// <summary>
-    /// Consume un comentario de línea completo. Según §2.2 de la especificación,
-    /// todo desde '#' hasta el fin de línea física es ignorado.
+    /// Consume desde el <c>#</c> actual hasta el final de la línea física, sin
+    /// incluir el salto de línea (especificación TM §2.2).
     /// </summary>
     private void SkipLineComment()
     {
-        // Consumir el '#'
-        Advance();
+        Advance(); // el '#'
         while (!IsAtEnd() && Peek() != '\n')
         {
             Advance();
         }
-        // El '\n' se deja para que SkipWhitespace lo consuma en la siguiente iteración,
-        // manteniendo el conteo correcto de líneas.
+        // El '\n' queda sin consumir para que Advance() lo cuente como cambio
+        // de línea en la siguiente pasada.
     }
 
     /// <summary>
-    /// Consume un comentario de bloque ## ... ##. Según §2.2, no pueden anidarse
-    /// y terminan en el primer par '##' encontrado.
+    /// Consume un comentario de bloque, desde el <c>##</c> de apertura hasta el
+    /// primer <c>##</c> de cierre. Los comentarios de bloque no anidan
+    /// (especificación TM §2.2).
     /// </summary>
     /// <exception cref="LexerException">
-    /// Si se alcanza EOF sin encontrar el cierre del comentario de bloque.
+    /// Si la fuente termina sin que aparezca el <c>##</c> de cierre.
     /// </exception>
     private void SkipBlockComment()
     {
-        // Consumir los dos '#'
-        Advance(); // primer #
-        Advance(); // segundo #
+        Advance(); // primer '#' de apertura
+        Advance(); // segundo '#' de apertura
 
         while (!IsAtEnd())
         {
             if (Peek() == '#' && PeekNext() == '#')
             {
-                Advance(); // primer #
-                Advance(); // segundo #
+                Advance(); // primer '#' de cierre
+                Advance(); // segundo '#' de cierre
                 return;
             }
             Advance();
@@ -249,10 +258,11 @@ public sealed class Lexer : ILexer
     }
 
     /// <summary>
-    /// Punto de despacho principal: examina el carácter actual y delega
-    /// al método especializado de reconocimiento de token correspondiente.
-    /// Aplica el principio Open/Closed (OCP): para agregar un nuevo token,
-    /// basta extender el switch sin modificar la estructura general.
+    /// Lee un token completo a partir del carácter actual y elige el
+    /// reconocedor según ese carácter: una letra abre un identificador o
+    /// palabra reservada, un dígito un literal numérico, la comilla doble un
+    /// literal de cadena, la comilla simple un literal de carácter y cualquier
+    /// otro carácter un operador o signo de puntuación.
     /// </summary>
     private Token ReadNextToken()
     {
@@ -262,30 +272,40 @@ public sealed class Lexer : ILexer
 
         // Identificadores y palabras reservadas
         if (IsLetter(c))
+        {
             return ReadIdentifierOrKeyword(startLine, startColumn);
+        }
 
         // Literales numéricos (enteros y flotantes)
         if (char.IsDigit(c))
+        {
             return ReadNumericLiteral(startLine, startColumn);
+        }
 
         // Literales de cadena (phrase)
         if (c == '"')
+        {
             return ReadStringLiteral(startLine, startColumn);
+        }
 
         // Literales de carácter (tone)
         if (c == '\'')
+        {
             return ReadCharLiteral(startLine, startColumn);
+        }
 
         // Operadores y símbolos de puntuación de 1 o 2 caracteres
         return ReadOperatorOrPunctuation(c, startLine, startColumn);
     }
 
-    // RECONOCEDORES ESPECÍFICOS DE TOKENS
+    // Reconocedores por categoría de token
 
     /// <summary>
-    /// Reconoce identificadores y palabras reservadas.
+    /// Lee una palabra: una letra inicial seguida de letras, dígitos o guion
+    /// bajo. Si el lexema figura en la tabla de palabras reservadas devuelve la
+    /// keyword correspondiente; si no, un identificador. La comparación
+    /// distingue mayúsculas de minúsculas.
     /// EBNF: identifier = letter, { letter | digit | "_" };
-    /// Distingue mayúsculas/minúsculas. No puede iniciar con dígito ni '_'.
     /// </summary>
     private Token ReadIdentifierOrKeyword(int startLine, int startColumn)
     {
@@ -298,32 +318,29 @@ public sealed class Lexer : ILexer
 
         string lexeme = lexemeBuilder.ToString();
 
-        // Verificar si es palabra reservada (lookup O(1) en diccionario estático)
         if (ReservedWords.TryGetValue(lexeme, out TokenType keywordType))
         {
             return new Token(keywordType, lexeme, startLine, startColumn);
         }
 
-        // De lo contrario, es un identificador de usuario
         return new Token(TokenType.Identifier, lexeme, startLine, startColumn);
     }
 
     /// <summary>
-    /// Reconoce literales numéricos: enteros (sample) y flotantes (wave).
+    /// Lee un literal numérico: entero (sample) o, si hay un punto seguido de
+    /// al menos un dígito, flotante (wave). El lexema empieza siempre por un
+    /// dígito y nunca lleva signo; un <c>-</c> delante es un token
+    /// <see cref="TokenType.Minus"/> aparte.
     /// EBNF:
     ///   integer_literal = digit, { digit };
     ///   float_literal   = digit, { digit }, ".", digit, { digit };
-    /// El signo menos NO forma parte del literal: se reconoce como operador
-    /// Minus independiente y se resuelve como unario/binario en el parser.
-    /// Este método solo se invoca desde ReadNextToken() cuando el carácter
-    /// actual ya es un dígito, por lo que no hace falta contemplar '-' aquí.
     /// </summary>
     private Token ReadNumericLiteral(int startLine, int startColumn)
     {
         var lexemeBuilder = new StringBuilder();
         bool isFloat = false;
 
-        // Secuencia de dígitos obligatoria antes del punto
+        // Parte entera: al menos un dígito.
         if (!char.IsDigit(Peek()))
         {
             throw new LexerException(
@@ -336,7 +353,7 @@ public sealed class Lexer : ILexer
             lexemeBuilder.Append(Advance());
         }
 
-        // Parte decimal (wave)
+        // El punto solo pertenece al número si va seguido de un dígito.
         if (Peek() == '.' && char.IsDigit(PeekNext()))
         {
             isFloat = true;
@@ -480,18 +497,17 @@ public sealed class Lexer : ILexer
     }
 
     /// <summary>
-    /// Reconoce operadores, delimitadores y símbolos de puntuación.
-    /// Implementa lookahead de 1 o 2 caracteres para distinguir
-    /// operadores compuestos (==, !=, >=, <=, >>, <<, ++, --).
+    /// Lee un operador, un delimitador o un signo de puntuación. Mira el
+    /// carácter siguiente para formar los operadores de dos caracteres (==, !=,
+    /// >=, <=, >>, <<, ++, --) antes de considerar los de uno solo.
     /// </summary>
     private Token ReadOperatorOrPunctuation(char c, int startLine, int startColumn)
     {
-        // Lookahead de 2 caracteres para operadores compuestos
         char next = PeekNext();
 
         switch (c)
         {
-            // Operadores de dos caracteres (prioridad alta)
+            // Operadores de dos caracteres: se prueban primero.
             case '>' when next == '>':
                 Advance(); Advance();
                 return new Token(TokenType.OutputOp, ">>", startLine, startColumn);
@@ -524,12 +540,10 @@ public sealed class Lexer : ILexer
                 Advance(); Advance();
                 return new Token(TokenType.Decrement, "--", startLine, startColumn);
 
-            // '>' y '<' sueltos son siempre relacionales a nivel léxico (spec §3.2.1).
-            // Actúan como delimitadores de bloque solo en ciertas posiciones sintácticas
-            // (después de "session", de la condición de if/loop/repeat, etc.) — esa
-            // distinción depende de la posición en la gramática, no del carácter en sí,
-            // así que la resuelve el Parser al consumir un GreaterThan/LessThan donde
-            // la gramática espera un bloque, no el Lexer.
+            // '>' y '<' a solas se emiten siempre como tokens relacionales
+            // (GreaterThan / LessThan). Su posible papel como delimitadores de
+            // bloque depende de la posición en la gramática (§3.2.1) y queda
+            // fuera del análisis léxico.
             case '>':
                 Advance();
                 return new Token(TokenType.GreaterThan, ">", startLine, startColumn);
@@ -608,20 +622,19 @@ public sealed class Lexer : ILexer
         }
     }
 
-    // UTILIDADES LÉXICAS PRIVADAS
+    // Clasificación de caracteres
 
     /// <summary>
-    /// Determina si un carácter puede iniciar un identificador (letra ASCII).
+    /// Indica si el carácter es una letra ASCII, el único inicio válido de un
+    /// identificador o palabra reservada en TM.
     /// EBNF: letter = "a".."z" | "A".."Z";
-    /// Nota: TM es sensible a mayúsculas/minúsculas y solo permite ASCII
-    /// para inicio de identificador según la especificación.
     /// </summary>
     private static bool IsLetter(char c) =>
         (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
 
     /// <summary>
-    /// Determina si un carácter puede aparecer en la continuación de un identificador.
-    /// EBNF: letter | digit | "_"
+    /// Indica si el carácter puede aparecer después del primero en un
+    /// identificador: una letra, un dígito o un guion bajo.
     /// </summary>
     private static bool IsIdentifierPart(char c) =>
         IsLetter(c) || char.IsDigit(c) || c == '_';
