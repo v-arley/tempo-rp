@@ -4,6 +4,8 @@
             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
             xmlns:design="clr-namespace:TmIde.Design"
+            xmlns:vm="clr-namespace:TmIde.ViewModels.Panel"
+            xmlns:controls="clr-namespace:TmIde.Controls"
             mc:Ignorable="d"
             d:DataContext="{x:Static design:DesignData.BottomPanel}"
             d:DesignWidth="700" d:DesignHeight="180">
@@ -70,6 +72,71 @@
                     </Setter.Value>
                 </Setter>
             </Style>
+
+            <!-- Cuerpo de la pestaña Output: solo lectura. -->
+            <DataTemplate DataType="{x:Type vm:OutputPaneViewModel}">
+                <Border Background="{DynamicResource SurfaceBackgroundBrush}">
+                    <ScrollViewer Margin="10,8" controls:AutoScroll.ToEnd="True"
+                                  VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
+                        <ItemsControl ItemsSource="{Binding Lines}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding}"
+                                               FontFamily="{DynamicResource CodeFontFamily}"
+                                               FontSize="{DynamicResource CodeFontSize}"
+                                               Foreground="{DynamicResource SecondaryForegroundBrush}"
+                                               TextWrapping="NoWrap" />
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Border>
+            </DataTemplate>
+
+            <!-- Cuerpo de la pestaña Terminal: salida arriba, línea de entrada abajo. -->
+            <DataTemplate DataType="{x:Type vm:TerminalPaneViewModel}">
+                <Border Background="{DynamicResource SurfaceBackgroundBrush}">
+                    <DockPanel Margin="10,8">
+                        <Grid DockPanel.Dock="Bottom" Margin="0,4,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="{Binding Prompt}"
+                                       VerticalAlignment="Center" Margin="0,0,6,0"
+                                       FontFamily="{DynamicResource CodeFontFamily}"
+                                       FontSize="{DynamicResource CodeFontSize}"
+                                       Foreground="{DynamicResource AccentBrush}" />
+                            <TextBox Grid.Column="1"
+                                     Text="{Binding CurrentInput, UpdateSourceTrigger=PropertyChanged}"
+                                     Background="Transparent" Padding="0" BorderThickness="0"
+                                     FontFamily="{DynamicResource CodeFontFamily}"
+                                     FontSize="{DynamicResource CodeFontSize}"
+                                     Foreground="{DynamicResource PrimaryForegroundBrush}">
+                                <TextBox.InputBindings>
+                                    <KeyBinding Key="Enter" Command="{Binding SubmitCommand}" />
+                                    <KeyBinding Key="Up" Command="{Binding HistoryPreviousCommand}" />
+                                    <KeyBinding Key="Down" Command="{Binding HistoryNextCommand}" />
+                                </TextBox.InputBindings>
+                            </TextBox>
+                        </Grid>
+                        <ScrollViewer controls:AutoScroll.ToEnd="True"
+                                      VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
+                            <ItemsControl ItemsSource="{Binding Lines}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding}"
+                                                   FontFamily="{DynamicResource CodeFontFamily}"
+                                                   FontSize="{DynamicResource CodeFontSize}"
+                                                   Foreground="{DynamicResource SecondaryForegroundBrush}"
+                                                   TextWrapping="NoWrap" />
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </DockPanel>
+                </Border>
+            </DataTemplate>
         </TabControl.Resources>
         <TabControl.Template>
             <ControlTemplate TargetType="TabControl">
@@ -92,34 +159,5 @@
                 <TextBlock Text="{Binding Header}" FontSize="11" Foreground="{DynamicResource PrimaryForegroundBrush}" />
             </DataTemplate>
         </TabControl.ItemTemplate>
-        <TabControl.ContentTemplate>
-            <DataTemplate>
-                <!-- Cuerpo del panel: prompt abajo, líneas emitidas arriba -->
-                <Border Background="{DynamicResource SurfaceBackgroundBrush}">
-                    <DockPanel Margin="10,8">
-                        <TextBlock DockPanel.Dock="Bottom"
-                                    Text="{Binding Prompt}"
-                                    Margin="0,4,0,0"
-                                    FontFamily="{DynamicResource CodeFontFamily}"
-                                    FontSize="{DynamicResource CodeFontSize}"
-                                    Foreground="{DynamicResource AccentBrush}"
-                                    Visibility="{Binding HasPrompt, Converter={StaticResource BoolToVisibility}}" />
-                        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
-                            <ItemsControl ItemsSource="{Binding Lines}">
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <TextBlock Text="{Binding}"
-                                                    FontFamily="{DynamicResource CodeFontFamily}"
-                                                    FontSize="{DynamicResource CodeFontSize}"
-                                                    Foreground="{DynamicResource SecondaryForegroundBrush}"
-                                                    TextWrapping="NoWrap" />
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                        </ScrollViewer>
-                    </DockPanel>
-                </Border>
-            </DataTemplate>
-        </TabControl.ContentTemplate>
     </TabControl>
 </UserControl>
