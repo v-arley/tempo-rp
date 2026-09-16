@@ -6,8 +6,8 @@
 - [Especificación formal del lenguaje TM v1.1](docs/ESPECIFICACION-TM.md) —
   gramática léxica y sintáctica (EBNF), sistema de tipos, semántica estática y
   dinámica, formato de errores y suite de pruebas canónicas. Es la referencia
-  autoritativa para `TmCompiler` (Lexer, y próximamente Parser/análisis
-  semántico).
+  autoritativa para `TmCompiler` (Lexer y Parser implementados; análisis
+  semántico pendiente).
 
 - [Arquitectura del proyecto](docs/ARQUITECTURA.md) — estado real del repo: las
   capas de `TmCompiler`, el diseño del `Lexer`, el esqueleto de `TmIde` y la
@@ -37,15 +37,16 @@ tempo-rp/
 │   ├── TmCompiler/
 │   │   ├── TmCompiler.Domain/            # Modelos puros, sin dependencias externas
 │   │   │   ├── Lexical/                  # IToken, Token, TokenType, LexerException
-│   │   │   ├── Syntactic/                # AST (pendiente: Parser)
+│   │   │   ├── Syntactic/                # AST completo (34 nodos) + ParserException
 │   │   │   └── Semantic/                 # SymbolTable, etc. (pendiente: análisis semántico)
 │   │   ├── TmCompiler.Application/       # Casos de uso — depende solo de Domain
 │   │   │   ├── Lexing/                   # ILexer, Lexer
-│   │   │   ├── Parsing/                  # (pendiente)
-│   │   │   └── Analysis/                 # (pendiente)
+│   │   │   ├── Parsing/                  # IParser, Parser
+│   │   │   └── Analysis/                 # (pendiente: análisis semántico)
 │   │   ├── TmCompiler.Infrastructure/    # Servicios externos — depende de Domain
-│   │   │   └── LexerDiagnosticReporter.cs
-│   │   └── TmCompiler.Cli/               # Arnés de consola para probar el pipeline
+│   │   │   ├── LexerDiagnosticReporter.cs
+│   │   │   └── AstDiagnosticReporter.cs
+│   │   └── TmCompiler.Cli/               # Arnés de consola del pipeline (Lexer → Parser)
 │   ├── TmIde/                            # IDE gráfico (WPF, net10.0-windows, MVVM con
 │   │   ├── Resources/                    #   CommunityToolkit.Mvvm). Esqueleto visual:
 │   │   ├── Services/                     #   chrome propio (WindowChrome), theming en
