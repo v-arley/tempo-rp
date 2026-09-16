@@ -9,10 +9,3 @@ public sealed record ProgramNode(
     IReadOnlyList<FunctionDeclarationNode> Functions,
     SessionNode Session
 ) : AstNode;
-
-/// <summary>
-/// Representa la sentencia session del lenguaje TM.
-/// </summary>
-public sealed record SessionNode(
-    BlockNode Body
-) : AstNode;

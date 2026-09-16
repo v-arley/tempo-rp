@@ -16,11 +16,3 @@ public sealed record IfStatementNode(
     int Line,
     int Column
 ) : StatementNode;
-
-/// <summary>
-/// Representa una rama "else if".
-/// </summary>
-public sealed record ElseIfClauseNode(
-    ExpressionNode Condition,
-    BlockNode Body
-) : AstNode;
