@@ -1,12 +1,13 @@
+using TmCompiler.Application.Analysis;
 using TmCompiler.Application.Lexing;
 using TmCompiler.Application.Parsing;
 using TmCompiler.Domain.Lexical;
 using TmCompiler.Domain.Syntactic;
 using TmCompiler.Infrastructure;
 
+
 // Arnés de consola del pipeline del compilador, para probarlo de forma aislada
-// sin depender de TmIde. Hoy ejecuta análisis léxico y sintáctico;
-// se ampliará con el análisis semántico cuando exista.
+// sin depender de TmIde. Ejecuta las fases léxica, sintáctica y semántica.
 
 // La especificación (§7.2) reserva E001-E020 para errores semánticos y deja los
 // errores léxicos y sintácticos como "E###" genérico (§10.2), sin número
@@ -15,7 +16,7 @@ const string GenericErrorCode = "E000";
 
 if (args.Length == 0)
 {
-    Console.WriteLine("Uso: TmCompiler.Cli <archivo.tm> [--tokens]");
+    Console.WriteLine("Uso: TmCompiler.Cli <archivo.tm|archivo.tmpr> [--tokens]");
     return;
 }
 
@@ -33,6 +34,7 @@ string source = File.ReadAllText(path);
 
 try
 {
+    //Analisis lexico
     ILexer lexer = new Lexer(source, path);
     List<Token> tokens = lexer.Tokenize().ToList();
 
@@ -41,10 +43,26 @@ try
         Console.WriteLine(LexerDiagnosticReporter.GenerateTokenReport(tokens, path));
     }
 
+    //analisis sintactico
     IParser parser = new Parser(tokens, path);
     ProgramNode program = parser.Parse();
 
     Console.WriteLine(AstDiagnosticReporter.GenerateAstReport(program, path));
+
+    //analisis semantico
+    ISemanticAnalyzer semanticAnalyzer = new SemanticAnalyzer(program, path);
+    SemanticAnalysisResult semanticResult = semanticAnalyzer.Analyze();
+
+    Console.WriteLine(
+        SemanticDiagnosticReporter.GenerateDiagnosticReport(
+            semanticResult.Diagnostics,
+            path));
+
+    if (semanticResult.HasErrors)
+    {
+        Environment.ExitCode = 1;
+        return;
+    }
 }
 catch (LexerException ex)
 {

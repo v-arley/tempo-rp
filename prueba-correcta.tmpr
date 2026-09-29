@@ -1,0 +1,4 @@
+session >
+    sample numero = 10;
+    output >> numero;
+<

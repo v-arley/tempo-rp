@@ -1,0 +1,4 @@
+session >
+    sample numero = "hola";
+    output >> numero;
+<
