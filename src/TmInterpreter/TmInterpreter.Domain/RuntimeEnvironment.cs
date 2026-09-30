@@ -21,6 +21,19 @@ public sealed class RuntimeEnvironment
         RuntimeValue value,
         bool isConstant = false)
     {
+        Declare(
+            name,
+            value.Kind,
+            value,
+            isConstant);
+    }
+
+    public void Declare(
+        string name,
+        RuntimeValueKind declaredKind,
+        RuntimeValue value,
+        bool isConstant = false)
+    {
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
         ArgumentNullException.ThrowIfNull(value);
 
@@ -34,6 +47,7 @@ public sealed class RuntimeEnvironment
             name,
             new RuntimeVariable(
                 name,
+                declaredKind,
                 value,
                 isConstant));
     }
@@ -66,5 +80,13 @@ public sealed class RuntimeEnvironment
 
         throw new InvalidOperationException(
             $"La variable '{name}' no existe en el entorno de ejecución.");
+    }
+
+    public void Assign(
+        string name,
+        RuntimeValue value)
+    {
+        RuntimeVariable variable = Resolve(name);
+        variable.Assign(value);
     }
 }

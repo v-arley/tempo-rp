@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\TmInterpreter.Domain\TmInterpreter.Domain.csproj" />
+    <ProjectReference Include="..\TmInterpreter.Application\TmInterpreter.Application.csproj" />
   </ItemGroup>
 
   <PropertyGroup>
