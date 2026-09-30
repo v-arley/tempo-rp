@@ -7,8 +7,6 @@ namespace TmInterpreter.Application;
 
 /// <summary>
 /// Ejecuta las sentencias de un programa TM.
-/// En este bloque soporta declaraciones, asignaciones,
-/// actualizaciones y entrada/salida.
 /// </summary>
 public sealed class StatementExecutor
 {
@@ -93,6 +91,30 @@ public sealed class StatementExecutor
                     environment);
                 break;
 
+            case IfStatementNode ifStatement:
+                ExecuteIf(
+                    ifStatement,
+                    environment);
+                break;
+
+            case RepeatStatementNode repeat:
+                ExecuteRepeat(
+                    repeat,
+                    environment);
+                break;
+
+            case LoopStatementNode loop:
+                ExecuteLoop(
+                    loop,
+                    environment);
+                break;
+
+            case MixStatementNode mix:
+                ExecuteMix(
+                    mix,
+                    environment);
+                break;
+
             default:
                 throw new NotSupportedException(
                     $"La sentencia '{statement.GetType().Name}' " +
@@ -157,45 +179,11 @@ public sealed class StatementExecutor
         UpdateStatementNode update,
         RuntimeEnvironment environment)
     {
-        RuntimeVariable variable =
-            environment.Resolve(
-                update.Identifier);
-
-        if (variable.IsConstant)
-        {
-            throw new InvalidOperationException(
-                $"La constante '{update.Identifier}' no puede modificarse.");
-        }
-
-        int currentValue =
-            (int)variable.Value.Value!;
-
-        try
-        {
-            int newValue =
-                update.Operator switch
-                {
-                    TokenType.Increment =>
-                        checked(currentValue + 1),
-
-                    TokenType.Decrement =>
-                        checked(currentValue - 1),
-
-                    _ => throw new InvalidOperationException(
-                        $"Operador de actualización no válido: " +
-                        $"'{update.Operator}'.")
-                };
-
-            variable.Assign(
-                RuntimeValue.Sample(newValue));
-        }
-        catch (OverflowException)
-        {
-            throw new TmRuntimeException(
-                RuntimeErrorCodes.ArithmeticOverflow,
-                update.Line,
-                "Se produjo un desbordamiento aritmético.");
-        }
+        ApplySampleUpdate(
+            update.Identifier,
+            update.Operator,
+            update.Line,
+            environment);
     }
 
     private void ExecuteOutput(
@@ -236,6 +224,280 @@ public sealed class StatementExecutor
                 input.Line);
 
         variable.Assign(value);
+    }
+
+    private void ExecuteIf(
+        IfStatementNode statement,
+        RuntimeEnvironment environment)
+    {
+        if (EvaluateCondition(
+                statement.Condition,
+                environment))
+        {
+            ExecuteBlock(
+                statement.ThenBlock,
+                environment);
+
+            return;
+        }
+
+        foreach (ElseIfClauseNode clause
+                 in statement.ElseIfClauses)
+        {
+            if (!EvaluateCondition(
+                    clause.Condition,
+                    environment))
+            {
+                continue;
+            }
+
+            ExecuteBlock(
+                clause.Body,
+                environment);
+
+            return;
+        }
+
+        if (statement.ElseBlock is not null)
+        {
+            ExecuteBlock(
+                statement.ElseBlock,
+                environment);
+        }
+    }
+
+    private void ExecuteRepeat(
+        RepeatStatementNode statement,
+        RuntimeEnvironment environment)
+    {
+        while (EvaluateCondition(
+                   statement.Condition,
+                   environment))
+        {
+            ExecuteBlock(
+                statement.Body,
+                environment);
+        }
+    }
+
+    private void ExecuteLoop(
+        LoopStatementNode statement,
+        RuntimeEnvironment environment)
+    {
+        // El inicializador pertenece al ámbito del loop,
+        // no al ámbito que contiene al loop.
+        var loopEnvironment =
+            new RuntimeEnvironment(environment);
+
+        ExecuteVariableDeclaration(
+            statement.Initializer,
+            loopEnvironment);
+
+        while (EvaluateCondition(
+                   statement.Condition,
+                   loopEnvironment))
+        {
+            ExecuteBlock(
+                statement.Body,
+                loopEnvironment);
+
+            ExecuteLoopUpdate(
+                statement.Update,
+                loopEnvironment);
+        }
+    }
+
+    private void ExecuteLoopUpdate(
+        LoopUpdateNode update,
+        RuntimeEnvironment environment)
+    {
+        if (update.Operator == TokenType.Increment ||
+            update.Operator == TokenType.Decrement)
+        {
+            ApplySampleUpdate(
+                update.Identifier,
+                update.Operator,
+                update.Line,
+                environment);
+
+            return;
+        }
+
+        if (update.Operator == TokenType.Assign)
+        {
+            if (update.Value is null)
+            {
+                throw new InvalidOperationException(
+                    "La actualización por asignación del loop " +
+                    "requiere una expresión.");
+            }
+
+            RuntimeValue value =
+                _expressions.Evaluate(
+                    update.Value,
+                    environment);
+
+            environment.Assign(
+                update.Identifier,
+                value);
+
+            return;
+        }
+
+        throw new InvalidOperationException(
+            $"Operador de actualización de loop no válido: " +
+            $"'{update.Operator}'.");
+    }
+
+    private void ExecuteMix(
+        MixStatementNode statement,
+        RuntimeEnvironment environment)
+    {
+        RuntimeValue control =
+            _expressions.Evaluate(
+                statement.Expression,
+                environment);
+
+        foreach (MixCaseNode mixCase in statement.Cases)
+        {
+            RuntimeValue caseValue =
+                _expressions.Evaluate(
+                    mixCase.Value,
+                    environment);
+
+            if (!RuntimeValuesEqual(
+                    control,
+                    caseValue))
+            {
+                continue;
+            }
+
+            ExecuteBlock(
+                mixCase.Body,
+                environment);
+
+            // TM no permite fall-through.
+            return;
+        }
+
+        if (statement.DefaultBlock is not null)
+        {
+            ExecuteBlock(
+                statement.DefaultBlock,
+                environment);
+        }
+    }
+
+    private bool EvaluateCondition(
+        ExpressionNode condition,
+        RuntimeEnvironment environment)
+    {
+        RuntimeValue value =
+            _expressions.Evaluate(
+                condition,
+                environment);
+
+        if (value.Kind != RuntimeValueKind.Signal)
+        {
+            throw new InvalidOperationException(
+                "La condición de control debe producir un valor signal.");
+        }
+
+        return (bool)value.Value!;
+    }
+
+    private static void ApplySampleUpdate(
+        string identifier,
+        TokenType operatorType,
+        int line,
+        RuntimeEnvironment environment)
+    {
+        RuntimeVariable variable =
+            environment.Resolve(identifier);
+
+        if (variable.IsConstant)
+        {
+            throw new InvalidOperationException(
+                $"La constante '{identifier}' no puede modificarse.");
+        }
+
+        if (variable.Value.Kind != RuntimeValueKind.Sample)
+        {
+            throw new InvalidOperationException(
+                $"La actualización '{operatorType}' " +
+                "solo puede aplicarse a valores sample.");
+        }
+
+        int currentValue =
+            (int)variable.Value.Value!;
+
+        try
+        {
+            int newValue =
+                operatorType switch
+                {
+                    TokenType.Increment =>
+                        checked(currentValue + 1),
+
+                    TokenType.Decrement =>
+                        checked(currentValue - 1),
+
+                    _ => throw new InvalidOperationException(
+                        $"Operador de actualización no válido: " +
+                        $"'{operatorType}'.")
+                };
+
+            variable.Assign(
+                RuntimeValue.Sample(newValue));
+        }
+        catch (OverflowException)
+        {
+            throw new TmRuntimeException(
+                RuntimeErrorCodes.ArithmeticOverflow,
+                line,
+                "Se produjo un desbordamiento aritmético.");
+        }
+    }
+
+    private static bool RuntimeValuesEqual(
+        RuntimeValue left,
+        RuntimeValue right)
+    {
+        if (left.Kind != right.Kind)
+        {
+            return false;
+        }
+
+        return left.Kind switch
+        {
+            RuntimeValueKind.Sample =>
+                (int)left.Value! ==
+                (int)right.Value!,
+
+            RuntimeValueKind.Wave =>
+                (float)left.Value! ==
+                (float)right.Value!,
+
+            RuntimeValueKind.Tone =>
+                (char)left.Value! ==
+                (char)right.Value!,
+
+            RuntimeValueKind.Phrase =>
+                string.Equals(
+                    (string)left.Value!,
+                    (string)right.Value!,
+                    StringComparison.Ordinal),
+
+            RuntimeValueKind.Signal =>
+                (bool)left.Value! ==
+                (bool)right.Value!,
+
+            RuntimeValueKind.Silence =>
+                true,
+
+            _ => throw new InvalidOperationException(
+                $"El tipo '{left.Kind}' no puede utilizarse en mix.")
+        };
     }
 
     private static RuntimeValue ParseInput(
@@ -318,7 +580,8 @@ public sealed class StatementExecutor
                 throw new TmRuntimeException(
                     RuntimeErrorCodes.InvalidToneInput,
                     sourceLine,
-                    "La entrada para tone está vacía o no contiene un carácter válido.");
+                    "La entrada para tone está vacía o " +
+                    "no contiene un carácter válido.");
             }
 
             default:
