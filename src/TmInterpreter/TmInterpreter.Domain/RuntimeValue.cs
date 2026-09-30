@@ -41,4 +41,24 @@ public sealed record RuntimeValue(
     {
         return new RuntimeValue(RuntimeValueKind.Void, null);
     }
+
+    public static RuntimeValue Sequence(
+        RuntimeSequence value)
+    {
+        ArgumentNullException.ThrowIfNull(value);
+
+        return new RuntimeValue(
+            RuntimeValueKind.Sequence,
+            value);
+    }
+
+    public static RuntimeValue Score(
+        RuntimeScore value)
+    {
+        ArgumentNullException.ThrowIfNull(value);
+
+        return new RuntimeValue(
+            RuntimeValueKind.Score,
+            value);
+    }
 }

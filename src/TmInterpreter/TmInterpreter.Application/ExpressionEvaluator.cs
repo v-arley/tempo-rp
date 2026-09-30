@@ -41,6 +41,99 @@ public sealed class ExpressionEvaluator : IExpressionEvaluator
             environment);
     }
 
+    private RuntimeValue EvaluateCollectionLiteral(
+        CollectionLiteralExpressionNode collection,
+        RuntimeEnvironment environment)
+    {
+        var values =
+            new List<RuntimeValue>(
+                collection.Elements.Count);
+
+        foreach (ExpressionNode element
+                in collection.Elements)
+        {
+            values.Add(
+                Evaluate(
+                    element,
+                    environment));
+        }
+
+        bool containsSequence =
+            values.Any(
+                value =>
+                    value.Kind ==
+                    RuntimeValueKind.Sequence);
+
+        if (!containsSequence)
+        {
+            return RuntimeValue.Sequence(
+                new RuntimeSequence(values));
+        }
+
+        bool allSequences =
+            values.All(
+                value =>
+                    value.Kind ==
+                    RuntimeValueKind.Sequence);
+
+        if (!allSequences)
+        {
+            throw new InvalidOperationException(
+                "Un literal de score no puede mezclar filas " +
+                "con valores escalares.");
+        }
+
+        var rows =
+            new List<RuntimeSequence>(
+                values.Count);
+
+        foreach (RuntimeValue value in values)
+        {
+            rows.Add(
+                (RuntimeSequence)value.Value!);
+        }
+
+        return RuntimeValue.Score(
+            new RuntimeScore(rows));
+    }
+
+    private RuntimeValue EvaluateIndex(
+        IndexExpressionNode indexExpression,
+        RuntimeEnvironment environment)
+    {
+        RuntimeValue target =
+            Evaluate(
+                indexExpression.Target,
+                environment);
+
+        RuntimeValue indexValue =
+            Evaluate(
+                indexExpression.Index,
+                environment);
+
+        int index =
+            RuntimeCollectionAccess.ReadIndex(
+                indexValue);
+
+        return RuntimeCollectionAccess.Read(
+            target,
+            index,
+            indexExpression.Line);
+    }
+
+    private RuntimeValue EvaluateLength(
+        LengthExpressionNode lengthExpression,
+        RuntimeEnvironment environment)
+    {
+        RuntimeValue target =
+            Evaluate(
+                lengthExpression.Target,
+                environment);
+
+        return RuntimeCollectionAccess.Length(
+            target);
+    }
+
     public RuntimeValue Evaluate(
         ExpressionNode expression,
         RuntimeEnvironment environment)
@@ -54,17 +147,38 @@ public sealed class ExpressionEvaluator : IExpressionEvaluator
                 EvaluateLiteral(literal),
 
             IdentifierExpressionNode identifier =>
-                EvaluateIdentifier(identifier, environment),
+                EvaluateIdentifier(
+                    identifier,
+                    environment),
 
             UnaryExpressionNode unary =>
-                EvaluateUnary(unary, environment),
+                EvaluateUnary(
+                    unary,
+                    environment),
 
             BinaryExpressionNode binary =>
-                EvaluateBinary(binary, environment),
+                EvaluateBinary(
+                    binary,
+                    environment),
 
             CallExpressionNode call =>
                 EvaluateCall(
                     call,
+                    environment),
+
+            CollectionLiteralExpressionNode collection =>
+                EvaluateCollectionLiteral(
+                    collection,
+                    environment),
+
+            IndexExpressionNode index =>
+                EvaluateIndex(
+                    index,
+                    environment),
+
+            LengthExpressionNode length =>
+                EvaluateLength(
+                    length,
                     environment),
 
             _ => throw new NotSupportedException(

@@ -150,6 +150,12 @@ public sealed class StatementExecutor
                     environment);
                 break;
 
+            case IndexedAssignmentStatementNode indexedAssignment:
+                ExecuteIndexedAssignment(
+                    indexedAssignment,
+                    environment);
+                break;    
+
             default:
                 throw new NotSupportedException(
                     $"La sentencia '{statement.GetType().Name}' " +
@@ -421,6 +427,36 @@ public sealed class StatementExecutor
                 statement.DefaultBlock,
                 environment);
         }
+    }
+
+    private void ExecuteIndexedAssignment(
+        IndexedAssignmentStatementNode statement,
+        RuntimeEnvironment environment)
+    {
+        RuntimeValue target =
+            _expressions.Evaluate(
+                statement.Target.Target,
+                environment);
+
+        RuntimeValue indexValue =
+            _expressions.Evaluate(
+                statement.Target.Index,
+                environment);
+
+        RuntimeValue value =
+            _expressions.Evaluate(
+                statement.Value,
+                environment);
+
+        int index =
+            RuntimeCollectionAccess.ReadIndex(
+                indexValue);
+
+        RuntimeCollectionAccess.Write(
+            target,
+            index,
+            value,
+            statement.Target.Line);
     }
 
     private bool EvaluateCondition(
