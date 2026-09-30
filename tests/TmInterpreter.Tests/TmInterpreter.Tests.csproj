@@ -22,6 +22,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\TmInterpreter\TmInterpreter.Domain\TmInterpreter.Domain.csproj" />
     <ProjectReference Include="..\..\src\TmInterpreter\TmInterpreter.Application\TmInterpreter.Application.csproj" />
+    <ProjectReference Include="..\..\src\TmCompiler\TmCompiler.Application\TmCompiler.Application.csproj" />
   </ItemGroup>
 
 </Project>
