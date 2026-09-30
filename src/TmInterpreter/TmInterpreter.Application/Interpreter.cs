@@ -22,10 +22,17 @@ public sealed class Interpreter : IInterpreter
 
         _program = program;
 
-        _statements = new StatementExecutor(
-            new ExpressionEvaluator(),
-            input,
-            output);
+        var registry =
+            new FunctionRegistry(
+                program.Functions);
+
+        var functions =
+            new FunctionInvoker(
+                registry,
+                input,
+                output);
+
+        _statements = functions.Statements;
     }
 
     public void Execute()

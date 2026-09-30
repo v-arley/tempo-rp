@@ -11,6 +11,36 @@ namespace TmInterpreter.Application;
 /// </summary>
 public sealed class ExpressionEvaluator : IExpressionEvaluator
 {
+    private readonly IFunctionInvoker? _functions;
+
+    public ExpressionEvaluator()
+    {
+    }
+
+    public ExpressionEvaluator(
+        IFunctionInvoker functions)
+    {
+        ArgumentNullException.ThrowIfNull(functions);
+
+        _functions = functions;
+    }
+
+    private RuntimeValue EvaluateCall(
+        CallExpressionNode call,
+        RuntimeEnvironment environment)
+    {
+        if (_functions is null)
+        {
+            throw new InvalidOperationException(
+                "Este evaluador no tiene un invocador " +
+                "de funciones configurado.");
+        }
+
+        return _functions.Invoke(
+            call,
+            environment);
+    }
+
     public RuntimeValue Evaluate(
         ExpressionNode expression,
         RuntimeEnvironment environment)
@@ -31,6 +61,11 @@ public sealed class ExpressionEvaluator : IExpressionEvaluator
 
             BinaryExpressionNode binary =>
                 EvaluateBinary(binary, environment),
+
+            CallExpressionNode call =>
+                EvaluateCall(
+                    call,
+                    environment),
 
             _ => throw new NotSupportedException(
                 $"La expresión '{expression.GetType().Name}' " +

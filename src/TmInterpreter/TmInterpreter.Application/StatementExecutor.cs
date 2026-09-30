@@ -46,6 +46,29 @@ public sealed class StatementExecutor
         }
     }
 
+    private void ExecuteReturn(
+        ReturnStatementNode statement,
+        RuntimeEnvironment environment)
+    {
+        RuntimeValue value =
+            statement.Expression is null
+                ? RuntimeValue.Void()
+                : _expressions.Evaluate(
+                    statement.Expression,
+                    environment);
+
+        throw new ReturnSignal(value);
+    }
+
+    private void ExecuteExpressionStatement(
+        ExpressionStatementNode statement,
+        RuntimeEnvironment environment)
+    {
+        _expressions.Evaluate(
+            statement.Expression,
+            environment);
+    }
+
     public void ExecuteStatement(
         StatementNode statement,
         RuntimeEnvironment environment)
@@ -112,6 +135,18 @@ public sealed class StatementExecutor
             case MixStatementNode mix:
                 ExecuteMix(
                     mix,
+                    environment);
+                break;
+
+            case ReturnStatementNode returnStatement:
+                ExecuteReturn(
+                    returnStatement,
+                    environment);
+                break;
+
+            case ExpressionStatementNode expressionStatement:
+                ExecuteExpressionStatement(
+                    expressionStatement,
                     environment);
                 break;
 
