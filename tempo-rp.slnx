@@ -1,5 +1,15 @@
 <Solution>
   <Project Path="src/TmCompiler/TmCompiler.Domain/TmCompiler.Domain.csproj" />
+  <Folder Name="/src/" />
+  <Folder Name="/src/TmCompiler/" />
+  <Folder Name="/src/TmInterpreter/">
+    <Project Path="src/TmInterpreter/TmInterpreter.Application/TmInterpreter.Application.csproj" />
+    <Project Path="src/TmInterpreter/TmInterpreter.Domain/TmInterpreter.Domain.csproj" />
+    <Project Path="src/TmInterpreter/TmInterpreter.Infrastructure/TmInterpreter.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/TmInterpreter.Tests/TmInterpreter.Tests.csproj" />
+  </Folder>
   <Project Path="src/TmCompiler/TmCompiler.Application/TmCompiler.Application.csproj" />
   <Project Path="src/TmCompiler/TmCompiler.Infrastructure/TmCompiler.Infrastructure.csproj" />
   <Project Path="src/TmCompiler/TmCompiler.Cli/TmCompiler.Cli.csproj" />
