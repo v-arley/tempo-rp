@@ -1,0 +1,6 @@
+session >
+    sample x = 10;
+    sample y = 0;
+
+    output >> x / y;
+<

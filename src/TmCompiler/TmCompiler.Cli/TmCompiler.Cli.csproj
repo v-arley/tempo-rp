@@ -12,6 +12,8 @@
     <ProjectReference Include="..\TmCompiler.Domain\TmCompiler.Domain.csproj" />
     <ProjectReference Include="..\TmCompiler.Application\TmCompiler.Application.csproj" />
     <ProjectReference Include="..\TmCompiler.Infrastructure\TmCompiler.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\TmInterpreter\TmInterpreter.Application\TmInterpreter.Application.csproj" />
+    <ProjectReference Include="..\..\TmInterpreter\TmInterpreter.Infrastructure\TmInterpreter.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

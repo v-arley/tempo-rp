@@ -4,10 +4,15 @@ using TmCompiler.Application.Parsing;
 using TmCompiler.Domain.Lexical;
 using TmCompiler.Domain.Syntactic;
 using TmCompiler.Infrastructure;
+using TmInterpreter.Application;
+using TmInterpreter.Domain;
+using TmInterpreter.Infrastructure;
 
 
-// Arnés de consola del pipeline del compilador, para probarlo de forma aislada
-// sin depender de TmIde. Ejecuta las fases léxica, sintáctica y semántica.
+// Arnés de consola del pipeline completo de TM.
+// Ejecuta análisis léxico, sintáctico y semántico.
+// Si el archivo principal es .tmpr y no existen errores,
+// ejecuta también el intérprete.
 
 // La especificación (§7.2) reserva E001-E020 para errores semánticos y deja los
 // errores léxicos y sintácticos como "E###" genérico (§10.2), sin número
@@ -16,42 +21,77 @@ const string GenericErrorCode = "E000";
 
 if (args.Length == 0)
 {
-    Console.WriteLine("Uso: TmCompiler.Cli <archivo.tm|archivo.tmpr> [--tokens]");
+    Console.WriteLine(
+        "Uso: TmCompiler.Cli <archivo.tm|archivo.tmpr> [--tokens]");
+
     return;
 }
 
 string path = args[0];
-bool showTokens = Array.Exists(args, argument => argument == "--tokens");
+
+bool showTokens =
+    Array.Exists(
+        args,
+        argument =>
+            string.Equals(
+                argument,
+                "--tokens",
+                StringComparison.Ordinal));
 
 if (!File.Exists(path))
 {
-    Console.Error.WriteLine($"No se encontró el archivo '{path}'.");
+    Console.Error.WriteLine(
+        $"No se encontró el archivo '{path}'.");
+
     Environment.ExitCode = 1;
+
     return;
 }
 
-string source = File.ReadAllText(path);
+string source =
+    File.ReadAllText(path);
 
 try
 {
-    //Analisis lexico
-    ILexer lexer = new Lexer(source, path);
-    List<Token> tokens = lexer.Tokenize().ToList();
+    // Analisis lexico
+    var lexer =
+        new Lexer(
+            source,
+            path);
+
+    List<Token> tokens =
+        lexer.Tokenize().ToList();
 
     if (showTokens)
     {
-        Console.WriteLine(LexerDiagnosticReporter.GenerateTokenReport(tokens, path));
+        Console.WriteLine(
+            LexerDiagnosticReporter.GenerateTokenReport(
+                tokens,
+                path));
     }
 
-    //analisis sintactico
-    IParser parser = new Parser(tokens, path);
-    ProgramNode program = parser.Parse();
+    // Analisis sintactico
+    var parser =
+        new Parser(
+            tokens,
+            path);
 
-    Console.WriteLine(AstDiagnosticReporter.GenerateAstReport(program, path));
+    ProgramNode program =
+        parser.Parse();
 
-    //analisis semantico
-    ISemanticAnalyzer semanticAnalyzer = new SemanticAnalyzer(program, path);
-    SemanticAnalysisResult semanticResult = semanticAnalyzer.Analyze();
+    Console.WriteLine(
+        AstDiagnosticReporter.GenerateAstReport(
+            program,
+            path));
+
+    // Analisis semantico
+    var semanticAnalyzer =
+        new SemanticAnalyzer(
+            program,
+            path);
+
+    SemanticAnalysisResult semanticResult =
+        semanticAnalyzer.Analyze();
 
     Console.WriteLine(
         SemanticDiagnosticReporter.GenerateDiagnosticReport(
@@ -61,8 +101,37 @@ try
     if (semanticResult.HasErrors)
     {
         Environment.ExitCode = 1;
+
         return;
     }
+
+    // Los archivos .tm son modulos y no poseen un punto de entrada
+    // ejecutable. El interprete unicamente se inicia para un .tmpr.
+    bool isExecutableProgram =
+        string.Equals(
+            Path.GetExtension(path),
+            ".tmpr",
+            StringComparison.OrdinalIgnoreCase);
+
+    if (!isExecutableProgram)
+    {
+        return;
+    }
+
+    // Ejecucion
+    var runtimeInput =
+        new ConsoleRuntimeInput();
+
+    var runtimeOutput =
+        new ConsoleRuntimeOutput();
+
+    var interpreter =
+        new Interpreter(
+            program,
+            runtimeInput,
+            runtimeOutput);
+
+    interpreter.Execute();
 }
 catch (LexerException ex)
 {
@@ -81,6 +150,13 @@ catch (ParserException ex)
             GenericErrorCode,
             ex.Message,
             "Revise la estructura de la sentencia según la gramática de TM."));
+
+    Environment.ExitCode = 1;
+}
+catch (TmRuntimeException ex)
+{
+    Console.Error.WriteLine(
+        $"{ex.Code} (línea {ex.Line}): {ex.Message}");
 
     Environment.ExitCode = 1;
 }
