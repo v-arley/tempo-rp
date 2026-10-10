@@ -15,11 +15,13 @@ namespace TmIde.ViewModels.Shell;
 public sealed partial class MenuBarViewModel : ViewModelBase
 {
     private readonly IThemeService _themeService;
+    private readonly IStartDialogService _startDialog;
     private readonly Action<string> _log;
 
-    public MenuBarViewModel(IThemeService themeService, Action<string> log)
+    public MenuBarViewModel(IThemeService themeService, IStartDialogService startDialog, Action<string> log)
     {
         _themeService = themeService;
+        _startDialog = startDialog;
         _log = log;
 
         Roots = new ObservableCollection<MenuEntryViewModel>
@@ -36,6 +38,9 @@ public sealed partial class MenuBarViewModel : ViewModelBase
     private MenuEntryViewModel BuildFileMenu()
     {
         var menu = new MenuEntryViewModel("MENU");
+        // TEMPORAL: acceso a la ventana de inicio mientras se desarrolla; más adelante
+        // se mostrará al arrancar la aplicación.
+        menu.Add(new MenuEntryViewModel("Inicio (temporal)", _startDialog.Show));
         menu.Add(new MenuEntryViewModel("Nuevo archivo", () => _log("MENU → Nuevo archivo (pendiente)")));
         menu.Add(new MenuEntryViewModel("Salir", () => System.Windows.Application.Current.Shutdown()));
         return menu;

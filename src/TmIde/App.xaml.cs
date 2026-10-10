@@ -7,10 +7,10 @@ using TmIde.Views;
 namespace TmIde;
 
 /// <summary>
-/// Punto de entrada de la aplicación. Composición manual del árbol de objetos
-/// en <see cref="OnStartup"/> (sin contenedor de inyección de dependencias):
+/// Punto de entrada de la aplicación:
 /// se construye el servicio de tema, el ViewModel raíz y la ventana principal.
 /// </summary>
+
 public partial class App : Application
 {
     private ThemeService? _themeService;
@@ -22,7 +22,7 @@ public partial class App : Application
         _themeService = new ThemeService();
         _themeService.Apply(AppTheme.Light);
 
-        var mainViewModel = new MainWindowViewModel(_themeService);
+        var mainViewModel = new MainWindowViewModel(_themeService, log => new StartDialogService(log));
 
         var window = new MainWindow
         {

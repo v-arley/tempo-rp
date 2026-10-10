@@ -1,3 +1,4 @@
+using System;
 using System.ComponentModel;
 
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -24,14 +25,14 @@ public sealed partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty]
     private string _title = "TMIDE";
 
-    public MainWindowViewModel(IThemeService themeService)
+    public MainWindowViewModel(IThemeService themeService, Func<Action<string>, IStartDialogService> createStartDialog)
     {
         _themeService = themeService;
 
         EditorHost = new EditorHostViewModel();
         BottomPanel = new BottomPanelViewModel();
         Explorer = new FileExplorerViewModel();
-        MenuBar = new MenuBarViewModel(themeService, BottomPanel.Log);
+        MenuBar = new MenuBarViewModel(themeService, createStartDialog(BottomPanel.Log), BottomPanel.Log);
         StatusBar = new StatusBarViewModel(EditorHost);
 
         EditorHost.PropertyChanged += OnEditorHostPropertyChanged;
