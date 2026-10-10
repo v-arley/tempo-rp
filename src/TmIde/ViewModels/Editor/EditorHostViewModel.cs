@@ -4,6 +4,7 @@ using System.Linq;
 
 using CommunityToolkit.Mvvm.ComponentModel;
 
+using TmIde.Services.Analysis;
 using TmIde.ViewModels;
 
 namespace TmIde.ViewModels.Editor;
@@ -18,10 +19,15 @@ public sealed partial class EditorHostViewModel : ViewModelBase
     [ObservableProperty]
     private EditorDocumentViewModel? _selectedDocument;
 
-    public EditorHostViewModel()
+    private readonly ICodeAnalysisService _analysis;
+
+    public EditorHostViewModel(ICodeAnalysisService? analysis = null)
     {
+        _analysis = analysis ?? new CodeAnalysisService();
         Documents = new ObservableCollection<EditorDocumentViewModel>();
         Breadcrumb = new ObservableCollection<BreadcrumbSegmentViewModel>();
+
+        AddPlaceholderDocuments();
     }
 
     public ObservableCollection<EditorDocumentViewModel> Documents { get; }
@@ -38,10 +44,26 @@ public sealed partial class EditorHostViewModel : ViewModelBase
             return;
         }
 
-        var document = new EditorDocumentViewModel(fileName, fileName, string.Empty, CloseDocument);
+        var document = new EditorDocumentViewModel(fileName, fileName, string.Empty, CloseDocument, _analysis);
 
         Documents.Add(document);
         SelectedDocument = document;
+    }
+
+    // TEMPORAL: documentos de relleno para visualizar las pestañas del editor
+    // mientras no hay apertura real de archivos. Eliminar al conectar el explorador.
+    private void AddPlaceholderDocuments()
+    {
+        Documents.Add(new EditorDocumentViewModel(
+            "main.tm", "src/main.tm",
+            "# main.tm — documento de relleno\n# Punto de entrada del programa TM.\n",
+            CloseDocument, _analysis));
+        Documents.Add(new EditorDocumentViewModel(
+            "matematicas.tm", "src/lib/matematicas.tm",
+            "# matematicas.tm — documento de relleno\n# Funciones auxiliares importadas desde main.tm.\n",
+            CloseDocument, _analysis));
+
+        SelectedDocument = Documents[0];
     }
 
     private void CloseDocument(EditorDocumentViewModel document)

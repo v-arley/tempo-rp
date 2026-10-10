@@ -7,8 +7,8 @@ using TmIde.ViewModels.Editor;
 namespace TmIde.ViewModels;
 
 /// <summary>
-/// Barra de estado: los botones COMPILE / RUN / DEBUG a la izquierda son solo
-/// visuales (sin acción); a la derecha muestra <c>LN x, COL y   UTF-8</c>.
+/// Barra de estado: a la izquierda muestra <c>LN x, COL y   UTF-8</c>; los botones
+/// COMPILE / RUN / DEBUG a la derecha son solo visuales (sin acción).
 /// </summary>
 
 public sealed partial class StatusBarViewModel : ViewModelBase
@@ -17,6 +17,9 @@ public sealed partial class StatusBarViewModel : ViewModelBase
 
     [ObservableProperty]
     private string _caretPosition = "LN 1, COL 1";
+
+    [ObservableProperty]
+    private string _problems = string.Empty;
 
     private EditorDocumentViewModel? _trackedDocument;
 
@@ -53,6 +56,7 @@ public sealed partial class StatusBarViewModel : ViewModelBase
         }
 
         UpdateCaret();
+        UpdateProblems();
     }
 
     private void OnDocumentPropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -62,6 +66,23 @@ public sealed partial class StatusBarViewModel : ViewModelBase
         {
             UpdateCaret();
         }
+        else if (e.PropertyName is nameof(EditorDocumentViewModel.ErrorCount)
+            or nameof(EditorDocumentViewModel.WarningCount))
+        {
+            UpdateProblems();
+        }
+    }
+
+    // Vacío cuando no hay problemas: la barra no muestra ruido en un archivo limpio.
+    private void UpdateProblems()
+    {
+        if (_trackedDocument is null || (_trackedDocument.ErrorCount == 0 && _trackedDocument.WarningCount == 0))
+        {
+            Problems = string.Empty;
+            return;
+        }
+
+        Problems = $"✕ {_trackedDocument.ErrorCount}   ⚠ {_trackedDocument.WarningCount}";
     }
 
     private void UpdateCaret()
