@@ -12,18 +12,21 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="AvalonEdit" />
     <PackageReference Include="CommunityToolkit.Mvvm" />
   </ItemGroup>
 
   <ItemGroup>
-    <!-- Fuentes monoespaciadas compartidas en src/Assets/ (origen único).
-         Se embeben en TmIde como recurso; se referencian en XAML como
-         "./Assets/#<nombre interno de la familia>". -->
     <Resource Include="..\Assets\JetBrainsMono-Medium.ttf" Link="Assets\JetBrainsMono-Medium.ttf" />
     <Resource Include="..\Assets\IBMPlexMono-Medium.ttf" Link="Assets\IBMPlexMono-Medium.ttf" />
   </ItemGroup>
 
-  <!-- ProjectReference a TmCompiler.* : se añadirá cuando el IDE cablee el Lexer.
-       Esta iteración es solo el esqueleto visual. -->
+  <!-- Pipeline del compilador (Lexer, Parser, analizador semántico) para los
+       diagnósticos del editor. Infrastructure no se referencia: el IDE da su
+       propio formato a los diagnósticos. -->
+  <ItemGroup>
+    <ProjectReference Include="..\TmCompiler\TmCompiler.Application\TmCompiler.Application.csproj" />
+    <ProjectReference Include="..\TmCompiler\TmCompiler.Domain\TmCompiler.Domain.csproj" />
+  </ItemGroup>
 
 </Project>

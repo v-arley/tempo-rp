@@ -16,34 +16,89 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <!-- Franja de acento con las pestañas de los documentos abiertos -->
-        <Border Grid.Row="0" Background="{DynamicResource AccentBrush}">
-            <TabControl HorizontalAlignment="Right"
+        <!-- Contenedor principal de las pestañas (franja de acento), sin márgenes ni
+            relleno lateral. Fila 0 (3px) = espacio superior; fila 1 (22px) = figura
+            decorativa + pestañas, alineadas a la izquierda y asentadas en el borde
+            inferior. Alto total 25.
+            Estructura: contenedor principal > (por cada archivo abierto) contenedor
+            de pestaña (TabItem) > figura + texto. -->
+        <Grid Grid.Row="0" Background="{DynamicResource AccentBrush}">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="3" />
+                <RowDefinition Height="22" />
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Figura decorativa fija al inicio, antes de todas las pestañas (visible
+                aunque no haya documentos): lateral izquierdo recto y el derecho con la
+                misma inclinación que las pestañas, 22px de ancho. -->
+            <Grid Grid.Row="1" Grid.Column="0" Width="22" IsHitTestVisible="False">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="8" />
+                </Grid.ColumnDefinitions>
+                <Rectangle Grid.Column="0" Fill="#1B212A" />
+                <Path Grid.Column="1" Stretch="Fill" Fill="#1B212A" Data="M0,0 L1,1 L0,1 Z" />
+            </Grid>
+
+            <!-- El TabControl genera un contenedor (TabItem) por cada documento de
+                Documents: abrir un archivo añade uno nuevo. -->
+            <TabControl Grid.Row="1" Grid.Column="1" HorizontalAlignment="Left"
                         Background="Transparent"
                         ItemsSource="{Binding Documents}"
                         SelectedItem="{Binding SelectedDocument, Mode=TwoWay}">
                 <TabControl.Resources>
                     <Style TargetType="TabItem" BasedOn="{StaticResource {x:Type TabItem}}">
-                        <!-- Texto claro fijo: la pestaña inactiva se lee sobre el acento -->
+                        <!-- Pestaña inactiva: fondo oscuro fijo con texto claro -->
                         <Setter Property="Foreground" Value="#B6C1D3" />
-                        <Setter Property="Margin" Value="6,0,0,0" />
-                        <Setter Property="Padding" Value="16,5" />
+                        <Setter Property="Background" Value="{DynamicResource ChromeShapeBrush}" />
+                        <Setter Property="Margin" Value="0" />
+                        <Setter Property="Padding" Value="0" />
+                        <Setter Property="Height" Value="22" />
                         <Setter Property="Template">
                             <Setter.Value>
                                 <ControlTemplate TargetType="TabItem">
-                                    <!-- Pestaña rectangular con borde de 1 px -->
-                                    <Border x:Name="Chrome" Background="{DynamicResource AccentBrush}"
-                                            BorderBrush="{DynamicResource DividerBrush}" BorderThickness="1"
-                                            Padding="{TemplateBinding Padding}">
-                                        <ContentPresenter ContentSource="Header" VerticalAlignment="Center" />
-                                    </Border>
+                                    <!-- Contenedor de la pestaña: figura + texto superpuestos -->
+                                    <Grid>
+                                        <!-- Figura: paralelogramo (ambos laterales inclinados en
+                                            el mismo sentido) en tres piezas; los laterales (8px)
+                                            se estiran solo en alto, así la inclinación no
+                                            cambia con la longitud del nombre. -->
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="8" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="8" />
+                                            </Grid.ColumnDefinitions>
+                                            <Path Grid.Column="0" Stretch="Fill" Fill="{TemplateBinding Background}"
+                                                    Data="M0,0 L1,0 L1,1 Z" />
+                                            <Rectangle Grid.Column="1" Fill="{TemplateBinding Background}" />
+                                            <Path Grid.Column="2" Stretch="Fill" Fill="{TemplateBinding Background}"
+                                                    Data="M0,0 L1,1 L0,1 Z" />
+                                        </Grid>
+                                        <!-- Texto: columnas de 18 (8 de lateral inclinado + 10
+                                            libres) a cada lado en lugar de márgenes, para que
+                                            el contenido nunca toque la diagonal. -->
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="18" />
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="18" />
+                                            </Grid.ColumnDefinitions>
+                                            <ContentPresenter Grid.Column="1" ContentSource="Header"
+                                                                VerticalAlignment="Center" />
+                                        </Grid>
+                                    </Grid>
                                     <ControlTemplate.Triggers>
                                         <Trigger Property="IsMouseOver" Value="True">
-                                            <!-- Aclarado del acento al pasar el cursor -->
-                                            <Setter TargetName="Chrome" Property="Background" Value="#D14A3B" />
+                                            <!-- Aclarado del fondo oscuro al pasar el cursor -->
+                                            <Setter Property="Background" Value="{DynamicResource ChromeShapeHoverBrush}" />
                                         </Trigger>
                                         <Trigger Property="IsSelected" Value="True">
-                                            <Setter TargetName="Chrome" Property="Background" Value="{DynamicResource WindowBackgroundBrush}" />
+                                            <Setter Property="Background" Value="{DynamicResource WindowBackgroundBrush}" />
                                             <Setter Property="Foreground" Value="{DynamicResource PrimaryForegroundBrush}" />
                                         </Trigger>
                                     </ControlTemplate.Triggers>
@@ -57,20 +112,30 @@
                 </TabControl.ContentTemplate>
                 <TabControl.ItemTemplate>
                     <DataTemplate>
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <TextBlock Text="{Binding FileName}" VerticalAlignment="Center" FontSize="12" />
-                            <Button Command="{Binding CloseCommand}"
-                                    Margin="8,0,0,0" Padding="2"
+                        <!-- Nombre + botón de cerrar; la separación de 8 es una
+                            columna, no un margen -->
+                        <Grid VerticalAlignment="Center">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="8" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <!-- Foreground local enlazado a la pestaña: sin él, el estilo
+                                implícito global de TextBlock impondría el color oscuro -->
+                            <TextBlock Grid.Column="0" Text="{Binding FileName}" VerticalAlignment="Center" FontSize="12"
+                                        Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=TabItem}}" />
+                            <Button Grid.Column="2" Command="{Binding CloseCommand}"
+                                    Padding="2"
                                     ToolTip="Cerrar pestaña">
                                 <!-- Icono claro fijo, a juego con el texto de la pestaña sobre el acento -->
                                 <Path Style="{StaticResource IconPath}" Data="{StaticResource IconWindowClose}"
                                         Width="10" Height="10" Fill="#B6C1D3" />
                             </Button>
-                        </StackPanel>
+                        </Grid>
                     </DataTemplate>
                 </TabControl.ItemTemplate>
             </TabControl>
-        </Border>
+        </Grid>
 
         <!-- Ruta de navegación (breadcrumb) del documento activo -->
         <ItemsControl Grid.Row="1"
@@ -87,7 +152,7 @@
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="{Binding Text}" FontSize="10.5"
                                     Foreground="{DynamicResource SecondaryForegroundBrush}" />
-                        <TextBlock Text="  /  " FontSize="10.5"
+                        <TextBlock Text="  •  " FontSize="10.5"
                                     Foreground="{DynamicResource TertiaryForegroundBrush}">
                             <TextBlock.Style>
                                 <Style TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
@@ -107,8 +172,9 @@
 
         <!-- Área de edición del documento activo -->
         <controls:LineNumberedTextBox Grid.Row="2"
-                                        Text="{Binding SelectedDocument.Content, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, FallbackValue=''}"
+                                        Document="{Binding SelectedDocument.Document}"
                                         CaretLine="{Binding SelectedDocument.CaretLine, Mode=TwoWay, FallbackValue=1}"
-                                        CaretColumn="{Binding SelectedDocument.CaretColumn, Mode=TwoWay, FallbackValue=1}" />
+                                        CaretColumn="{Binding SelectedDocument.CaretColumn, Mode=TwoWay, FallbackValue=1}"
+                                        Diagnostics="{Binding SelectedDocument.Diagnostics}" />
     </Grid>
 </UserControl>
