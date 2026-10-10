@@ -9,6 +9,10 @@ public sealed class ThemeService : IThemeService
 {
     private const string ThemeDictionaryMarker = "Resources/Theme.";
 
+    /// <summary>Se dispara tras reemplazar el diccionario de tema; lo usan los controles
+    /// con pinceles que no son propiedades de dependencia (p. ej. el editor).</summary>
+    public static event EventHandler? ThemeApplied;
+
     public AppTheme Current { get; private set; } = AppTheme.Light;
 
     public void Apply(AppTheme theme)
@@ -35,6 +39,7 @@ public sealed class ThemeService : IThemeService
         }
 
         Current = theme;
+        ThemeApplied?.Invoke(this, EventArgs.Empty);
     }
 
     public void Toggle() => Apply(Current == AppTheme.Light ? AppTheme.Dark : AppTheme.Light);

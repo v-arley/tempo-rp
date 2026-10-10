@@ -24,7 +24,7 @@
 
     <SolidColorBrush x:Key="WindowBackgroundBrush"      Color="#A4B1C7" />
     <SolidColorBrush x:Key="SurfaceBackgroundBrush"     Color="#A4B1C7" />
-    <SolidColorBrush x:Key="PanelOverlayBrush"          Color="#747A87" />
+    <SolidColorBrush x:Key="PanelOverlayBrush"          Color="#20262E" />
     <SolidColorBrush x:Key="PanelHeaderBrush"           Color="#585C66" />
     <SolidColorBrush x:Key="InputBackgroundBrush"       Color="#464A52" />
     <SolidColorBrush x:Key="DividerBrush"               Color="#1B212A" />
@@ -35,7 +35,35 @@
     <SolidColorBrush x:Key="PrimaryForegroundBrush"     Color="#23303A" />
     <SolidColorBrush x:Key="SecondaryForegroundBrush"   Color="#4E5B65" />
     <SolidColorBrush x:Key="TertiaryForegroundBrush"    Color="#7C8890" />
-    <SolidColorBrush x:Key="CloseButtonHoverBrush"      Color="#E81123" />
+    <SolidColorBrush x:Key="CloseButtonHoverBrush"      Color="#BF3B2C" />
     <SolidColorBrush x:Key="TitleMenuForegroundBrush"   Color="#4F5E7C" />
+    <SolidColorBrush x:Key="ChromeShapeBrush"           Color="#1B212A" />
+    <SolidColorBrush x:Key="ChromeShapeHoverBrush"      Color="#2A323D" />
+
+    <!-- Colores de sintaxis del editor (sobre SurfaceBackgroundBrush) -->
+    <SolidColorBrush x:Key="SyntaxKeywordBrush"         Color="#A02D20" />
+    <SolidColorBrush x:Key="SyntaxTypeBrush"            Color="#1F5F8B" />
+    <SolidColorBrush x:Key="SyntaxLiteralBrush"         Color="#6B3FA0" />
+    <SolidColorBrush x:Key="SyntaxNumberBrush"          Color="#1E6B52" />
+    <SolidColorBrush x:Key="SyntaxStringBrush"          Color="#7A5200" />
+    <SolidColorBrush x:Key="SyntaxCommentBrush"         Color="#56657A" />
+
+    <!-- Subrayado de diagnósticos del editor -->
+    <SolidColorBrush x:Key="DiagnosticErrorBrush"       Color="#B3261E" />
+    <SolidColorBrush x:Key="DiagnosticWarningBrush"     Color="#9A6A00" />
+
+    <!-- Pantalla de inicio: fondo central, rótulos de sección y mensaje de error -->
+    <SolidColorBrush x:Key="StartCentralBrush"          Color="#A4B1C7" />
+    <SolidColorBrush x:Key="StartBarBrush"              Color="#20262E" />
+    <SolidColorBrush x:Key="StartFrameBrush"            Color="#1B212A" />
+    <SolidColorBrush x:Key="StartCaptionBrush"          Color="#1B212A" />
+    <SolidColorBrush x:Key="StartErrorBrush"            Color="#A33223" />
+    <SolidColorBrush x:Key="StartTextStrongBrush"       Color="#0E1218" />
+    <SolidColorBrush x:Key="StartTextBrush"             Color="#1B212A" />
+    <SolidColorBrush x:Key="StartTextMutedBrush"        Color="#3A4658" />
+    <SolidColorBrush x:Key="StartTextDimBrush"          Color="#46536A" />
+    <SolidColorBrush x:Key="StartVeilHoverBrush"        Color="#26FFFFFF" />
+    <SolidColorBrush x:Key="StartVeilSelectedBrush"     Color="#40FFFFFF" />
+    <SolidColorBrush x:Key="StartAccentTextBrush"       Color="#A33223" />
 
 </ResourceDictionary>

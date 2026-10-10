@@ -21,17 +21,18 @@
         <!-- Botón de operación de ventana dentro del grupo en pastilla recesada -->
         <Style x:Key="CaptionGroupButton" TargetType="Button">
             <Setter Property="Background" Value="Transparent" />
-            <Setter Property="Width" Value="32" />
-            <Setter Property="Height" Value="26" />
+            <!-- Cuadrado 24x24 con glifo de 8x8: 8px de relleno en los 4 lados -->
+            <Setter Property="Width" Value="24" />
+            <Setter Property="Height" Value="24" />
             <Setter Property="Margin" Value="1,0" />
             <Setter Property="Cursor" Value="Arrow" />
             <Setter Property="SnapsToDevicePixels" Value="True" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="Chrome" Background="{TemplateBinding Background}">
+                        <Grid x:Name="Chrome" Background="{TemplateBinding Background}">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
-                        </Border>
+                        </Grid>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="Chrome" Property="Background" Value="#33000000" />
@@ -49,9 +50,9 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="Chrome" Background="{TemplateBinding Background}">
+                        <Grid x:Name="Chrome" Background="{TemplateBinding Background}">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
-                        </Border>
+                        </Grid>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="Chrome" Property="Background" Value="{DynamicResource CloseButtonHoverBrush}" />
@@ -91,36 +92,63 @@
         </Style>
     </UserControl.Resources>
 
-    <!-- Barra de título: menús a la izquierda, título al centro, botones de
-            ventana a la derecha -->
-    <Border Padding="3 0 3 3"
-            Background="{DynamicResource WindowBackgroundBrush}"
-            BorderBrush="{DynamicResource DividerBrush}"
-            BorderThickness="0 2 0 0">
-        <Grid>
+    <!-- Header: contenedor principal a todo el ancho con dos hijos en columna.
+            Fila 0: franja superior oscura, más baja que la barra.
+            Fila 1: barra en tres secciones (menús | título | operaciones de ventana).
+            Sin Border: los fondos van en Grid y las líneas en Rectangle/Path. -->
+    <Grid Background="{DynamicResource WindowBackgroundBrush}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="6" />
+            <RowDefinition Height="28" />
+        </Grid.RowDefinitions>
+
+        <!-- Hijo superior: franja oscura -->
+        <Grid Grid.Row="0" Background="{DynamicResource DividerBrush}" />
+
+        <!-- Hijo inferior: izquierda / centro / derecha. Los laterales son iguales
+            (el título queda centrado respecto a la ventana) y el centro es más
+            ancho (1.5*). -->
+        <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="1.5*" />
+                <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
-            <!-- Título centrado sobre una placa trapezoidal decorativa (no interactiva) -->
-            <Grid Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="top"
-                    Width="212" Height="27" IsHitTestVisible="False">
-                <Path Stretch="Fill"
-                        Fill="{DynamicResource DividerBrush}"
-                        Stroke="{DynamicResource DividerBrush}"
-                        StrokeThickness="2"
-                        Data="M0,0 L212,0 L198,34 L14,34 Z" />
-                <TextBlock Text="{Binding Title}"
+            <!-- Centro: contenedor que ocupa todo el segmento central y, dentro, la
+                placa trapezoidal que cuelga de la franja superior con el nombre del
+                archivo abierto encima (decorativa, no interactiva). La fila de 22
+                es la altura de la placa, para centrar el título sobre ella. -->
+            <Grid Grid.Column="1" IsHitTestVisible="False">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="22" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <!-- Placa a todo el ancho del segmento, en tres piezas para que los
+                    chaflanes laterales mantengan 14px de inclinación a cualquier ancho
+                    (un único Path con Stretch=Fill los deformaría). -->
+                <Grid Grid.Row="0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="14" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="14" />
+                    </Grid.ColumnDefinitions>
+                    <Path Grid.Column="0" Fill="{DynamicResource DividerBrush}"
+                            Data="M0,0 L14,0 L14,22 Z" />
+                    <Rectangle Grid.Column="1" Fill="{DynamicResource DividerBrush}" />
+                    <Path Grid.Column="2" Fill="{DynamicResource DividerBrush}"
+                            Data="M0,0 L14,0 L0,22 Z" />
+                </Grid>
+                <TextBlock Grid.Row="0" Text="{Binding Title}"
                             HorizontalAlignment="Center" VerticalAlignment="Center"
                             FontFamily="{DynamicResource HeaderFontFamily}"
                             FontSize="11" FontWeight="Medium"
                             Foreground="#A4B1C7" />
             </Grid>
 
-            <!-- Menús raíz separados por "|" (MENU / TOOLS / VER / OTROS) -->
-            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+            <!-- Izquierda: menús raíz separados por "|" (MENU / TOOLS / VER / OTROS) -->
+            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center"
+                        HorizontalAlignment="Left" Margin="3,0,0,0">
                 <StackPanel.Resources>
                     <Style x:Key="MenuSep" TargetType="Rectangle">
                         <Setter Property="Width" Value="1" />
@@ -147,26 +175,25 @@
                                                             Margin="{TemplateBinding Padding}"
                                                             VerticalAlignment="Center"
                                                             RecognizesAccessKey="True" />
-                                        <Border x:Name="Underline"
+                                        <Rectangle x:Name="Underline"
                                                 Height="2"
                                                 VerticalAlignment="Bottom"
-                                                Background="{DynamicResource AccentBrush}"
+                                                Fill="{DynamicResource AccentBrush}"
                                                 RenderTransformOrigin="0,0.5">
-                                            <Border.RenderTransform>
+                                            <Rectangle.RenderTransform>
                                                 <ScaleTransform x:Name="UnderlineScale" ScaleX="0" ScaleY="1" />
-                                            </Border.RenderTransform>
-                                        </Border>
+                                            </Rectangle.RenderTransform>
+                                        </Rectangle>
                                         <Popup x:Name="PART_Popup"
                                                 Placement="Bottom"
                                                 IsOpen="{TemplateBinding IsSubmenuOpen}"
                                                 AllowsTransparency="True"
                                                 Focusable="False"
                                                 PopupAnimation="Fade">
-                                            <Border Background="{DynamicResource SurfaceBackgroundBrush}"
-                                                    Padding="4"
+                                            <Grid Background="{DynamicResource SurfaceBackgroundBrush}"
                                                     SnapsToDevicePixels="True">
-                                                <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Cycle" />
-                                            </Border>
+                                                <StackPanel Margin="4" IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Cycle" />
+                                            </Grid>
                                         </Popup>
                                     </Grid>
                                     <ControlTemplate.Triggers>
@@ -221,23 +248,23 @@
                 </Menu>
             </StackPanel>
 
-            <!-- Operaciones de ventana: grupo en pastilla recesada -->
-            <Border Grid.Column="2" VerticalAlignment="Center" Padding="3">
-                <StackPanel Orientation="Horizontal">
-                    <Button Style="{StaticResource CaptionGroupButton}" Click="OnMinimize" ToolTip="Minimizar">
-                        <Path Style="{StaticResource CaptionGlyph}" Width="10" Height="10"
-                                Data="{StaticResource IconCaptionMin}" />
-                    </Button>
-                    <Button x:Name="MaximizeButton" Style="{StaticResource CaptionGroupButton}" Click="OnMaximizeRestore" ToolTip="Maximizar / restaurar">
-                        <Path x:Name="MaximizeGlyph" Style="{StaticResource CaptionGlyph}" Width="11" Height="11"
-                                Data="{StaticResource IconCaptionMax}" />
-                    </Button>
-                    <Button x:Name="CloseButton" Style="{StaticResource CaptionGroupCloseButton}" Click="OnClose" ToolTip="Cerrar">
-                        <Path Style="{StaticResource CloseGlyph}" Width="10" Height="10"
-                                Data="{StaticResource IconCaptionClose}" />
-                    </Button>
-                </StackPanel>
-            </Border>
+            <!-- Derecha: operaciones de ventana. Botones de 24 en una barra de 28:
+                2px arriba y abajo. -->
+            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center"
+                        HorizontalAlignment="Right" Margin="0,0,3,0">
+                <Button Style="{StaticResource CaptionGroupButton}" Click="OnMinimize" ToolTip="Minimizar">
+                    <Path Style="{StaticResource CaptionGlyph}" Width="8" Height="8"
+                            Data="{StaticResource IconCaptionMin}" />
+                </Button>
+                <Button x:Name="MaximizeButton" Style="{StaticResource CaptionGroupButton}" Click="OnMaximizeRestore" ToolTip="Maximizar / restaurar">
+                    <Path x:Name="MaximizeGlyph" Style="{StaticResource CaptionGlyph}" Width="8" Height="8"
+                            Data="{StaticResource IconCaptionMax}" />
+                </Button>
+                <Button x:Name="CloseButton" Style="{StaticResource CaptionGroupCloseButton}" Click="OnClose" ToolTip="Cerrar">
+                    <Path Style="{StaticResource CloseGlyph}" Width="8" Height="8"
+                            Data="{StaticResource IconCaptionClose}" />
+                </Button>
+            </StackPanel>
         </Grid>
-    </Border>
+    </Grid>
 </UserControl>
