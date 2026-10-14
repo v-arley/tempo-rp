@@ -6,12 +6,13 @@
 - [Especificación formal del lenguaje TM v1.1](docs/ESPECIFICACION-TM.md) —
   gramática léxica y sintáctica (EBNF), sistema de tipos, semántica estática y
   dinámica, formato de errores y suite de pruebas canónicas. Es la referencia
-  autoritativa para `TmCompiler` (Lexer y Parser implementados; análisis
-  semántico pendiente).
+  autoritativa para `Tempo.Language` (Lexer, Parser, análisis semántico e
+  intérprete implementados).
 
-- [Arquitectura del proyecto](docs/ARQUITECTURA.md) — estado real del repo: las
-  capas de `TmCompiler`, el diseño del `Lexer`, el esqueleto de `TmIde` y la
-  infraestructura de build (`global.json`, `Directory.*.props`, `.editorconfig`).
+- [Arquitectura del proyecto](docs/ARQUITECTURA.md) — estado real del repo: la
+  organización por fases de `Tempo.Language` (modelo Roslyn/Minsk), el host
+  `Tempo.Cli`, el esqueleto de `TmIde` y la infraestructura de build
+  (`global.json`, `Directory.*.props`, `.editorconfig`).
 
 - [Convenciones de código](docs/CONVENTIONS.md) — nomenclatura C#/.NET (estándar
   Microsoft), verificadas en compilación vía `.editorconfig` +
@@ -32,41 +33,45 @@ tempo-rp/
 │   ├── ESPECIFICACION-TM.md
 │   ├── ARQUITECTURA.md
 │   └── CONVENTIONS.md
+├── samples/                             # programas TM de ejemplo (prueba-*.tmpr)
 ├── src/
 │   ├── Assets/                          # fuentes .ttf + iconos .svg compartidos (JetBrains/IBM Plex Mono)
-│   ├── TmCompiler/
-│   │   ├── TmCompiler.Domain/            # Modelos puros, sin dependencias externas
-│   │   │   ├── Lexical/                  # IToken, Token, TokenType, LexerException
-│   │   │   ├── Syntactic/                # AST completo (34 nodos) + ParserException
-│   │   │   └── Semantic/                 # SymbolTable, etc. (pendiente: análisis semántico)
-│   │   ├── TmCompiler.Application/       # Casos de uso — depende solo de Domain
-│   │   │   ├── Lexing/                   # ILexer, Lexer
-│   │   │   ├── Parsing/                  # IParser, Parser
-│   │   │   └── Analysis/                 # (pendiente: análisis semántico)
-│   │   ├── TmCompiler.Infrastructure/    # Servicios externos — depende de Domain
-│   │   │   ├── LexerDiagnosticReporter.cs
-│   │   │   └── AstDiagnosticReporter.cs
-│   │   └── TmCompiler.Cli/               # Arnés de consola del pipeline (Lexer → Parser)
-│   ├── TmIde/                            # IDE gráfico (WPF, net10.0-windows, MVVM con
-│   │   ├── Resources/                    #   CommunityToolkit.Mvvm). Esqueleto visual:
-│   │   ├── Services/                     #   chrome propio (WindowChrome), theming en
-│   │   ├── Controls/                     #   caliente, explorador, editor de texto plano,
-│   │   ├── ViewModels/                   #   panel Terminal/Output/Debug, barra de estado.
-│   │   └── Views/
-│   ├── TmInterpreter/                    # Placeholder — sin implementar aún
-│   └── TmSystemProject/                  # Placeholder — sin implementar aún
+│   ├── Tempo.Language/                  # Biblioteca: TODO el lenguaje, organizada por fase
+│   │   ├── Diagnostics/                 # Diagnostic, DiagnosticBag, catálogo y códigos (§7)
+│   │   ├── Syntax/                      # Lexer, Parser, Token/TokenType, AST (33 nodos), *Exception
+│   │   ├── Symbols/                     # TmType, TypeKind, TypeNameParser, FunctionSymbol, VariableSymbol
+│   │   ├── Binding/                     # SemanticAnalyzer, analizadores, SymbolTable/Scope, reglas de tipos
+│   │   ├── Evaluation/                  # Interpreter, ejecutores, RuntimeValue/Environment, errores de ejecución
+│   │   └── IO/                          # reportes de texto: tokens, AST y diagnósticos
+│   ├── Tempo.Cli/                       # Host de consola: pipeline completo + E/S por consola
+│   └── TmIde/                           # IDE gráfico (WPF, net10.0-windows, MVVM con
+│       ├── Resources/                   #   CommunityToolkit.Mvvm). Esqueleto visual:
+│       ├── Services/                    #   chrome propio (WindowChrome), theming en
+│       ├── Controls/                    #   caliente, explorador, editor de texto plano,
+│       ├── ViewModels/                  #   panel Terminal/Output/Debug, barra de estado.
+│       └── Views/
 └── tests/
-    └── TmCompiler.Tests/
-        └── Lexing/
-            └── LexerTests.cs
+    └── Tempo.Language.Tests/            # xUnit; carpetas espejo de las fases:
+        ├── Syntax/                      #   LexerTests, ParserTests
+        ├── Symbols/                     #   TmTypeTests, TypeNameParserTests
+        ├── Binding/                     #   análisis semántico (+ SemanticTestHarness)
+        ├── Diagnostics/                 #   DiagnosticTests
+        └── Evaluation/                  #   intérprete y programas canónicos
 ```
 
-La arquitectura de `TmCompiler` sigue Clean Architecture por capas: `Domain` no
-depende de nada, `Application` depende solo de `Domain`, e `Infrastructure`
-depende de `Domain` (y de `Application` cuando haga falta). Esa regla de
-dependencias es verificable por el compilador — cada capa es su propio
-proyecto, así que una capa interna físicamente no puede referenciar una capa
-externa.
+`Tempo.Language` sigue el modelo de **Roslyn/Minsk** ("el compilador como
+API"): un único proyecto con todo el lenguaje, dividido en carpetas y namespaces
+según la **fase del pipeline** (texto → `Syntax` → `Binding` → `Evaluation`).
+Los namespaces coinciden con la carpeta
+(`Tempo.Language.Syntax`, `Tempo.Language.Binding`, …). Los hosts, como
+`Tempo.Cli`, consumen la biblioteca; la biblioteca no depende de
+ningún host.
+
+```powershell
+dotnet build                                            # compila toda la solución
+dotnet test                                             # corre Tempo.Language.Tests
+dotnet run --project src/Tempo.Cli -- samples/prueba-correcta.tmpr [--tokens]
+```
 
 `TmIde` es un proyecto **WPF SDK-style sobre `net10.0-windows`**. Patrón MVVM con
 `CommunityToolkit.Mvvm` (`[ObservableProperty]` / `[RelayCommand]`), composición
@@ -74,13 +79,9 @@ manual en `App.OnStartup` (sin contenedor de DI), ventana sin chrome nativo con
 `System.Windows.Shell.WindowChrome`, y tema claro/oscuro intercambiable en
 caliente (15 brushes por rol en `Resources/Theme.*.xaml`, consumidos con
 `{DynamicResource}`). El editor es un `TextBox` monoespaciado con canaleta de
-números de línea; no aplica resaltado de sintaxis todavía. El árbol del
-explorador, las pestañas del editor y el panel Terminal arrancan vacíos, y los
-botones de crear archivo/carpeta y COMPILE / RUN / DEBUG son hoy solo
-decorativos (sin acción). Nada de `TmIde` referencia aún a `TmCompiler.*`.
-
-`TmInterpreter` y `TmSystemProject` no tienen código todavía: se dividirán en
-las mismas capas (Domain/Application/Infrastructure) cuando arranque su
-implementación, siguiendo el mismo patrón que `TmCompiler`.
+números de línea, sin resaltado de sintaxis. El árbol del explorador, las
+pestañas del editor y el panel Terminal arrancan vacíos, y los botones de crear
+archivo/carpeta y COMPILE / RUN / DEBUG son decorativos (sin acción). `TmIde` no
+referencia a `Tempo.Language`.
 
 ---

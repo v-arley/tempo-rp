@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <!-- annotations: admite las anotaciones '?' de Evaluation/ y el código sin
+         anotaciones del resto de carpetas, sin advertencias de nulabilidad. -->
+    <Nullable>annotations</Nullable>
+    <RootNamespace>Tempo.Language</RootNamespace>
+  </PropertyGroup>
+
+</Project>
