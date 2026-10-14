@@ -1,0 +1,35 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <!-- annotations: admite las anotaciones '?' de Evaluation/ y el código sin
+         anotaciones del resto de carpetas, sin advertencias de nulabilidad. -->
+    <Nullable>annotations</Nullable>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <!-- CA1707: los nombres de test llevan guion bajo (Metodo_Escenario_Resultado).
+         xUnit1012: las pruebas pasan null a parámetros string para cubrir
+         entradas nulas. -->
+    <NoWarn>$(NoWarn);CA1707;xUnit1012</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- La versión de cada paquete la fija Directory.Packages.props. -->
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="coverlet.collector">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Tempo.Language\Tempo.Language.csproj" />
+  </ItemGroup>
+
+</Project>

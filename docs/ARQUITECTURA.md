@@ -1,7 +1,7 @@
 # Arquitectura de tempo-rp
 
-Estado real del repositorio. Lo que ya existe está descrito en presente; lo que
-falta queda en "Hoja de ruta" al final para que no haya que re-derivarlo.
+Describe el estado del repositorio. El trabajo no implementado se recoge en
+"Hoja de ruta", al final.
 
 ## Panorama
 
@@ -10,37 +10,58 @@ falta queda en "Hoja de ruta" al final para que no haya que re-derivarlo.
 
 | Proyecto | TFM | Rol | Estado |
 |---|---|---|---|
-| `TmCompiler.Domain` | `net8.0` | Modelos puros del compilador, sin dependencias | Solo la capa léxica |
-| `TmCompiler.Application` | `net8.0` | Casos de uso; depende solo de `Domain` | Solo el `Lexer` |
-| `TmCompiler.Infrastructure` | `net8.0` | Servicios de presentación de diagnósticos; depende de `Domain` | Solo `LexerDiagnosticReporter` |
-| `TmCompiler.Cli` | `net8.0` (Exe) | Arnés de consola del pipeline | Solo ejecuta el `Lexer` |
-| `TmIde` | `net10.0-windows` (WPF) | IDE gráfico | Esqueleto visual (sin cablear al compilador) |
-| `TmCompiler.Tests` | `net8.0` | Pruebas xUnit | Solo `LexerTests` |
-| `TmInterpreter` | — | Carpeta vacía | Sin implementar |
-| `TmSystemProject` | — | Carpeta vacía | Sin implementar |
+| `src/Tempo.Language` | `net8.0` | Biblioteca con todo el lenguaje: léxico, sintaxis, semántica e intérprete | Pipeline completo de un archivo |
+| `src/Tempo.Cli` | `net8.0` (Exe) | Host de consola: ejecuta el pipeline y aporta la E/S por consola | Funcional |
+| `src/TmIde` | `net10.0-windows` (WPF) | IDE gráfico | Esqueleto visual (sin cablear al lenguaje) |
+| `tests/Tempo.Language.Tests` | `net8.0` | Pruebas xUnit de todas las fases | 479 tests |
 
-La solución es [`tempo-rp.slnx`](../tempo-rp.slnx) (formato `.slnx`). No incluye a
-`TmInterpreter` ni `TmSystemProject` porque todavía no tienen `.csproj`.
+La solución es [`tempo-rp.slnx`](../tempo-rp.slnx) (formato `.slnx`). Los
+programas de ejemplo están en [`samples/`](../samples).
 
-## `TmCompiler` — Clean Architecture por capas
+## `Tempo.Language` — modelo Roslyn/Minsk
 
-La regla de dependencias se hace **físicamente verificable**: cada capa es su
-propio proyecto, así que una capa interna no puede referenciar una externa aunque
-se quisiera.
+La biblioteca sigue el enfoque de Roslyn y de Minsk, "el compilador como
+API": **un solo proyecto**, organizado en carpetas según la **fase del
+pipeline**. Cada carpeta es un namespace (`Tempo.Language.<Carpeta>`).
 
 ```
-TmCompiler.Cli  ──►  TmCompiler.Application  ──►  TmCompiler.Domain
-      │                                              ▲
-      └──────────────►  TmCompiler.Infrastructure  ──┘
+texto fuente ─► Syntax (Lexer → tokens → Parser → AST)
+                   │
+                   ▼
+                Binding (SemanticAnalyzer → diagnósticos)  ◄── Symbols (tipos y símbolos)
+                   │                                       ◄── Diagnostics (formato §7)
+                   ▼
+                Evaluation (Interpreter ejecuta el AST)
 ```
 
-- **`Domain`** no referencia ningún otro proyecto.
-- **`Application`** referencia solo a `Domain`.
-- **`Infrastructure`** referencia solo a `Domain` (aún no necesita `Application`).
-- **`Cli`** referencia a los tres.
-- **`TmCompiler.Tests`** referencia a `Domain` y `Application`.
+```
+Tempo.Cli ──► Tempo.Language          Tempo.Language.Tests ──► Tempo.Language
+```
 
-### `TmCompiler.Domain/Lexical/` — modelos léxicos
+| Carpeta | Contenido |
+|---|---|
+| `Syntax/` | `ILexer`/`Lexer`, `IToken`/`Token`/`TokenType`, `LexerException`, `IParser`/`Parser`, `ParserException` y el AST: 33 `record` (bases `AstNode`, `ExpressionNode`, `StatementNode`). |
+| `Symbols/` | Modelo de tipos y símbolos: `TmType` (record con igualdad estructural), `TypeKind`, `TypeNameParser` (único punto que interpreta nombres como `score<sample>`), `FunctionSymbol`, `VariableSymbol`, `SymbolKind`. |
+| `Binding/` | Análisis semántico (§5): `SemanticAnalyzer` (orquestador), `FunctionSignatureCollector` (primera pasada), `StatementAnalyzer`, `ExpressionTypeResolver`, `ReturnPathAnalyzer`, `ConstantExpressionEvaluator`; `SymbolTable`/`Scope`, `DeclarationResult`/`DeclarationStatus`; reglas de tipos `OperatorRuleTable`/`OperatorSignature`, `TypeCompatibility`. |
+| `Diagnostics/` | `Diagnostic` (bloque de cinco campos de la §7.1), `DiagnosticBag`, `DiagnosticSeverity`, `DiagnosticCodes` y `DiagnosticCatalog` (títulos de las tablas §7.2 y §7.4). |
+| `Evaluation/` | Intérprete: `Interpreter`, `StatementExecutor`, `ExpressionEvaluator`, `FunctionInvoker`/`FunctionRegistry`, `ReturnSignal`; modelo de ejecución `RuntimeValue`/`RuntimeValueKind`, `RuntimeSequence`, `RuntimeScore`, `RuntimeEnvironment`, `RuntimeVariable`, `RuntimeCallFrame`/`RuntimeCallTracker`; `TmRuntimeException` con `RuntimeErrorCodes` (`R001`–`R007`); puertos de E/S `IRuntimeInput`/`IRuntimeOutput`. |
+| `IO/` | Reportes de texto para hosts: `LexerDiagnosticReporter` (tabla de tokens), `AstDiagnosticReporter` (árbol), `SemanticDiagnosticReporter` (delega en `Diagnostic.ToStandardFormat`). |
+
+Reglas de diseño:
+
+- **La biblioteca no conoce a ningún host.** La E/S del programa TM entra por
+  `IRuntimeInput`/`IRuntimeOutput`. Las implementaciones de consola viven en
+  `Tempo.Cli`.
+- **Errores según la fase.** El lexer y el parser **lanzan** (`LexerException`,
+  `ParserException`) al primer error. El análisis semántico **no lanza**:
+  acumula los `Diagnostic` en un `DiagnosticBag` y continúa, así una ejecución
+  reporta todos los problemas. El intérprete lanza `TmRuntimeException` con un
+  código `R###`.
+- **Nullable.** El proyecto usa `<Nullable>annotations</Nullable>`. Admite las
+  anotaciones `?` de `Evaluation/` y el resto de carpetas, que no las declaran,
+  sin emitir advertencias de nulabilidad.
+
+### `Syntax/` — modelos léxicos
 
 | Archivo | Qué es |
 |---|---|
@@ -49,13 +70,10 @@ TmCompiler.Cli  ──►  TmCompiler.Application  ──►  TmCompiler.Domain
 | `Token.cs` | `readonly record struct Token(...)` que implementa `IToken`. Struct inmutable para minimizar asignaciones en heap al tokenizar fuentes grandes. `ToString()` da `[Tipo] 'lexema' (L, C)`. |
 | `LexerException.cs` | `sealed` : `Exception` con `FileName`/`Line`/`Column`. `ToStandardFormat(code, description, suggestion)` produce el bloque de error `[ERROR E###]` de la §7 de la especificación. |
 
-Las carpetas `Syntactic/` (AST) y `Semantic/` (tabla de símbolos) existen en la
-estructura pero están vacías.
-
-### `TmCompiler.Application/Lexing/` — el Lexer
+### `Syntax/` — el Lexer
 
 `ILexer` expone un único método: `IEnumerable<Token> Tokenize()`. Aplica DIP: el
-`Cli`, el futuro parser y el IDE dependen de la abstracción, no de la clase.
+`Parser`, `Tempo.Cli` y el futuro IDE dependen de la abstracción, no de la clase.
 
 `Lexer` es `sealed`. Diseño:
 
@@ -85,23 +103,35 @@ estructura pero están vacías.
 - **Comentarios**: línea `# ...` y bloque `## ... ##` (no anidable; EOF sin cerrar
   el bloque → `LexerException`).
 
-### `TmCompiler.Infrastructure/`
+## `Tempo.Cli` — host de consola
 
-`LexerDiagnosticReporter` (estático): `GenerateTokenReport(tokens, fileName)`
-devuelve una tabla de texto `Token Type | Lexeme | Location` para depuración. SRP:
-separa generar tokens de presentarlos.
+Contiene `Program.cs` (top-level statements) y los adaptadores de consola
+`ConsoleRuntimeInput` y `ConsoleRuntimeOutput`. Se invoca con
+`<archivo.tm|archivo.tmpr> [--tokens]` y hace lo siguiente:
 
-### `TmCompiler.Cli/Program.cs`
+1. Lee el archivo y lo tokeniza. Con `--tokens` imprime la tabla de
+   `LexerDiagnosticReporter`.
+2. Lo parsea e imprime el árbol con `AstDiagnosticReporter`.
+3. Corre `SemanticAnalyzer` e imprime los diagnósticos con
+   `SemanticDiagnosticReporter`. Si hay errores, termina con código de salida 1.
+4. Solo si el archivo es `.tmpr` (los `.tm` son módulos sin punto de entrada),
+   ejecuta el programa con `Interpreter` sobre la E/S de consola.
 
-Top-level statements. `TmCompiler.Cli <archivo.tm>` → lee el archivo, corre el
-`Lexer`, imprime el reporte de `LexerDiagnosticReporter`. Es un arnés temporal
-para probar el pipeline sin `TmIde`; se ampliará con parser y análisis semántico
-cuando existan.
+Los errores léxicos y sintácticos se imprimen con el bloque de la §7 y el
+código genérico `E000`. Los errores de ejecución se imprimen como
+`R### (línea N): mensaje`. En todos los casos, el código de salida es 1.
+
+## `Tempo.Language.Tests`
+
+Un único proyecto xUnit. Sus carpetas reflejan las de la biblioteca: `Syntax/`,
+`Symbols/`, `Binding/` (incluye `SemanticTestHarness`), `Diagnostics/` y
+`Evaluation/` (incluye los programas canónicos de la especificación). Los
+namespaces siguen el patrón `Tempo.Language.Tests.<Carpeta>`.
 
 ## `TmIde` — IDE gráfico (WPF)
 
-Proyecto **WPF SDK-style** sobre `net10.0-windows`. Hoy es **esqueleto visual**:
-no referencia a `TmCompiler.*` todavía.
+Proyecto **WPF SDK-style** sobre `net10.0-windows`. Es un **esqueleto visual**:
+no referencia a `Tempo.Language`.
 
 - **MVVM con `CommunityToolkit.Mvvm`** (`[ObservableProperty]` / `[RelayCommand]`).
   `ViewModelBase : ObservableObject`; los ViewModels que generan comandos son
@@ -152,7 +182,7 @@ no referencia a `TmCompiler.*` todavía.
 | Archivo | Función |
 |---|---|
 | [`global.json`](../global.json) | Fija el SDK de .NET en `10.0.400`, `rollForward: latestFeature`, sin prerelease. |
-| [`Directory.Build.props`](../Directory.Build.props) | Props para **todos** los proyectos: `LangVersion=latest`, `Nullable=enable` (los de `TmCompiler` lo sobrescriben a `disable`), `ImplicitUsings=enable`, `AnalysisLevel=latest-Recommended`, `EnforceCodeStyleInBuild=true`, `TreatWarningsAsErrors=true`, `CodeAnalysisTreatWarningsAsErrors=false`. |
+| [`Directory.Build.props`](../Directory.Build.props) | Props para **todos** los proyectos: `LangVersion=latest`, `Nullable=enable` (`Tempo.Language`, `Tempo.Cli` y `Tempo.Language.Tests` lo sobrescriben a `annotations`), `ImplicitUsings=enable`, `AnalysisLevel=latest-Recommended`, `EnforceCodeStyleInBuild=true`, `TreatWarningsAsErrors=true`, `CodeAnalysisTreatWarningsAsErrors=false`. |
 | [`Directory.Packages.props`](../Directory.Packages.props) | Central Package Management: `CommunityToolkit.Mvvm 8.4.2`; para tests `Microsoft.NET.Test.Sdk 17.11.1`, `xunit 2.9.2`, `xunit.runner.visualstudio 2.8.2`, `coverlet.collector 6.0.2`. Los `.csproj` referencian sin `Version`. |
 | [`.editorconfig`](../.editorconfig) | Estilo + nomenclatura C#. Ver [`CONVENTIONS.md`](CONVENTIONS.md). |
 
@@ -160,24 +190,22 @@ no referencia a `TmCompiler.*` todavía.
 
 ```powershell
 dotnet build                                   # compila todo; el estilo roto rompe el build
-dotnet test                                    # corre TmCompiler.Tests (xUnit)
-dotnet run --project src/TmCompiler/TmCompiler.Cli -- ruta/al/archivo.tm
+dotnet test                                    # corre Tempo.Language.Tests (xUnit)
+dotnet run --project src/Tempo.Cli -- samples/prueba-correcta.tmpr [--tokens]
 ```
 
 `TmIde` requiere Windows (`net10.0-windows`, `UseWPF`).
 
 ## Hoja de ruta (no implementado)
 
-- **Parser** de TM → AST en `TmCompiler.Domain/Syntactic/`, orquestado desde
-  `TmCompiler.Application/Parsing/`. La especificación (EBNF sintáctico, §3) es la
-  referencia autoritativa.
-- **Análisis semántico**: tabla de símbolos y sistema de tipos en
-  `TmCompiler.Domain/Semantic/` + `TmCompiler.Application/Analysis/`.
-- **Cablear `TmIde` al compilador**: `ProjectReference` a `TmCompiler.*` y consumir
-  `ILexer` (y luego el parser) desde los ViewModels; volcar diagnósticos al panel
-  inferior.
-- **Reemplazar el editor placeholder** por AvalonEdit con resaltado de sintaxis TM.
-- **`TmInterpreter`** y **`TmSystemProject`**: se dividirán en las mismas capas
-  (`Domain` / `Application` / `Infrastructure`) que `TmCompiler` cuando arranque su
-  implementación.
-- **Migrar `TmCompiler.*` a `<Nullable>enable</Nullable>`**.
+- **Fachada de compilación** al estilo `Compilation` de Roslyn/Minsk: un punto de
+  entrada único que encadene `Lexer` → `Parser` → `SemanticAnalyzer` →
+  `Interpreter`, para que los hosts no orquesten las fases a mano.
+- **Proyectos multiarchivo**: `SemanticAnalyzer` acepta firmas importadas;
+  falta que `Tempo.Cli` resuelva los `import`.
+- **Cablear `TmIde` al lenguaje**: añadir un `ProjectReference` a
+  `Tempo.Language`, consumir el pipeline desde los ViewModels y volcar los
+  diagnósticos al panel inferior.
+- **Editor con AvalonEdit** y resaltado de sintaxis TM en `TmIde`.
+- **`<Nullable>enable</Nullable>` en `Tempo.Language`**, con anotaciones de
+  nulabilidad en todas sus carpetas.

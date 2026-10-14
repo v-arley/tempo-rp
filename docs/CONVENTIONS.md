@@ -9,8 +9,7 @@ verifica **en compilación** vía [`.editorconfig`](../.editorconfig) +
 - `TreatWarningsAsErrors` es `true`, así que esos *warnings* de estilo **rompen el
   build**.
 - `CodeAnalysisTreatWarningsAsErrors` es `false`: los diagnósticos de los
-  analizadores (`CAxxxx`) quedan solo como advertencia, para no bloquear el build
-  por hallazgos preexistentes ajenos a la iteración en curso.
+  analizadores (`CAxxxx`) quedan solo como advertencia y no bloquean el build.
 
 No hace falta un linter aparte: `dotnet build` es la verificación.
 
@@ -27,7 +26,7 @@ Cada fila corresponde a una `dotnet_naming_rule` de [`.editorconfig`](../.editor
 
 | Elemento | Estilo | Ejemplo (del repo) |
 |---|---|---|
-| Namespace, clase, struct, enum, delegate | `PascalCase` | `TmCompiler.Domain.Lexical`, `Lexer`, `TokenType` |
+| Namespace, clase, struct, enum, delegate | `PascalCase` | `Tempo.Language.Syntax`, `Lexer`, `TokenType` |
 | Interfaz | `PascalCase` con prefijo `I` | `ILexer`, `IToken`, `IThemeService` |
 | Método, propiedad, evento (público o no-privado) | `PascalCase` | `Tokenize()`, `Current`, `Toggle()` |
 | Campo constante (`const`) | `PascalCase` | `ThemeDictionaryMarker` en `ThemeService` |
@@ -35,7 +34,7 @@ Cada fila corresponde a una `dotnet_naming_rule` de [`.editorconfig`](../.editor
 | Campo privado estático | `_camelCase` | `_hostWindow` en `TitleMenuBarView` |
 | Parámetro, variable local | `camelCase` | `source`, `fileName`, `startLine` |
 | Parámetro de tipo genérico | `PascalCase` con prefijo `T` | `TResult` |
-| Método asíncrono | `PascalCase` + sufijo `Async` | (aún no hay ninguno en el repo) |
+| Método asíncrono | `PascalCase` + sufijo `Async` | (no hay ninguno en el repo) |
 
 > **Excepción vigente en el código:** las tablas de búsqueda `private static
 > readonly` que actúan como constante lógica se nombran en `PascalCase`, igual que
@@ -58,8 +57,11 @@ Cada fila corresponde a una `dotnet_naming_rule` de [`.editorconfig`](../.editor
 - **Un tipo público por archivo**, y el nombre de archivo coincide exactamente con
   el tipo (`Lexer.cs` → `sealed class Lexer`; `MainWindowViewModel.cs` →
   `sealed partial class MainWindowViewModel`).
-- **`namespace` con ámbito de archivo** (`namespace TmCompiler.Application.Lexing;`),
+- **`namespace` con ámbito de archivo** (`namespace Tempo.Language.Syntax;`),
   no con bloque `{ }`. Lo exige `csharp_style_namespace_declarations = file_scoped`.
+- **El namespace coincide con la carpeta** (modelo Roslyn/Minsk):
+  `src/Tempo.Language/Binding/` → `Tempo.Language.Binding`;
+  `tests/Tempo.Language.Tests/Syntax/` → `Tempo.Language.Tests.Syntax`.
 - **Llaves en línea propia** (estilo Allman), y **siempre llaves** aunque el cuerpo
   sea de una línea (`csharp_prefer_braces = true`).
 - **Sin `this.`** para cualificar campos/propiedades/métodos/eventos
@@ -71,10 +73,12 @@ Cada fila corresponde a una `dotnet_naming_rule` de [`.editorconfig`](../.editor
 
 ## Nullable
 
-- `TmIde` (WPF, `net10.0-windows`) nace con `<Nullable>enable</Nullable>` (heredado
-  de `Directory.Build.props`).
-- Los cuatro proyectos de `TmCompiler` (`net8.0`) declaran `<Nullable>disable</Nullable>`
-  de forma explícita en su `.csproj`. Migrarlos a `enable` es una tarea aparte.
+- `TmIde` (WPF, `net10.0-windows`) usa `<Nullable>enable</Nullable>`, el valor
+  de `Directory.Build.props`.
+- `Tempo.Language`, `Tempo.Cli` y `Tempo.Language.Tests` (`net8.0`) declaran
+  `<Nullable>annotations</Nullable>`. El código de `Evaluation/` usa anotaciones
+  `?` y el del resto de carpetas no las declara. El contexto `annotations`
+  admite ambos estilos y no emite advertencias de nulabilidad.
 
 ## Patrones de las librerías usadas (no son "excepciones", es cómo funcionan)
 
@@ -108,12 +112,16 @@ MainWindowViewModel : ViewModelBase`).
 el nombre exacto en `PascalCase` de la propiedad generada. Cambiar el estilo de
 nomenclatura de las propiedades rompe los bindings de los `.xaml`.
 
-## Pruebas (`TmCompiler.Tests`)
+## Pruebas (`Tempo.Language.Tests`)
 
+- Las carpetas reflejan las de la biblioteca (`Syntax/`, `Symbols/`, `Binding/`,
+  `Diagnostics/`, `Evaluation/`).
 - Nombres de test con el patrón `Metodo_Escenario_ResultadoEsperado`
   (`Tokenize_EmptySource_ReturnsOnlyEndOfFile`). El proyecto de tests silencia
-  `CA1707` (`<NoWarn>$(NoWarn);CA1707</NoWarn>`) precisamente para permitir los
-  guiones bajos en esos nombres.
+  `CA1707` precisamente para permitir los guiones bajos en esos nombres.
+- También silencia `xUnit1012`. Con `Nullable=annotations`, esa regla marcaría
+  los `[InlineData(null)]` sobre parámetros `string`, que las pruebas usan para
+  cubrir las entradas nulas.
 - Framework: xUnit (`[Fact]` / `[Theory]` + `[InlineData]`).
 
 ## Estilo de archivos (`.editorconfig`)
