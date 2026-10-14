@@ -19,8 +19,8 @@ estructura de bloques explicita mediante delimitadores visuales.
 
 | Extension | Proposito | Reglas |
 | --- | --- | --- |
-| `.tm` | Archivo fuente estandar | Contiene funciones, variables globales y sentencias. Puede ser importado por otros archivos. |
-| `.tmpr` | Archivo principal del proyecto | Contiene obligatoriamente la unica sentencia `session` del proyecto. Es el punto de entrada de ejecucion. Un proyecto solo puede tener un archivo `.tmpr`. |
+| `.tm` | Modulo | Contiene importaciones y funciones. No puede contener `session` ni `tempo`. Puede ser importado por otros archivos. |
+| `.tmpr` | Archivo principal del proyecto | Contiene obligatoriamente la unica sentencia `session` del proyecto y, opcionalmente, la declaracion `tempo`. Es el punto de entrada de ejecucion. Un proyecto solo puede tener un archivo `.tmpr`. |
 
 ### 1.2 Codificacion
 
@@ -76,7 +76,8 @@ compose    session    output     input      mix
 loop       repeat     if         else       ret
 import     const      sequence   score      true
 false      silence    sample     wave       tone
-phrase     signal     void
+phrase     signal     void       case       default
+tempo      pulse
 ```
 
 #### 2.4.2 Identificadores
@@ -190,11 +191,15 @@ null_literal = "silence" ;
 
 ```ebnf
 
-(* PROGRAMA                                                     *)
-program        = { import_stmt }, { function_decl }, session ;
+(* ARCHIVOS                                                     *)
+project_file   = { import_stmt }, [ tempo_decl ], { function_decl }, session ;  (* .tmpr *)
+module_file    = { import_stmt }, { function_decl } ;                           (* .tm   *)
 
 (* IMPORTACIONES                                                *)
 import_stmt    = "import", string_literal, ";" ;
+
+(* RITMO DEL PROYECTO (seccion 11)                              *)
+tempo_decl     = "tempo", integer_literal, ";" ;
 
 (* PUNTO DE ENTRADA                                             *)
 session        = "session", block ;
@@ -218,6 +223,7 @@ statement      = var_decl
                | loop_statement
                | repeat_statement
                | ret_stmt
+               | pulse_stmt
                | expr_stmt
                ;
 
@@ -252,6 +258,9 @@ repeat_statement = "repeat", "[", expression, "]", block ;
 
 (* RETORNO                                                      *)
 ret_stmt       = "ret", [ expression ], ";" ;
+
+(* PULSO VISUAL (seccion 11)                                    *)
+pulse_stmt     = "pulse", "[", expression, "]", ";" ;
 
 (* EXPRESIONES                                                  *)
 expression     = or_expr ;
@@ -307,6 +316,13 @@ identifier     = letter, { letter | digit | "_" } ;
 letter         = "a" .. "z" | "A" .. "Z" ;
 digit          = "0" .. "9" ;
 ```
+
+**Tipo de archivo.** La extension determina la produccion que aplica:
+`project_file` para `.tmpr` y `module_file` para `.tm`. El analizador sintactico
+acepta la union de ambas (`session` y `tempo` opcionales). Las reglas propias de
+cada tipo de archivo se verifican en el analisis semantico: E011 (session ausente
+o multiple), E015 (`.tm` con `session`) y E041 (`tempo` fuera del `.tmpr` o
+duplicado).
 
 ### 3.2 Resolucion de ambiguedades sintacticas
 
@@ -519,11 +535,11 @@ asignacion valida o un incremento/decremento (`++`/`-`).
 - **Todas las funciones son publicas por defecto.** No existen modificadores
 de visibilidad. Cualquier funcion definida en un archivo `.tm` puede ser
 invocada desde cualquier otro archivo del mismo proyecto tras importarlo.
-- **Variables globales:** Las variables globales declaradas en un archivo `.tm`
-son visibles en todos los archivos del proyecto despues de la importacion.
-Sin embargo, se recomienda limitar el uso de variables globales.
-- **No existen namespaces.** Todos los identificadores de funciones y variables
-globales comparten un unico espacio de nombres por proyecto.
+- **No existen variables globales.** Las variables y constantes solo pueden
+declararse dentro de un bloque (`session`, funciones y sentencias de control).
+Lo unico que se comparte entre archivos son las funciones.
+- **No existen namespaces.** Todos los nombres de funciones comparten un unico
+espacio de nombres por proyecto.
 
 ---
 
@@ -652,10 +668,15 @@ el siguiente formato:
 ```
 [<TIPO> <CODIGO>] <Titulo del error>
 Archivo: <nombre_archivo.ext>
-Linea: <numero_linea>
-Descripcion: <explicacion detallada del error>
-Posible solucion: <sugerencia para corregir el error>
+Línea: <numero_linea>
+Descripción: <explicacion detallada del error>
+Posible solución: <sugerencia para corregir el error>
 ```
+
+Las etiquetas `Archivo:`, `Línea:`, `Descripción:` y `Posible solución:` se
+escriben literalmente como se muestran, con tilde. El formato es el mismo para
+los errores lexicos, sintacticos, semanticos y de ejecucion, y para las
+advertencias.
 
 **Tipos de mensaje:**
 - `[ERROR E###]` : Error de compilacion que impide la ejecucion.
@@ -668,12 +689,14 @@ un posible problema.
 ```
 [ERROR E003] Tipo incompatible en asignacion
 Archivo: operaciones.tm
-Linea: 15
-Descripcion: No se puede asignar un valor de tipo 'wave' a una variable de tipo 'sample'.
-Posible solucion: Use una funcion de conversion o cambie el tipo de la variable.
+Línea: 15
+Descripción: No se puede asignar un valor de tipo 'wave' a una variable de tipo 'sample'.
+Posible solución: Use una funcion de conversion o cambie el tipo de la variable.
 ```
 
 ### 7.2 Errores de compilacion (tiempo de analisis)
+
+#### 7.2.1 Errores semanticos
 
 | Codigo | Descripcion |
 | --- | --- |
@@ -697,6 +720,47 @@ Posible solucion: Use una funcion de conversion o cambie el tipo de la variable.
 | E018 | Constante inicializada con expresion no constante |
 | E019 | Matriz con filas de distinto tamano |
 | E020 | Forward reference a funcion no resuelta |
+
+#### 7.2.2 Errores lexicos
+
+El analisis lexico se detiene en el primer error.
+
+| Codigo | Descripcion | Casos que cubre |
+| --- | --- | --- |
+| E021 | Caracter no valido | Caracter fuera del alfabeto lexico de TM |
+| E022 | Literal de cadena no cerrado | Falta `"` antes del fin de linea o del fin de archivo |
+| E023 | Literal de caracter mal formado | Vacio, mas de un caracter, salto de linea o falta `'` |
+| E024 | Secuencia de escape no valida | Escape distinto de `\n`, `\t`, `\"`, `\\`, o escape incompleto |
+| E025 | Comentario de bloque no cerrado | Falta `##` antes del fin de archivo |
+| E026 | Literal numerico mal formado | Falta el digito despues del punto decimal |
+
+#### 7.2.3 Errores sintacticos
+
+El analisis sintactico se detiene en el primer error.
+
+| Codigo | Descripcion | Casos que cubre |
+| --- | --- | --- |
+| E027 | Se esperaba `;` al final de la sentencia | Cualquier sentencia, importacion o declaracion sin terminador |
+| E028 | Delimitador de bloque esperado | Falta `>` al iniciar o `<` al cerrar un bloque, o delimitadores invertidos |
+| E029 | Condicion sin corchetes | Falta `[` o `]` en `if`, `else if`, `repeat` o `loop` |
+| E030 | Declaracion de funcion mal formada | Falta el tipo de retorno, `:`, `compose` o el nombre de la funcion |
+| E031 | Lista de parametros mal formada | Falta `(` o `)`, o un parametro sin tipo o sin nombre |
+| E032 | Se esperaba una expresion | Operando ausente o token que no puede iniciar una expresion |
+| E033 | Agrupacion sin cerrar | Falta `)` o `]` en una expresion, llamada, indexacion o literal de coleccion |
+| E034 | Declaracion de variable o constante mal formada | Falta el identificador o el `=` en una declaracion |
+| E035 | Sentencia de entrada/salida mal formada | Falta `>>` en `output`, o `<<` o el identificador en `input` |
+| E036 | Cabecera de `loop` mal formada | La cabecera no sigue `[ declaracion; condicion; actualizacion ]` |
+| E037 | Sentencia `mix` mal formada | Falta `{`, `}`, `:` tras `case`/`default`, o hay contenido fuera de un caso |
+| E038 | Sentencia no valida | Token que no inicia ninguna sentencia, o expresion distinta de una llamada usada como sentencia |
+| E039 | Elemento inesperado en el nivel superior | Contenido distinto de `import`, `tempo`, funcion o `session` fuera de un bloque |
+
+#### 7.2.4 Errores de la innovacion (seccion 11)
+
+| Codigo | Descripcion |
+| --- | --- |
+| E040 | Tempo fuera de rango (20 a 300 BPM) |
+| E041 | Declaracion `tempo` no permitida (fuera del `.tmpr` o duplicada) |
+| E042 | Intensidad de `pulse` no numerica |
 
 ### 7.3 Errores en tiempo de ejecucion
 
@@ -932,6 +996,8 @@ session >
 | `const` | Declarar variable inmutable | Constante | `const sample MAX = 100;` |
 | `true` | Literal booleano verdadero | Valor signal | `signal ok = true;` |
 | `false` | Literal booleano falso | Valor signal | `signal ok = false;` |
+| `tempo` | Ritmo del proyecto en BPM | Declaracion en el `.tmpr` (seccion 11) | `tempo 120;` |
+| `pulse` | Pulso del visualizador | Emitir una rafaga de particulas (seccion 11) | `pulse [nota * 10];` |
 
 ---
 
@@ -1033,7 +1099,7 @@ session >
 <
 ```
 
-*Error esperado:* E### - Se esperaba `;` al final de la sentencia.
+*Error esperado:* E027 - Se esperaba `;` al final de la sentencia.
 
 **Prueba S2: Delimitadores de bloque invertidos**
 
@@ -1043,7 +1109,7 @@ session <
 >
 ```
 
-*Error esperado:* E### - Se esperaba `>` para iniciar el bloque.
+*Error esperado:* E028 - Se esperaba `>` para iniciar el bloque.
 
 **Prueba S3: Condicion sin corchetes**
 
@@ -1055,7 +1121,7 @@ session >
 <
 ```
 
-*Error esperado:* E### - La condicion debe estar entre corchetes `[ ]`.
+*Error esperado:* E029 - La condicion debe estar entre corchetes `[ ]`.
 
 **Prueba S4: Funcion sin tipo de retorno**
 
@@ -1065,7 +1131,7 @@ compose funcion() >
 <
 ```
 
-*Error esperado:* E### - Se esperaba el tipo de retorno antes de `:`.
+*Error esperado:* E030 - Se esperaba el tipo de retorno antes de `:`.
 
 **Prueba S5: Matriz con filas de distinto tamano**
 
@@ -1168,74 +1234,119 @@ valide que sean notas validas, y genere una matriz de acordes.)*
 
 ---
 
-## 11. INNOVACION
+## 11. INNOVACION: VISUALIZADOR DE PARTICULAS
 
-TM reserva la siguiente extension sintactica y semantica para la caracteristica
-de innovacion del proyecto. El equipo debe implementar **al menos una** de las
-siguientes opciones (u otra propuesta original):
+El IDE de TM incluye un panel que representa el estado del proyecto con una
+animacion 3D de particulas dibujada con caracteres ASCII. El lenguaje controla
+la animacion con dos construcciones propias del entorno de produccion musical:
+`tempo`, que fija el ritmo, y `pulse`, que lanza rafagas de particulas desde el
+programa en ejecucion.
 
-### 11.1 Opcion A: Visualizacion de memoria en tiempo de ejecucion (`trace`)
+### 11.1 Panel de particulas
 
-**Sintaxis propuesta:**
+- **Representacion:** las particulas son puntos en un espacio 3D proyectados
+sobre una rejilla de caracteres monoespaciados. El caracter de cada celda
+depende de la profundidad de la particula mas cercana, de lejos a cerca:
+`" .:-=+*#%@"`.
+- **Ritmo:** la animacion late al ritmo declarado con `tempo` (11.3). Cada pulso
+(beat) produce una contraccion y expansion del conjunto de particulas.
+- **Modos:**
+    - *Edicion:* el panel muestra el estado armonico del proyecto (11.2).
+    - *Ejecucion:* mientras se ejecuta el programa, cada sentencia `pulse`
+    (11.4) agrega una rafaga sobre la animacion. Al terminar la ejecucion, el
+    panel vuelve al modo edicion.
+
+### 11.2 Estado armonico del proyecto
+
+El estado se calcula con los diagnosticos de **todos los archivos del proyecto**
+y se actualiza tras cada analisis (al editar y al compilar).
+
+| Estado | Condicion | Comportamiento de las particulas |
+| --- | --- | --- |
+| Armonia | 0 errores y 0 advertencias | Orbita ordenada con pulso estable |
+| Tension | 0 errores y 1 o mas advertencias | Vibracion y deriva irregular |
+| Disonancia | 1 o mas errores | Turbulencia; la intensidad crece con el numero de errores y alcanza su maximo con 10 |
+
+### 11.3 Declaracion `tempo`
+
+**Sintaxis:**
+
+```ebnf
+tempo_decl = "tempo", integer_literal, ";" ;
+```
+
+**Semantica estatica:**
+- Solo puede aparecer en el archivo `.tmpr`, despues de las importaciones y
+antes de las funciones.
+- Se permite como maximo una declaracion por proyecto. Una declaracion en un
+`.tm`, o una segunda declaracion, produce E041.
+- El valor debe estar entre 20 y 300 BPM, ambos incluidos. Fuera de ese rango
+produce E040.
+- Si el proyecto no declara `tempo`, se usa 120 BPM.
+
+**Semantica dinamica:** fija la frecuencia de pulso del panel. No afecta a la
+ejecucion del programa.
+
+### 11.4 Sentencia `pulse`
+
+**Sintaxis:**
+
+```ebnf
+pulse_stmt = "pulse", "[", expression, "]", ";" ;
+```
+
+**Semantica estatica:**
+- Puede aparecer en cualquier bloque donde se admite una sentencia.
+- La expresion debe ser de tipo `sample` o `wave`. Cualquier otro tipo produce
+E042.
+
+**Semantica dinamica:**
+- Se evalua la expresion. Los errores de ejecucion de la expresion (por ejemplo,
+R001) se reportan como en cualquier otra sentencia.
+- La intensidad es el valor obtenido, limitado al rango [0, 100]. Con intensidad
+0 no se emite ninguna rafaga; con intensidad mayor que 0 se emite una rafaga
+cuyo tamano es proporcional a la intensidad.
+- `pulse` no modifica variables ni escribe en la salida estandar. Fuera del IDE
+(linea de comandos) evalua la expresion y no tiene efecto visible.
+
+### 11.5 Ejemplos
+
+**Programa valido:** un arpegio de tres notas por cada valor de la secuencia.
 
 ```
-trace >
-    # Bloque de codigo a trazar
+tempo 96;
+
+void : compose acorde(sample raiz) >
+    pulse [raiz];
+    pulse [raiz + 4];
+    pulse [raiz + 7];
+    ret;
 <
-```
 
-**Comportamiento:** Durante la ejecucion de un bloque `trace`, el interprete
-muestra en un panel especial del IDE:
-- Valor de todas las variables locales al inicio y al final del bloque.
-- Cambios de valor en cada sentencia.
-- Stack trace de llamadas a funciones dentro del bloque.
-- Representacion visual de `sequence` y `score` como tablas/graficos.
-
-**Validaciones:**
-- `trace` solo puede usarse dentro de funciones o `session`.
-- No se permite anidamiento de bloques `trace`.
-- Genera advertencia W005 si se usa en codigo de produccion.
-
-### 11.2 Opcion B: Asistencia de programacion (`suggest`)
-
-**Sintaxis propuesta:**
-
-```
-suggest tipo : compose nombre(params) >
-    # Cuerpo sugerido por el IDE
-<
-```
-
-**Comportamiento:** El IDE puede generar automaticamente el cuerpo de una
-funcion marcada con `suggest` basandose en:
-- El tipo de retorno.
-- Los nombres y tipos de los parametros.
-- Funciones similares ya definidas en el proyecto.
-
-### 11.3 Opcion C: Breakpoints semanticos (`break`)
-
-**Sintaxis propuesta:**
-
-```
 session >
-    sample x = 0;
-    repeat [x < 100] >
-        x++;
-        break [x == 50];  # Pausa la ejecucion cuando x llega a 50
+    sequence<sample> notas = [40, 55, 70];
+    loop [sample i = 0; i < notas.length(); i++] >
+        acorde(notas[i]);
     <
 <
 ```
 
-**Comportamiento:** La sentencia `break [condicion]` actua como un breakpoint
-programable. Cuando la condicion se evalua como `true`, la ejecucion se pausa
-y el IDE muestra el estado actual de todas las variables, permitiendo al usuario
-continuar paso a paso o reanudar la ejecucion.
+**Errores:**
 
-**Validaciones:**
-- La condicion debe ser de tipo `signal`.
-- Solo puede usarse dentro de bloques (funciones, `session`, ciclos).
+```
+tempo 500;                  # E040: fuera del rango 20 a 300
 
-### 11.4 Requisitos de la innovacion
+session >
+    pulse ["fuerte"];       # E042: la intensidad debe ser sample o wave
+<
+```
+
+```
+# utilidades.tm
+tempo 120;                  # E041: tempo solo puede declararse en el .tmpr
+```
+
+### 11.6 Requisitos de la innovacion
 
 - Debe tener utilidad practica para el programador.
 - Debe estar integrada con el IDE (no solo en linea de comandos).
