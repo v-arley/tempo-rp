@@ -34,13 +34,16 @@ tempo-rp/
 │   ├── ARQUITECTURA.md
 │   └── CONVENTIONS.md
 ├── samples/                             # programas TM de ejemplo (prueba-*.tmpr)
+│   └── importaciones/                   # proyecto multiarchivo: principal.tmpr + utilidades.tm
 ├── src/
 │   ├── Assets/                          # fuentes .ttf + iconos .svg compartidos (JetBrains/IBM Plex Mono)
 │   ├── Tempo.Language/                  # Biblioteca: TODO el lenguaje, organizada por fase
-│   │   ├── Diagnostics/                 # Diagnostic, DiagnosticBag, catálogo y códigos (§7)
-│   │   ├── Syntax/                      # Lexer, Parser, Token/TokenType, AST (33 nodos), *Exception
+│   │   ├── Compilation.cs               # fachada: compila un proyecto y lo ejecuta
+│   │   ├── Projects/                    # TempoProject, ImportGraph, reglas de proyecto (§6.6)
+│   │   ├── Diagnostics/                 # Diagnostic, DiagnosticBag, ProjectDiagnostics, catálogo y códigos (§7)
+│   │   ├── Syntax/                      # SyntaxTree, Lexer, Parser, Token/TokenType, AST (33 nodos), *Exception
 │   │   ├── Symbols/                     # TmType, TypeKind, TypeNameParser, FunctionSymbol, VariableSymbol
-│   │   ├── Binding/                     # SemanticAnalyzer, analizadores, SymbolTable/Scope, reglas de tipos
+│   │   ├── Binding/                     # ProjectAnalyzer, SemanticAnalyzer, analizadores, SymbolTable/Scope, reglas de tipos
 │   │   ├── Evaluation/                  # Interpreter, ejecutores, RuntimeValue/Environment, errores de ejecución
 │   │   └── IO/                          # reportes de texto: tokens, AST y diagnósticos
 │   ├── Tempo.Cli/                       # Host de consola: pipeline completo + E/S por consola
@@ -56,7 +59,8 @@ tempo-rp/
         ├── Symbols/                     #   TmTypeTests, TypeNameParserTests
         ├── Binding/                     #   análisis semántico (+ SemanticTestHarness)
         ├── Diagnostics/                 #   DiagnosticTests
-        └── Evaluation/                  #   intérprete y programas canónicos
+        ├── Evaluation/                  #   intérprete y programas canónicos
+        └── Projects/                    #   proyectos multiarchivo (I1–I3, C1) + ProjectWorkspace
 ```
 
 `Tempo.Language` sigue el modelo de **Roslyn/Minsk** ("el compilador como
@@ -64,13 +68,14 @@ API"): un único proyecto con todo el lenguaje, dividido en carpetas y namespace
 según la **fase del pipeline** (texto → `Syntax` → `Binding` → `Evaluation`).
 Los namespaces coinciden con la carpeta
 (`Tempo.Language.Syntax`, `Tempo.Language.Binding`, …). Los hosts, como
-`Tempo.Cli`, consumen la biblioteca; la biblioteca no depende de
-ningún host.
+`Tempo.Cli`, consumen la biblioteca a través de la fachada `Compilation`; la
+biblioteca no depende de ningún host.
 
 ```powershell
 dotnet build                                            # compila toda la solución
 dotnet test                                             # corre Tempo.Language.Tests
 dotnet run --project src/Tempo.Cli -- samples/prueba-correcta.tmpr [--tokens]
+dotnet run --project src/Tempo.Cli -- samples/importaciones   # proyecto multiarchivo (directorio)
 ```
 
 `TmIde` es un proyecto **WPF SDK-style sobre `net10.0-windows`**. Patrón MVVM con

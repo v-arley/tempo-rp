@@ -25,13 +25,18 @@ API": **un solo proyecto**, organizado en carpetas según la **fase del
 pipeline**. Cada carpeta es un namespace (`Tempo.Language.<Carpeta>`).
 
 ```
-texto fuente ─► Syntax (Lexer → tokens → Parser → AST)
+                Compilation  (fachada: un proyecto entra, diagnósticos y ejecución salen)
+                   │
+directorio ──► Projects (TempoProject → ImportGraph → ProjectRules)
+o archivo         │
+                   ▼
+                Syntax (SyntaxTree por archivo: Lexer → tokens → Parser → AST)
                    │
                    ▼
-                Binding (SemanticAnalyzer → diagnósticos)  ◄── Symbols (tipos y símbolos)
-                   │                                       ◄── Diagnostics (formato §7)
+                Binding (ProjectAnalyzer → SemanticAnalyzer por archivo)  ◄── Symbols (tipos y símbolos)
+                   │                                                      ◄── Diagnostics (formato §7)
                    ▼
-                Evaluation (Interpreter ejecuta el AST)
+                Evaluation (Interpreter ejecuta el AST de entrada con sus importaciones)
 ```
 
 ```
@@ -40,10 +45,12 @@ Tempo.Cli ──► Tempo.Language          Tempo.Language.Tests ──► Tempo
 
 | Carpeta | Contenido |
 |---|---|
-| `Syntax/` | `ILexer`/`Lexer`, `IToken`/`Token`/`TokenType`, `LexerException`, `IParser`/`Parser`, `ParserException` y el AST: 33 `record` (bases `AstNode`, `ExpressionNode`, `StatementNode`). |
+| raíz | `Compilation`: fachada del compilador. `Compilation.FromPath(ruta)` analiza un proyecto completo; `IsExecutable` y `Run(entrada, salida)` lo ejecutan. |
+| `Projects/` | `TempoProject` (se abre desde un directorio, con las reglas de §6.6, o desde un archivo, que se completa con lo que importa); `ImportGraph` (resuelve `import`: E014, detecta ciclos: E012, y da el orden de dependencias); reglas estructurales con el patrón Specification: `IProjectRule`, `ProjectRules.All`, `ExactlyOneProjectFileRule` (E016/E017) y `ModulesDeclareNoSessionRule` (E015). |
+| `Syntax/` | `SyntaxTree` (un archivo analizado: AST y errores léxicos o sintácticos como `Diagnostic`), `ILexer`/`Lexer`, `IToken`/`Token`/`TokenType`, `LexerException`, `IParser`/`Parser`, `ParserException` y el AST: 33 `record` (bases `AstNode`, `ExpressionNode`, `StatementNode`). |
 | `Symbols/` | Modelo de tipos y símbolos: `TmType` (record con igualdad estructural), `TypeKind`, `TypeNameParser` (único punto que interpreta nombres como `score<sample>`), `FunctionSymbol`, `VariableSymbol`, `SymbolKind`. |
-| `Binding/` | Análisis semántico (§5): `SemanticAnalyzer` (orquestador), `FunctionSignatureCollector` (primera pasada), `StatementAnalyzer`, `ExpressionTypeResolver`, `ReturnPathAnalyzer`, `ConstantExpressionEvaluator`; `SymbolTable`/`Scope`, `DeclarationResult`/`DeclarationStatus`; reglas de tipos `OperatorRuleTable`/`OperatorSignature`, `TypeCompatibility`. |
-| `Diagnostics/` | `Diagnostic` (bloque de cinco campos de la §7.1), `DiagnosticBag`, `DiagnosticSeverity`, `DiagnosticCodes` y `DiagnosticCatalog` (títulos de las tablas §7.2 y §7.4). |
+| `Binding/` | Análisis semántico (§5): `ProjectAnalyzer` (analiza cada archivo en orden de dependencias con las firmas que puede ver; reporta E013 entre archivos y W003 sobre todo el proyecto), `SemanticAnalyzer` (un archivo; E020 para llamadas a funciones de módulos no importados), `FunctionSignatureCollector` (primera pasada), `StatementAnalyzer`, `ExpressionTypeResolver`, `ReturnPathAnalyzer`, `ConstantExpressionEvaluator`; `SymbolTable`/`Scope`, `DeclarationResult`/`DeclarationStatus`; reglas de tipos `OperatorRuleTable`/`OperatorSignature`, `TypeCompatibility`. |
+| `Diagnostics/` | `Diagnostic` (bloque de cinco campos de la §7.1), `DiagnosticBag`, `ProjectDiagnostics` (diagnósticos de todos los archivos, ordenados por archivo y línea), `DiagnosticSeverity`, `DiagnosticCodes` y `DiagnosticCatalog` (títulos de las tablas §7.2 y §7.4). |
 | `Evaluation/` | Intérprete: `Interpreter`, `StatementExecutor`, `ExpressionEvaluator`, `FunctionInvoker`/`FunctionRegistry`, `ReturnSignal`; modelo de ejecución `RuntimeValue`/`RuntimeValueKind`, `RuntimeSequence`, `RuntimeScore`, `RuntimeEnvironment`, `RuntimeVariable`, `RuntimeCallFrame`/`RuntimeCallTracker`; `TmRuntimeException` con `RuntimeErrorCodes` (`R001`–`R007`); puertos de E/S `IRuntimeInput`/`IRuntimeOutput`. |
 | `IO/` | Reportes de texto para hosts: `LexerDiagnosticReporter` (tabla de tokens), `AstDiagnosticReporter` (árbol), `SemanticDiagnosticReporter` (delega en `Diagnostic.ToStandardFormat`). |
 
@@ -53,10 +60,15 @@ Reglas de diseño:
   `IRuntimeInput`/`IRuntimeOutput`. Las implementaciones de consola viven en
   `Tempo.Cli`.
 - **Errores según la fase.** El lexer y el parser **lanzan** (`LexerException`,
-  `ParserException`) al primer error. El análisis semántico **no lanza**:
-  acumula los `Diagnostic` en un `DiagnosticBag` y continúa, así una ejecución
-  reporta todos los problemas. El intérprete lanza `TmRuntimeException` con un
-  código `R###`.
+  `ParserException`) al primer error, y `SyntaxTree` los convierte en un
+  `Diagnostic` del archivo, de modo que un archivo con errores no detiene el
+  análisis de los demás. El análisis semántico **no lanza**: acumula los
+  `Diagnostic` y continúa, así una ejecución reporta todos los problemas. El
+  intérprete lanza `TmRuntimeException` con un código `R###`.
+- **Importación textual (§6.5).** El programa que ejecuta `Compilation.Run` es
+  el AST del archivo de entrada con las funciones de todos los archivos que
+  importa, directa o indirectamente (`ProgramNode with { Functions = … }`). El
+  intérprete no distingue entre un proyecto de un archivo y uno de varios.
 - **Nullable.** El proyecto usa `<Nullable>annotations</Nullable>`. Admite las
   anotaciones `?` de `Evaluation/` y el resto de carpetas, que no las declaran,
   sin emitir advertencias de nulabilidad.
@@ -107,26 +119,38 @@ Reglas de diseño:
 
 Contiene `Program.cs` (top-level statements) y los adaptadores de consola
 `ConsoleRuntimeInput` y `ConsoleRuntimeOutput`. Se invoca con
-`<archivo.tm|archivo.tmpr> [--tokens]` y hace lo siguiente:
+`<directorio|archivo.tmpr|archivo.tm> [--tokens]`:
 
-1. Lee el archivo y lo tokeniza. Con `--tokens` imprime la tabla de
-   `LexerDiagnosticReporter`.
-2. Lo parsea e imprime el árbol con `AstDiagnosticReporter`.
-3. Corre `SemanticAnalyzer` e imprime los diagnósticos con
-   `SemanticDiagnosticReporter`. Si hay errores, termina con código de salida 1.
-4. Solo si el archivo es `.tmpr` (los `.tm` son módulos sin punto de entrada),
-   ejecuta el programa con `Interpreter` sobre la E/S de consola.
+- Con un **directorio**, compila todos sus `.tm` y `.tmpr` como un proyecto
+  (§6.6).
+- Con un **archivo**, compila ese archivo y los que importa.
 
-Los errores léxicos y sintácticos se imprimen con el bloque de la §7 y el
-código genérico `E000`. Los errores de ejecución se imprimen como
-`R### (línea N): mensaje`. En todos los casos, el código de salida es 1.
+Pasos:
+
+1. Compila con `Compilation.FromPath`.
+2. Con `--tokens`, imprime la tabla de tokens del archivo de entrada
+   (`LexerDiagnosticReporter`), y después su árbol (`AstDiagnosticReporter`).
+3. Imprime un reporte de diagnósticos por archivo con
+   `SemanticDiagnosticReporter`: siempre el del archivo de entrada, y los demás
+   solo si tienen diagnósticos. Si hay errores, termina con código de salida 1.
+4. Si la entrada es un `.tmpr` con `session` (los `.tm` son módulos sin punto
+   de entrada), ejecuta el proyecto con `Compilation.Run` sobre la E/S de
+   consola.
+
+Los errores léxicos y sintácticos llevan el código genérico `E000`. Los errores
+de ejecución se imprimen como `R### (línea N): mensaje`, con código de salida 1.
 
 ## `Tempo.Language.Tests`
 
 Un único proyecto xUnit. Sus carpetas reflejan las de la biblioteca: `Syntax/`,
-`Symbols/`, `Binding/` (incluye `SemanticTestHarness`), `Diagnostics/` y
-`Evaluation/` (incluye los programas canónicos de la especificación). Los
+`Symbols/`, `Binding/` (incluye `SemanticTestHarness`), `Diagnostics/`,
+`Evaluation/` (incluye los programas canónicos de la especificación) y
+`Projects/` (pruebas canónicas I1–I3 y C1, y reglas de proyecto). Los
 namespaces siguen el patrón `Tempo.Language.Tests.<Carpeta>`.
+
+`ProjectWorkspace` escribe un proyecto en un directorio temporal a partir de sus
+archivos, lo compila contra el disco real y lo borra al terminar:
+`ProjectWorkspace.With(("principal.tmpr", "..."), ("utilidades.tm", "..."))`.
 
 ## `TmIde` — IDE gráfico (WPF)
 
@@ -192,17 +216,13 @@ no referencia a `Tempo.Language`.
 dotnet build                                   # compila todo; el estilo roto rompe el build
 dotnet test                                    # corre Tempo.Language.Tests (xUnit)
 dotnet run --project src/Tempo.Cli -- samples/prueba-correcta.tmpr [--tokens]
+dotnet run --project src/Tempo.Cli -- samples/importaciones          # proyecto multiarchivo
 ```
 
 `TmIde` requiere Windows (`net10.0-windows`, `UseWPF`).
 
 ## Hoja de ruta (no implementado)
 
-- **Fachada de compilación** al estilo `Compilation` de Roslyn/Minsk: un punto de
-  entrada único que encadene `Lexer` → `Parser` → `SemanticAnalyzer` →
-  `Interpreter`, para que los hosts no orquesten las fases a mano.
-- **Proyectos multiarchivo**: `SemanticAnalyzer` acepta firmas importadas;
-  falta que `Tempo.Cli` resuelva los `import`.
 - **Cablear `TmIde` al lenguaje**: añadir un `ProjectReference` a
   `Tempo.Language`, consumir el pipeline desde los ViewModels y volcar los
   diagnósticos al panel inferior.
