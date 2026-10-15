@@ -30,6 +30,12 @@ public sealed class ExpressionTypeResolver
     /// </summary>
     public bool HasUnresolvedImports { get; set; }
 
+    /// <summary>
+    /// Funciones de otros archivos del proyecto que este archivo no importa
+    /// (nombre → archivo que la declara). Una llamada a ellas se reporta como E020.
+    /// </summary>
+    public IReadOnlyDictionary<string, string> UnimportedFunctions { get; set; }
+
     public IReadOnlyCollection<string> UnresolvedFunctionCalls => _unresolvedCalls;
 
     public TmType Resolve(ExpressionNode expression)
@@ -195,6 +201,16 @@ public sealed class ExpressionTypeResolver
             if (HasUnresolvedImports)
             {
                 _unresolvedCalls.Add(call.Identifier);
+            }
+            else if (UnimportedFunctions is not null &&
+                    UnimportedFunctions.TryGetValue(call.Identifier, out string declaringFile))
+            {
+                _diagnostics.ReportError(
+                    DiagnosticCodes.UnimportedFunction,
+                    call.Line,
+                    $"La función '{call.Identifier}' está declarada en '{declaringFile}', " +
+                    "pero ese archivo no se importa.",
+                    $"Agregue import \"{declaringFile}\"; al inicio del archivo.");
             }
             else
             {

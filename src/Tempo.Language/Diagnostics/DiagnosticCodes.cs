@@ -20,9 +20,19 @@ public static class DiagnosticCodes
     public const string ConstantWrite = "E009";
     public const string InvalidSilenceUsage = "E010";
     public const string SessionMissingOrDuplicated = "E011";
+    public const string ImportCycle = "E012";
     public const string FunctionOverload = "E013";
+    public const string ImportNotFound = "E014";
+    public const string ModuleWithSession = "E015";
+    public const string MissingProjectFile = "E016";
+    public const string MultipleProjectFiles = "E017";
     public const string NonConstantConstantInitializer = "E018";
     public const string RaggedMatrix = "E019";
+    public const string UnimportedFunction = "E020";
+
+    // Los errores léxicos y sintácticos se emiten con un código genérico hasta
+    // que el catálogo E021-E039 (§7.2.2 y §7.2.3) esté asignado por tipo.
+    public const string LexicalOrSyntaxError = "E000";
 
     // ---- Advertencias (§7.4) ----
     public const string UnusedVariable = "W001";

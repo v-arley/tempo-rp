@@ -36,6 +36,18 @@ public sealed class SemanticAnalyzer : ISemanticAnalyzer
         _importedFunctions = importedFunctions;
     }
 
+    /// <summary>
+    /// Cuando es <c>false</c>, W003 queda a cargo del análisis de proyecto, que
+    /// conoce las llamadas hechas desde todos los archivos.
+    /// </summary>
+    public bool ReportsUninvokedFunctions { get; init; } = true;
+
+    /// <summary>
+    /// Funciones declaradas en archivos del proyecto que este archivo no importa,
+    /// con el archivo que declara cada una. Llamarlas produce E020 en lugar de E001.
+    /// </summary>
+    public IReadOnlyDictionary<string, string> UnimportedFunctions { get; init; }
+
     public SemanticAnalysisResult Analyze()
     {
         var symbols = new SymbolTable();
@@ -44,7 +56,8 @@ public sealed class SemanticAnalyzer : ISemanticAnalyzer
         {
             // Sin las firmas de los archivos importados no se puede afirmar que
             // un nombre desconocido no exista: se anota para el análisis de proyecto.
-            HasUnresolvedImports = _program.Imports.Count > 0 && _importedFunctions is null
+            HasUnresolvedImports = _program.Imports.Count > 0 && _importedFunctions is null,
+            UnimportedFunctions = UnimportedFunctions
         };
 
         var statements = new StatementAnalyzer(symbols, diagnostics, resolver);
@@ -59,7 +72,11 @@ public sealed class SemanticAnalyzer : ISemanticAnalyzer
         }
 
         AnalyzeSession(symbols, diagnostics, statements);
-        ReportUninvokedFunctions(symbols, diagnostics);
+
+        if (ReportsUninvokedFunctions)
+        {
+            ReportUninvokedFunctions(symbols, diagnostics);
+        }
 
         return new SemanticAnalysisResult(
             diagnostics.Diagnostics,

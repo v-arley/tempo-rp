@@ -1,24 +1,20 @@
 using Tempo.Cli;
-using Tempo.Language.Binding;
+using Tempo.Language;
+using Tempo.Language.Diagnostics;
 using Tempo.Language.Evaluation;
 using Tempo.Language.IO;
 using Tempo.Language.Syntax;
 
 
 // Arnés de consola del pipeline completo de TM.
-// Ejecuta análisis léxico, sintáctico y semántico.
-// Si el archivo principal es .tmpr y no existen errores,
-// ejecuta también el intérprete.
-
-// La especificación (§7.2) reserva E001-E020 para errores semánticos y deja los
-// errores léxicos y sintácticos como "E###" genérico (§10.2), sin número
-// asignado: se emiten con E000 para no colisionar con el catálogo.
-const string GenericErrorCode = "E000";
+// Compila un proyecto y, si no hay errores y la entrada es un .tmpr, lo ejecuta.
+//  - Con un directorio, compila todos sus archivos como un proyecto.
+//  - Con un archivo, compila ese archivo y los que importa.
 
 if (args.Length == 0)
 {
     Console.WriteLine(
-        "Uso: TmCompiler.Cli <archivo.tm|archivo.tmpr> [--tokens]");
+        "Uso: Tempo.Cli <directorio|archivo.tmpr|archivo.tm> [--tokens]");
 
     return;
 }
@@ -34,120 +30,96 @@ bool showTokens =
                 "--tokens",
                 StringComparison.Ordinal));
 
-if (!File.Exists(path))
+if (!File.Exists(path) && !Directory.Exists(path))
 {
     Console.Error.WriteLine(
-        $"No se encontró el archivo '{path}'.");
+        $"No se encontró el archivo o directorio '{path}'.");
 
     Environment.ExitCode = 1;
 
     return;
 }
 
-string source =
-    File.ReadAllText(path);
+Compilation compilation =
+    Compilation.FromPath(path);
 
-try
+SyntaxTree entry =
+    compilation.Project.EntryFile;
+
+if (entry is { IsParsed: true })
 {
-    // Analisis lexico
-    var lexer =
-        new Lexer(
-            source,
-            path);
-
-    List<Token> tokens =
-        lexer.Tokenize().ToList();
-
     if (showTokens)
     {
+        List<Token> tokens =
+            new Lexer(
+                File.ReadAllText(entry.FullPath),
+                entry.FileName)
+            .Tokenize()
+            .ToList();
+
         Console.WriteLine(
             LexerDiagnosticReporter.GenerateTokenReport(
                 tokens,
-                path));
+                entry.FileName));
     }
-
-    // Analisis sintactico
-    var parser =
-        new Parser(
-            tokens,
-            path);
-
-    ProgramNode program =
-        parser.Parse();
 
     Console.WriteLine(
         AstDiagnosticReporter.GenerateAstReport(
-            program,
-            path));
+            entry.Root,
+            entry.FileName));
+}
 
-    // Analisis semantico
-    var semanticAnalyzer =
-        new SemanticAnalyzer(
-            program,
-            path);
+// Un reporte por archivo: siempre el de entrada, y los demás solo si tienen
+// diagnósticos.
+foreach (SyntaxTree file in compilation.Project.Files)
+{
+    List<Diagnostic> diagnostics =
+        compilation.DiagnosticsOf(file).ToList();
 
-    SemanticAnalysisResult semanticResult =
-        semanticAnalyzer.Analyze();
+    if (file != entry && diagnostics.Count == 0)
+    {
+        continue;
+    }
 
     Console.WriteLine(
         SemanticDiagnosticReporter.GenerateDiagnosticReport(
-            semanticResult.Diagnostics,
-            path));
-
-    if (semanticResult.HasErrors)
-    {
-        Environment.ExitCode = 1;
-
-        return;
-    }
-
-    // Los archivos .tm son modulos y no poseen un punto de entrada
-    // ejecutable. El interprete unicamente se inicia para un .tmpr.
-    bool isExecutableProgram =
-        string.Equals(
-            Path.GetExtension(path),
-            ".tmpr",
-            StringComparison.OrdinalIgnoreCase);
-
-    if (!isExecutableProgram)
-    {
-        return;
-    }
-
-    // Ejecucion
-    var runtimeInput =
-        new ConsoleRuntimeInput();
-
-    var runtimeOutput =
-        new ConsoleRuntimeOutput();
-
-    var interpreter =
-        new Interpreter(
-            program,
-            runtimeInput,
-            runtimeOutput);
-
-    interpreter.Execute();
+            diagnostics,
+            file.FileName));
 }
-catch (LexerException ex)
-{
-    Console.Error.Write(
-        ex.ToStandardFormat(
-            GenericErrorCode,
-            ex.Message,
-            "Revise el texto señalado y corríjalo según el alfabeto léxico de TM."));
 
-    Environment.ExitCode = 1;
+// Diagnósticos que no pertenecen a ningún archivo (por ejemplo, E016).
+List<Diagnostic> projectDiagnostics =
+    compilation.Diagnostics
+        .Where(diagnostic =>
+            !compilation.Project.Files.Any(file => file.FileName == diagnostic.FileName))
+        .ToList();
+
+if (projectDiagnostics.Count > 0)
+{
+    Console.WriteLine(
+        SemanticDiagnosticReporter.GenerateDiagnosticReport(
+            projectDiagnostics,
+            compilation.Project.RootDirectory));
 }
-catch (ParserException ex)
-{
-    Console.Error.Write(
-        ex.ToStandardFormat(
-            GenericErrorCode,
-            ex.Message,
-            "Revise la estructura de la sentencia según la gramática de TM."));
 
+if (compilation.HasErrors)
+{
     Environment.ExitCode = 1;
+
+    return;
+}
+
+// Los archivos .tm son módulos y no poseen un punto de entrada ejecutable.
+if (!compilation.IsExecutable)
+{
+    return;
+}
+
+try
+{
+    compilation.Run(
+        new ConsoleRuntimeInput(),
+        new ConsoleRuntimeOutput());
 }
 catch (TmRuntimeException ex)
 {
