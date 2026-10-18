@@ -56,6 +56,15 @@ public static class DiagnosticCatalog
             [DiagnosticCodes.InvalidStatement] = "Sentencia no valida",
             [DiagnosticCodes.UnexpectedTopLevelElement] = "Elemento inesperado en el nivel superior",
 
+            // 7.3 — Errores en tiempo de ejecución
+            ["R001"] = "Division por cero",
+            ["R002"] = "Indice fuera de limites",
+            ["R003"] = "Desbordamiento aritmetico",
+            ["R004"] = "Error de parseo en input",
+            ["R005"] = "Llamada a funcion no definida",
+            ["R006"] = "Lectura desde entrada estandar sin datos disponibles (EOF)",
+            ["R007"] = "Linea vacia o invalida para input de tone",
+
             // §7.4 — Advertencias
             ["W001"] = "Variable declarada pero no utilizada",
             ["W002"] = "Sombreado de identificador (shadowing)",

@@ -9,21 +9,26 @@ public sealed class Interpreter : IInterpreter
 {
     private readonly ProgramNode _program;
     private readonly StatementExecutor _statements;
+    private readonly string? _entryFileName;
 
     public Interpreter(
         ProgramNode program,
         IRuntimeInput input,
-        IRuntimeOutput output)
+        IRuntimeOutput output,
+        IReadOnlyDictionary<string, string>? sourceFiles = null,
+        string? entryFileName = null)
     {
         ArgumentNullException.ThrowIfNull(program);
         ArgumentNullException.ThrowIfNull(input);
         ArgumentNullException.ThrowIfNull(output);
 
         _program = program;
+        _entryFileName = entryFileName;
 
         var registry =
             new FunctionRegistry(
-                program.Functions);
+                program.Functions,
+                sourceFiles);
 
         var functions =
             new FunctionInvoker(
@@ -45,8 +50,16 @@ public sealed class Interpreter : IInterpreter
         var globalEnvironment =
             new RuntimeEnvironment();
 
-        _statements.ExecuteBlock(
-            _program.Session.Body,
-            globalEnvironment);
+        try
+        {
+            _statements.ExecuteBlock(
+                _program.Session.Body,
+                globalEnvironment);
+        }
+        catch (TmRuntimeException ex)
+        {
+            ex.SetFileNameIfMissing(_entryFileName);
+            throw;
+        }
     }
 }

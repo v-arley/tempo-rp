@@ -11,8 +11,12 @@ public sealed class FunctionRegistry
     private readonly Dictionary<string, FunctionDeclarationNode> _functions =
         new(StringComparer.Ordinal);
 
+    private readonly Dictionary<string, string> _sourceFiles =
+        new(StringComparer.Ordinal);    
+
     public FunctionRegistry(
-        IEnumerable<FunctionDeclarationNode> functions)
+        IEnumerable<FunctionDeclarationNode> functions,
+        IReadOnlyDictionary<string, string>? sourceFiles = null)
     {
         ArgumentNullException.ThrowIfNull(functions);
 
@@ -26,6 +30,17 @@ public sealed class FunctionRegistry
                     $"La función '{function.Identifier}' " +
                     "ya está registrada.");
             }
+
+            if (sourceFiles is not null &&
+                sourceFiles.TryGetValue(
+                    function.Identifier,
+                    out string? fileName) &&
+                !string.IsNullOrWhiteSpace(fileName))
+            {
+                _sourceFiles.Add(
+                    function.Identifier,
+                    fileName);
+            }
         }
     }
 
@@ -37,5 +52,14 @@ public sealed class FunctionRegistry
         return _functions.TryGetValue(
             identifier,
             out function);
+    }
+
+    public string? GetFileName(string identifier)
+    {
+        return _sourceFiles.TryGetValue(
+            identifier,
+            out string? fileName)
+            ? fileName
+            : null;
     }
 }

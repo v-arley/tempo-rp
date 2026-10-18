@@ -1,4 +1,4 @@
-using System.Text;
+using Tempo.Language.Diagnostics;
 
 namespace Tempo.Language.Syntax;
 
@@ -33,14 +33,17 @@ public sealed class LexerException : Exception
     ///     Posible solución: sugerencia
     /// </summary>
     
-    public string ToStandardFormat(string errorCode, string description, string suggestion)
+    public string ToStandardFormat(string suggestion)
     {
-        var sb = new StringBuilder();
-        sb.AppendLine($"[ERROR {errorCode}] Error léxico");
-        sb.AppendLine($"Archivo: {FileName}");
-        sb.AppendLine($"Línea: {Line}");
-        sb.AppendLine($"Descripción: {description}");
-        sb.AppendLine($"Posible solución: {suggestion}");
-        return sb.ToString();
+        var diagnostic = new Diagnostic(
+            DiagnosticSeverity.Error,
+            Code,
+            DiagnosticCatalog.TitleOf(Code),
+            FileName,
+            Line,
+            Message,
+            suggestion);
+
+        return diagnostic.ToStandardFormat();
     }
 }

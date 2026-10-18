@@ -89,7 +89,29 @@ public sealed class Compilation
                 "Solo se puede ejecutar un proyecto sin errores cuyo archivo de entrada sea un .tmpr con session.");
         }
 
-        new Interpreter(EntryProgramWithImports(), input, output).Execute();
+        ProgramNode program = EntryProgramWithImports();
+
+        var sourceFiles =
+            new Dictionary<string, string>(StringComparer.Ordinal);
+
+        SyntaxTree entry = Project.EntryFile;
+
+        foreach (SyntaxTree file in _imports.VisibleFrom(entry).Append(entry))
+        {
+            foreach (FunctionDeclarationNode function in file.Root.Functions)
+            {
+                sourceFiles.TryAdd(
+                    function.Identifier,
+                    file.FileName);
+            }
+        }
+
+        new Interpreter(
+            program,
+            input,
+            output,
+            sourceFiles,
+            entry.FileName).Execute();
     }
 
     private ProgramNode EntryProgramWithImports()

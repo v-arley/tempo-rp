@@ -18,4 +18,15 @@ public sealed class TmRuntimeException : Exception
     public string Code { get; }
 
     public int Line { get; }
+
+    public string? FileName { get; private set; }
+
+    internal void SetFileNameIfMissing(string? fileName)
+    {
+        if (FileName is null &&
+            !string.IsNullOrWhiteSpace(fileName))
+        {
+            FileName = fileName;
+        }
+    }
 }

@@ -1,4 +1,4 @@
-using System.Text;
+using Tempo.Language.Diagnostics;
 
 namespace Tempo.Language.Syntax;
 
@@ -26,19 +26,17 @@ public sealed class ParserException : Exception
     /// <summary>
     /// Formatea el error según el estándar utilizado por TM.
     /// </summary>
-    public string ToStandardFormat(
-        string errorCode,
-        string description,
-        string suggestion)
+    public string ToStandardFormat(string suggestion)
     {
-        var sb = new StringBuilder();
+        var diagnostic = new Diagnostic(
+            DiagnosticSeverity.Error,
+            Code,
+            DiagnosticCatalog.TitleOf(Code),
+            FileName,
+            Line,
+            Message,
+            suggestion);
 
-        sb.AppendLine($"[ERROR {errorCode}] Error sintáctico");
-        sb.AppendLine($"Archivo: {FileName}");
-        sb.AppendLine($"Línea: {Line}");
-        sb.AppendLine($"Descripción: {description}");
-        sb.AppendLine($"Posible solución: {suggestion}");
-
-        return sb.ToString();
+        return diagnostic.ToStandardFormat();
     }
 }

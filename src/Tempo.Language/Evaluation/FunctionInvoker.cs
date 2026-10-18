@@ -108,6 +108,15 @@ public sealed class FunctionInvoker : IFunctionInvoker
                 $"La función '{function.Identifier}' " +
                 "terminó sin ejecutar una sentencia ret.");
         }
+
+        catch (TmRuntimeException ex)
+        {
+            ex.SetFileNameIfMissing(
+                _registry.GetFileName(function.Identifier));
+
+            throw;
+        }
+        
         finally
         {
             CallStack.Pop();

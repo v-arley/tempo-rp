@@ -1,0 +1,5 @@
+import "matematicas.tm";
+
+session >
+    output >> dividir(10, 0);
+<
