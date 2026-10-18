@@ -9,17 +9,15 @@ namespace Tempo.Language.Syntax;
 /// </summary>
 public sealed class ParserException : Exception
 {
+    public string Code { get; }
     public string FileName { get; }
     public int Line { get; }
     public int Column { get; }
 
-    public ParserException(
-        string message,
-        string fileName,
-        int line,
-        int column)
+    public ParserException(string code, string message, string fileName, int line, int column)
         : base(message)
     {
+        Code = code;
         FileName = fileName;
         Line = line;
         Column = column;

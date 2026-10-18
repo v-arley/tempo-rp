@@ -1,3 +1,4 @@
+using Tempo.Language.Diagnostics;
 namespace Tempo.Language.Syntax;
 
 /// <summary>
@@ -63,6 +64,7 @@ public sealed class Parser : IParser
             }
 
             throw new ParserException(
+                DiagnosticCodes.UnexpectedTopLevelElement,
                 $"Se esperaba una declaración de función, 'session' o fin de archivo, pero se encontró '{Current.Lexeme}'.",
                 _fileName,
                 Current.Line,
@@ -78,7 +80,8 @@ public sealed class Parser : IParser
 
         Expect(
             TokenType.EndOfFile,
-            "Se esperaba el fin del archivo.");
+            "Se esperaba el fin del archivo.",
+            DiagnosticCodes.UnexpectedTopLevelElement);
 
         return new ProgramNode(
             imports,
@@ -108,24 +111,28 @@ public sealed class Parser : IParser
         }
         else
         {
-            returnType = ParseTypeName();
+            returnType = ParseTypeName(DiagnosticCodes.MalformedFunctionDeclaration);
         }
 
         Expect(
             TokenType.Colon,
-            "Se esperaba ':' después del tipo de retorno.");
+            "Se esperaba ':' después del tipo de retorno.",
+            DiagnosticCodes.MalformedFunctionDeclaration);
 
         Expect(
             TokenType.Compose,
-            "Se esperaba la palabra reservada 'compose'.");
+            "Se esperaba la palabra reservada 'compose'.",
+            DiagnosticCodes.MalformedFunctionDeclaration);
 
         Token identifier = Expect(
             TokenType.Identifier,
-            "Se esperaba el nombre de la función después de 'compose'.");
+            "Se esperaba el nombre de la función después de 'compose'.",
+            DiagnosticCodes.MalformedFunctionDeclaration);
 
         Expect(
             TokenType.LeftParen,
-            "Se esperaba '(' después del nombre de la función.");
+            "Se esperaba '(' después del nombre de la función.",
+            DiagnosticCodes.MalformedParameterList);
 
         var parameters = new List<ParameterNode>();
 
@@ -141,7 +148,8 @@ public sealed class Parser : IParser
 
         Expect(
             TokenType.RightParen,
-            "Se esperaba ')' después de los parámetros de la función.");
+            "Se esperaba ')' después de los parámetros de la función.",
+            DiagnosticCodes.MalformedParameterList);
 
         BlockNode body = ParseBlock();
 
@@ -164,15 +172,18 @@ public sealed class Parser : IParser
     {
         Token importToken = Expect(
             TokenType.Import,
-            "Se esperaba la palabra reservada 'import'.");
+            "Se esperaba la palabra reservada 'import'.",
+            DiagnosticCodes.UnexpectedTopLevelElement);
 
         Token filePath = Expect(
             TokenType.StringLiteral,
-            "Se esperaba una ruta de archivo después de 'import'.");
+            "Se esperaba una ruta de archivo después de 'import'.",
+            DiagnosticCodes.UnexpectedTopLevelElement);
 
         Expect(
             TokenType.Semicolon,
-            "Se esperaba ';' después de la importación.");
+            "Se esperaba ';' después de la importación.",
+            DiagnosticCodes.MissingSemicolon);
 
         return new ImportNode(
             filePath.Lexeme,
@@ -187,11 +198,12 @@ public sealed class Parser : IParser
     {
         Token startToken = Current;
 
-        string typeName = ParseTypeName();
+        string typeName = ParseTypeName(DiagnosticCodes.MalformedParameterList);
 
         Token identifier = Expect(
             TokenType.Identifier,
-            "Se esperaba el nombre del parámetro.");
+            "Se esperaba el nombre del parámetro.",
+            DiagnosticCodes.MalformedParameterList);
 
         return new ParameterNode(
             typeName,
@@ -207,7 +219,8 @@ public sealed class Parser : IParser
     {
         Expect(
             TokenType.Session,
-            "Se esperaba la palabra reservada 'session'.");
+            "Se esperaba la palabra reservada 'session'.",
+            DiagnosticCodes.UnexpectedTopLevelElement);
 
         BlockNode body = ParseBlock();
 
@@ -221,19 +234,21 @@ public sealed class Parser : IParser
     {
         Expect(
             TokenType.GreaterThan,
-            "Se esperaba '>' para iniciar el bloque.");
+            "Se esperaba '>' para iniciar el bloque.",
+            DiagnosticCodes.MissingBlockDelimiter);
 
         var statements = new List<StatementNode>();
 
         while (!Check(TokenType.LessThan) &&
-               !Check(TokenType.EndOfFile))
+            !Check(TokenType.EndOfFile))
         {
             statements.Add(ParseStatement());
         }
 
         Expect(
             TokenType.LessThan,
-            "Se esperaba '<' para finalizar el bloque.");
+            "Se esperaba '<' para finalizar el bloque.",
+            DiagnosticCodes.MissingBlockDelimiter);
 
         return new BlockNode(statements);
     }
@@ -315,6 +330,7 @@ public sealed class Parser : IParser
         }
 
         throw new ParserException(
+            DiagnosticCodes.InvalidStatement,
             $"Sentencia inesperada '{Current.Lexeme}'.",
             _fileName,
             Current.Line,
@@ -333,21 +349,24 @@ public sealed class Parser : IParser
     {
         Token startToken = Current;
 
-        string typeName = ParseTypeName();
+        string typeName = ParseTypeName(DiagnosticCodes.MalformedVariableDeclaration);
 
         Token identifier = Expect(
             TokenType.Identifier,
-            "Se esperaba un identificador después del tipo de la variable.");
+            "Se esperaba un identificador después del tipo de la variable.",
+            DiagnosticCodes.MalformedVariableDeclaration);
 
         Expect(
             TokenType.Assign,
-            "Se esperaba '=' después del identificador de la variable.");
+            "Se esperaba '=' después del identificador de la variable.",
+            DiagnosticCodes.MalformedVariableDeclaration);
 
         ExpressionNode initializer = ParseExpression();
 
         Expect(
             TokenType.Semicolon,
-            "Se esperaba ';' al final de la declaración de variable.");
+            "Se esperaba ';' al final de la declaración de variable.",
+            DiagnosticCodes.MissingSemicolon);
 
         return new VariableDeclarationNode(
             typeName,
@@ -364,27 +383,31 @@ public sealed class Parser : IParser
     /// const sample MAX = 100;
     /// const sequence<sample> NUMEROS = [1, 2, 3];
     /// </summary>
-    private ConstantDeclarationNode ParseConstantDeclaration()
+   private ConstantDeclarationNode ParseConstantDeclaration()
     {
         Token constToken = Expect(
             TokenType.Const,
-            "Se esperaba la palabra reservada 'const'.");
+            "Se esperaba la palabra reservada 'const'.",
+            DiagnosticCodes.MalformedVariableDeclaration);
 
-        string typeName = ParseTypeName();
+        string typeName = ParseTypeName(DiagnosticCodes.MalformedVariableDeclaration);
 
         Token identifier = Expect(
             TokenType.Identifier,
-            "Se esperaba un identificador después del tipo de la constante.");
+            "Se esperaba un identificador después del tipo de la constante.",
+            DiagnosticCodes.MalformedVariableDeclaration);
 
         Expect(
             TokenType.Assign,
-            "Se esperaba '=' después del identificador de la constante.");
+            "Se esperaba '=' después del identificador de la constante.",
+            DiagnosticCodes.MalformedVariableDeclaration);
 
         ExpressionNode initializer = ParseExpression();
 
         Expect(
             TokenType.Semicolon,
-            "Se esperaba ';' al final de la declaración de constante.");
+            "Se esperaba ';' al final de la declaración de constante.",
+            DiagnosticCodes.MissingSemicolon);
 
         return new ConstantDeclarationNode(
             typeName,
@@ -404,17 +427,20 @@ public sealed class Parser : IParser
     {
         Token identifier = Expect(
             TokenType.Identifier,
-            "Se esperaba un identificador al inicio de la asignación.");
+            "Se esperaba un identificador al inicio de la asignación.",
+            DiagnosticCodes.InvalidStatement);
 
         Expect(
             TokenType.Assign,
-            "Se esperaba '=' después del identificador.");
+            "Se esperaba '=' después del identificador.",
+            DiagnosticCodes.InvalidStatement);
 
         ExpressionNode value = ParseExpression();
 
         Expect(
             TokenType.Semicolon,
-            "Se esperaba ';' al final de la asignación.");
+            "Se esperaba ';' al final de la asignación.",
+            DiagnosticCodes.MissingSemicolon);
 
         return new AssignmentStatementNode(
             identifier.Lexeme,
@@ -434,13 +460,15 @@ public sealed class Parser : IParser
     {
         Token identifier = Expect(
             TokenType.Identifier,
-            "Se esperaba un identificador.");
+            "Se esperaba un identificador.",
+            DiagnosticCodes.InvalidStatement);
 
         Token operatorToken = Current;
 
         if (!Match(TokenType.Increment, TokenType.Decrement))
         {
             throw new ParserException(
+                DiagnosticCodes.InvalidStatement,
                 "Se esperaba '++' o '--' después del identificador.",
                 _fileName,
                 Current.Line,
@@ -449,7 +477,8 @@ public sealed class Parser : IParser
 
         Expect(
             TokenType.Semicolon,
-            "Se esperaba ';' después de la actualización.");
+            "Se esperaba ';' después de la actualización.",
+            DiagnosticCodes.MissingSemicolon);
 
         return new UpdateStatementNode(
             identifier.Lexeme,
@@ -474,6 +503,7 @@ public sealed class Parser : IParser
         if (target is not IndexExpressionNode indexTarget)
         {
             throw new ParserException(
+                DiagnosticCodes.InvalidStatement,
                 "Se esperaba un acceso indexado en la asignación.",
                 _fileName,
                 startToken.Line,
@@ -482,13 +512,15 @@ public sealed class Parser : IParser
 
         Expect(
             TokenType.Assign,
-            "Se esperaba '=' después del acceso indexado.");
+            "Se esperaba '=' después del acceso indexado.",
+            DiagnosticCodes.InvalidStatement);
 
         ExpressionNode value = ParseExpression();
 
         Expect(
             TokenType.Semicolon,
-            "Se esperaba ';' al final de la asignación indexada.");
+            "Se esperaba ';' al final de la asignación indexada.",
+            DiagnosticCodes.MissingSemicolon);
 
         return new IndexedAssignmentStatementNode(
             indexTarget,
@@ -513,6 +545,7 @@ public sealed class Parser : IParser
         if (expression is not CallExpressionNode)
         {
             throw new ParserException(
+                DiagnosticCodes.InvalidStatement,
                 "Solo se permiten llamadas a funciones como sentencias de expresión.",
                 _fileName,
                 startToken.Line,
@@ -521,7 +554,8 @@ public sealed class Parser : IParser
 
         Expect(
             TokenType.Semicolon,
-            "Se esperaba ';' después de la llamada a función.");
+            "Se esperaba ';' después de la llamada a función.",
+            DiagnosticCodes.MissingSemicolon);
 
         return new ExpressionStatementNode(
             expression,
@@ -536,17 +570,20 @@ public sealed class Parser : IParser
     {
         Token outputToken = Expect(
             TokenType.Output,
-            "Se esperaba la palabra reservada 'output'.");
+            "Se esperaba la palabra reservada 'output'.",
+            DiagnosticCodes.MalformedInputOutput);
 
         Expect(
             TokenType.OutputOp,
-            "Se esperaba '>>' después de 'output'.");
+            "Se esperaba '>>' después de 'output'.",
+            DiagnosticCodes.MalformedInputOutput);
 
         ExpressionNode expression = ParseExpression();
 
         Expect(
             TokenType.Semicolon,
-            "Se esperaba ';' al final de la sentencia output.");
+            "Se esperaba ';' al final de la sentencia output.",
+            DiagnosticCodes.MissingSemicolon);
 
         return new OutputStatementNode(
             expression,
@@ -561,19 +598,23 @@ public sealed class Parser : IParser
     {
         Token inputToken = Expect(
             TokenType.Input,
-            "Se esperaba la palabra reservada 'input'.");
+            "Se esperaba la palabra reservada 'input'.",
+            DiagnosticCodes.MalformedInputOutput);
 
         Expect(
             TokenType.InputOp,
-            "Se esperaba '<<' después de 'input'.");
+            "Se esperaba '<<' después de 'input'.",
+            DiagnosticCodes.MalformedInputOutput);
 
         Token identifier = Expect(
             TokenType.Identifier,
-            "Se esperaba un identificador después de 'input <<'.");
+            "Se esperaba un identificador después de 'input <<'.",
+            DiagnosticCodes.MalformedInputOutput);
 
         Expect(
             TokenType.Semicolon,
-            "Se esperaba ';' al final de la sentencia input.");
+            "Se esperaba ';' al final de la sentencia input.",
+            DiagnosticCodes.MissingSemicolon);
 
         return new InputStatementNode(
             identifier.Lexeme,
@@ -593,7 +634,8 @@ public sealed class Parser : IParser
     {
         Token retToken = Expect(
             TokenType.Ret,
-            "Se esperaba la palabra reservada 'ret'.");
+            "Se esperaba la palabra reservada 'ret'.",
+            DiagnosticCodes.InvalidStatement);
 
         ExpressionNode expression = null;
 
@@ -606,7 +648,8 @@ public sealed class Parser : IParser
 
         Expect(
             TokenType.Semicolon,
-            "Se esperaba ';' al final de la sentencia ret.");
+            "Se esperaba ';' al final de la sentencia ret.",
+            DiagnosticCodes.MissingSemicolon);
 
         return new ReturnStatementNode(
             expression,
@@ -635,17 +678,20 @@ public sealed class Parser : IParser
     {
         Token ifToken = Expect(
             TokenType.If,
-            "Se esperaba la palabra reservada 'if'.");
+            "Se esperaba la palabra reservada 'if'.",
+            DiagnosticCodes.InvalidStatement);
 
         Expect(
             TokenType.LeftBracket,
-            "Se esperaba '[' después de 'if'.");
+            "Se esperaba '[' después de 'if'.",
+            DiagnosticCodes.MissingConditionBrackets);
 
         ExpressionNode condition = ParseExpression();
 
         Expect(
             TokenType.RightBracket,
-            "Se esperaba ']' después de la condición del if.");
+            "Se esperaba ']' después de la condición del if.",
+            DiagnosticCodes.MissingConditionBrackets);
 
         BlockNode thenBlock = ParseBlock();
 
@@ -656,21 +702,25 @@ public sealed class Parser : IParser
         {
             Expect(
                 TokenType.Else,
-                "Se esperaba 'else'.");
+                "Se esperaba 'else'.",
+                DiagnosticCodes.InvalidStatement);
 
             Expect(
                 TokenType.If,
-                "Se esperaba 'if' después de 'else'.");
+                "Se esperaba 'if' después de 'else'.",
+                DiagnosticCodes.InvalidStatement);
 
             Expect(
                 TokenType.LeftBracket,
-                "Se esperaba '[' después de 'else if'.");
+                "Se esperaba '[' después de 'else if'.",
+                DiagnosticCodes.MissingConditionBrackets);
 
             ExpressionNode elseIfCondition = ParseExpression();
 
             Expect(
                 TokenType.RightBracket,
-                "Se esperaba ']' después de la condición de 'else if'.");
+                "Se esperaba ']' después de la condición de 'else if'.",
+                DiagnosticCodes.MissingConditionBrackets);
 
             BlockNode elseIfBlock = ParseBlock();
 
@@ -711,17 +761,20 @@ public sealed class Parser : IParser
     {
         Token repeatToken = Expect(
             TokenType.Repeat,
-            "Se esperaba la palabra reservada 'repeat'.");
+            "Se esperaba la palabra reservada 'repeat'.",
+            DiagnosticCodes.InvalidStatement);
 
         Expect(
             TokenType.LeftBracket,
-            "Se esperaba '[' después de 'repeat'.");
+            "Se esperaba '[' después de 'repeat'.",
+            DiagnosticCodes.MissingConditionBrackets);
 
         ExpressionNode condition = ParseExpression();
 
         Expect(
             TokenType.RightBracket,
-            "Se esperaba ']' después de la condición de repeat.");
+            "Se esperaba ']' después de la condición de repeat.",
+            DiagnosticCodes.MissingConditionBrackets);
 
         BlockNode body = ParseBlock();
 
@@ -746,15 +799,18 @@ public sealed class Parser : IParser
     {
         Token loopToken = Expect(
             TokenType.Loop,
-            "Se esperaba la palabra reservada 'loop'.");
+            "Se esperaba la palabra reservada 'loop'.",
+            DiagnosticCodes.MalformedLoopHeader);
 
         Expect(
             TokenType.LeftBracket,
-            "Se esperaba '[' después de 'loop'.");
+            "Se esperaba '[' después de 'loop'.",
+            DiagnosticCodes.MissingConditionBrackets);
 
         if (!IsTypeStart(Current.TokenType))
         {
             throw new ParserException(
+                DiagnosticCodes.MalformedLoopHeader,
                 "Se esperaba una declaración de variable al inicio del loop.",
                 _fileName,
                 Current.Line,
@@ -768,13 +824,15 @@ public sealed class Parser : IParser
 
         Expect(
             TokenType.Semicolon,
-            "Se esperaba ';' después de la condición del loop.");
+            "Se esperaba ';' después de la condición del loop.",
+            DiagnosticCodes.MissingSemicolon);
 
         LoopUpdateNode update = ParseLoopUpdate();
 
         Expect(
             TokenType.RightBracket,
-            "Se esperaba ']' después de la actualización del loop.");
+            "Se esperaba ']' después de la actualización del loop.",
+            DiagnosticCodes.MissingConditionBrackets);
 
         BlockNode body = ParseBlock();
 
@@ -796,7 +854,8 @@ public sealed class Parser : IParser
     {
         Token identifier = Expect(
             TokenType.Identifier,
-            "Se esperaba un identificador en la actualización del loop.");
+            "Se esperaba un identificador en la actualización del loop.",
+            DiagnosticCodes.MalformedLoopHeader);
 
         if (Match(TokenType.Increment, TokenType.Decrement))
         {
@@ -823,6 +882,7 @@ public sealed class Parser : IParser
         }
 
         throw new ParserException(
+            DiagnosticCodes.MalformedLoopHeader,
             "Se esperaba '++', '--' o '=' en la actualización del loop.",
             _fileName,
             Current.Line,
@@ -846,7 +906,8 @@ public sealed class Parser : IParser
     {
         Token mixToken = Expect(
             TokenType.Mix,
-            "Se esperaba la palabra reservada 'mix'.");
+            "Se esperaba la palabra reservada 'mix'.",
+            DiagnosticCodes.MalformedMixStatement);
 
         ExpressionNode expression;
 
@@ -863,7 +924,8 @@ public sealed class Parser : IParser
 
         Expect(
             TokenType.GreaterThan,
-            "Se esperaba '>' para iniciar el bloque de mix.");
+            "Se esperaba '>' para iniciar el bloque de mix.",
+            DiagnosticCodes.MalformedMixStatement);
 
         var cases = new List<MixCaseNode>();
         BlockNode defaultBlock = null;
@@ -884,6 +946,7 @@ public sealed class Parser : IParser
                 if (defaultBlock is not null)
                 {
                     throw new ParserException(
+                        DiagnosticCodes.MalformedMixStatement,
                         "La sentencia mix no puede contener más de un bloque default.",
                         _fileName,
                         Current.Line,
@@ -895,6 +958,7 @@ public sealed class Parser : IParser
             }
 
             throw new ParserException(
+                DiagnosticCodes.MalformedMixStatement,
                 $"Se esperaba 'case', 'default' o '<' dentro de mix, pero se encontró '{Current.Lexeme}'.",
                 _fileName,
                 Current.Line,
@@ -903,7 +967,8 @@ public sealed class Parser : IParser
 
         Expect(
             TokenType.LessThan,
-            "Se esperaba '<' para finalizar la sentencia mix.");
+            "Se esperaba '<' para finalizar la sentencia mix.",
+            DiagnosticCodes.MalformedMixStatement);
 
         return new MixStatementNode(
             expression,
@@ -926,6 +991,7 @@ public sealed class Parser : IParser
             !string.Equals(caseToken.Lexeme, "case", StringComparison.Ordinal))
         {
             throw new ParserException(
+                DiagnosticCodes.MalformedMixStatement,
                 "Se esperaba 'case'.",
                 _fileName,
                 caseToken.Line,
@@ -938,7 +1004,8 @@ public sealed class Parser : IParser
 
         Expect(
             TokenType.Colon,
-            "Se esperaba ':' después del valor de case.");
+            "Se esperaba ':' después del valor de case.",
+            DiagnosticCodes.MalformedMixStatement);
 
         BlockNode body = ParseBlock();
 
@@ -960,6 +1027,7 @@ public sealed class Parser : IParser
             !string.Equals(defaultToken.Lexeme, "default", StringComparison.Ordinal))
         {
             throw new ParserException(
+                DiagnosticCodes.MalformedMixStatement,
                 "Se esperaba 'default'.",
                 _fileName,
                 defaultToken.Line,
@@ -970,7 +1038,8 @@ public sealed class Parser : IParser
 
         Expect(
             TokenType.Colon,
-            "Se esperaba ':' después de 'default'.");
+            "Se esperaba ':' después de 'default'.",
+            DiagnosticCodes.MalformedMixStatement);
 
         return ParseBlock();
     }
@@ -1184,7 +1253,8 @@ public sealed class Parser : IParser
 
                 Expect(
                     TokenType.RightBracket,
-                    "Se esperaba ']' después del índice.");
+                    "Se esperaba ']' después del índice.",
+                    DiagnosticCodes.UnclosedGrouping);
 
                 expression = new IndexExpressionNode(
                     expression,
@@ -1202,7 +1272,8 @@ public sealed class Parser : IParser
 
                 Token member = Expect(
                     TokenType.Identifier,
-                    "Se esperaba un miembro después de '.'.");
+                    "Se esperaba un miembro después de '.'.",
+                    DiagnosticCodes.ExpectedExpression);
 
                 if (!string.Equals(
                         member.Lexeme,
@@ -1210,6 +1281,7 @@ public sealed class Parser : IParser
                         StringComparison.Ordinal))
                 {
                     throw new ParserException(
+                        DiagnosticCodes.ExpectedExpression,
                         $"Propiedad no reconocida '{member.Lexeme}'.",
                         _fileName,
                         member.Line,
@@ -1218,11 +1290,13 @@ public sealed class Parser : IParser
 
                 Expect(
                     TokenType.LeftParen,
-                    "Se esperaba '(' después de 'length'.");
+                    "Se esperaba '(' después de 'length'.",
+                    DiagnosticCodes.ExpectedExpression);
 
                 Expect(
                     TokenType.RightParen,
-                    "Se esperaba ')' después de 'length('.");
+                    "Se esperaba ')' después de 'length('.",
+                    DiagnosticCodes.UnclosedGrouping);
 
                 expression = new LengthExpressionNode(
                     expression,
@@ -1280,7 +1354,8 @@ public sealed class Parser : IParser
 
                 Expect(
                     TokenType.RightParen,
-                    "Se esperaba ')' después de los argumentos de la función.");
+                    "Se esperaba ')' después de los argumentos de la función.",
+                    DiagnosticCodes.UnclosedGrouping);
 
                 return new CallExpressionNode(
                     identifier.Lexeme,
@@ -1302,7 +1377,8 @@ public sealed class Parser : IParser
 
             Expect(
                 TokenType.RightParen,
-                "Se esperaba ')' después de la expresión.");
+                "Se esperaba ')' después de la expresión.",
+                DiagnosticCodes.UnclosedGrouping);
 
             return expression;
         }
@@ -1325,7 +1401,8 @@ public sealed class Parser : IParser
 
             Expect(
                 TokenType.RightBracket,
-                "Se esperaba ']' después de los elementos de la colección.");
+                "Se esperaba ']' después de los elementos de la colección.",
+                DiagnosticCodes.UnclosedGrouping);
 
             return new CollectionLiteralExpressionNode(
                 elements,
@@ -1354,7 +1431,8 @@ public sealed class Parser : IParser
 
             Expect(
                 TokenType.RightBracket,
-                "Se esperaba ']' después de los elementos de la colección.");
+                "Se esperaba ']' después de los elementos de la colección.",
+                DiagnosticCodes.UnclosedGrouping);
 
             return new CollectionLiteralExpressionNode(
                 elements,
@@ -1363,6 +1441,7 @@ public sealed class Parser : IParser
         }
 
         throw new ParserException(
+            DiagnosticCodes.ExpectedExpression,
             $"Se esperaba una expresión, pero se encontró '{token.Lexeme}'.",
             _fileName,
             token.Line,
@@ -1450,7 +1529,7 @@ public sealed class Parser : IParser
     /// sequence<sample>
     /// score<wave>
     /// </summary>
-    private string ParseTypeName()
+    private string ParseTypeName(string errorCode)
     {
         if (IsPrimitiveType(Current.TokenType))
         {
@@ -1463,18 +1542,21 @@ public sealed class Parser : IParser
 
             Expect(
                 TokenType.LessThan,
-                "Se esperaba '<' después del tipo compuesto.");
+                "Se esperaba '<' después del tipo compuesto.",
+                errorCode);
 
-            string innerType = ParseTypeName();
+            string innerType = ParseTypeName(errorCode);
 
             Expect(
                 TokenType.GreaterThan,
-                "Se esperaba '>' después del tipo interno.");
+                "Se esperaba '>' después del tipo interno.",
+                errorCode);
 
             return $"{compositeType.Lexeme}<{innerType}>";
         }
 
         throw new ParserException(
+            errorCode,
             $"Se esperaba un tipo válido, pero se encontró '{Current.Lexeme}'.",
             _fileName,
             Current.Line,
@@ -1521,13 +1603,14 @@ public sealed class Parser : IParser
     /// <summary>
     /// Verifica que el token actual sea del tipo esperado.
     /// </summary>
-    private Token Expect(TokenType expectedType, string message)
+    private Token Expect(TokenType expectedType, string message, string errorCode)
     {
         Token current = Current;
 
         if (current.TokenType != expectedType)
         {
             throw new ParserException(
+                errorCode,
                 message,
                 _fileName,
                 current.Line,

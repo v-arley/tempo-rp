@@ -63,7 +63,7 @@ public sealed class SyntaxTree
             return Failed(
                 fullPath,
                 fileName,
-                "Error léxico",
+                ex.Code,
                 ex.Line,
                 ex.Message,
                 "Revise el texto señalado y corríjalo según el alfabeto léxico de TM.");
@@ -73,7 +73,7 @@ public sealed class SyntaxTree
             return Failed(
                 fullPath,
                 fileName,
-                "Error sintáctico",
+                ex.Code,
                 ex.Line,
                 ex.Message,
                 "Revise la estructura de la sentencia según la gramática de TM.");
@@ -83,15 +83,15 @@ public sealed class SyntaxTree
     private static SyntaxTree Failed(
         string fullPath,
         string fileName,
-        string title,
+        string code,
         int line,
         string description,
         string suggestion)
     {
         var diagnostic = new Diagnostic(
             DiagnosticSeverity.Error,
-            DiagnosticCodes.LexicalOrSyntaxError,
-            title,
+            code,
+            DiagnosticCatalog.TitleOf(code),
             fileName,
             line,
             description,

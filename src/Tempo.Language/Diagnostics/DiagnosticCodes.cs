@@ -30,9 +30,28 @@ public static class DiagnosticCodes
     public const string RaggedMatrix = "E019";
     public const string UnimportedFunction = "E020";
 
-    // Los errores léxicos y sintácticos se emiten con un código genérico hasta
-    // que el catálogo E021-E039 (§7.2.2 y §7.2.3) esté asignado por tipo.
-    public const string LexicalOrSyntaxError = "E000";
+    // ---- Errores léxicos (7.2.2) ----
+    public const string InvalidCharacter = "E021";
+    public const string UnterminatedString = "E022";
+    public const string MalformedCharacterLiteral = "E023";
+    public const string InvalidEscapeSequence = "E024";
+    public const string UnterminatedBlockComment = "E025";
+    public const string MalformedNumericLiteral = "E026";
+
+    // ---- Errores sintácticos (7.2.3) ----
+    public const string MissingSemicolon = "E027";
+    public const string MissingBlockDelimiter = "E028";
+    public const string MissingConditionBrackets = "E029";
+    public const string MalformedFunctionDeclaration = "E030";
+    public const string MalformedParameterList = "E031";
+    public const string ExpectedExpression = "E032";
+    public const string UnclosedGrouping = "E033";
+    public const string MalformedVariableDeclaration = "E034";
+    public const string MalformedInputOutput = "E035";
+    public const string MalformedLoopHeader = "E036";
+    public const string MalformedMixStatement = "E037";
+    public const string InvalidStatement = "E038";
+    public const string UnexpectedTopLevelElement = "E039";
 
     // ---- Advertencias (§7.4) ----
     public const string UnusedVariable = "W001";

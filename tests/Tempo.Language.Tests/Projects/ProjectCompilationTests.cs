@@ -198,7 +198,7 @@ public sealed class ProjectCompilationTests
 
         Compilation compilation = project.CompileDirectory();
 
-        AssertReports(compilation, DiagnosticCodes.LexicalOrSyntaxError, "roto.tm");
+        AssertReports(compilation, DiagnosticCodes.MalformedParameterList, "roto.tm");
         AssertReports(compilation, DiagnosticCodes.UndeclaredIdentifier, "principal.tmpr");
     }
 

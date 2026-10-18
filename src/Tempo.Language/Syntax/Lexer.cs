@@ -1,4 +1,5 @@
 using System.Text;
+using Tempo.Language.Diagnostics;
 
 namespace Tempo.Language.Syntax;
 
@@ -252,6 +253,7 @@ public sealed class Lexer : ILexer
         }
 
         throw new LexerException(
+            DiagnosticCodes.UnterminatedBlockComment,
             "Comentario de bloque no cerrado. Se esperaba '##' antes del fin de archivo.",
             _fileName, _line, _column);
     }
@@ -343,6 +345,7 @@ public sealed class Lexer : ILexer
         if (!char.IsDigit(Peek()))
         {
             throw new LexerException(
+                DiagnosticCodes.MalformedNumericLiteral,
                 "Se esperaba al menos un dígito en el literal numérico.",
                 _fileName, _line, _column);
         }
@@ -356,12 +359,19 @@ public sealed class Lexer : ILexer
         if (Peek() == '.' && char.IsDigit(PeekNext()))
         {
             isFloat = true;
-            lexemeBuilder.Append(Advance()); // consume '.'
+            lexemeBuilder.Append(Advance());
 
             while (!IsAtEnd() && char.IsDigit(Peek()))
             {
                 lexemeBuilder.Append(Advance());
             }
+        }
+        else if (Peek() == '.' && !IsIdentifierPart(PeekNext()))
+        {
+            throw new LexerException(
+                DiagnosticCodes.MalformedNumericLiteral,
+                "Se esperaba un dígito después del punto decimal.",
+                _fileName, _line, _column);
         }
 
         string lexeme = lexemeBuilder.ToString();
@@ -387,6 +397,7 @@ public sealed class Lexer : ILexer
             if (c == '\n')
             {
                 throw new LexerException(
+                    DiagnosticCodes.UnterminatedString,
                     "Literal de cadena no cerrado. Las cadenas no pueden abarcar múltiples líneas.",
                     _fileName, _line, _column);
             }
@@ -397,6 +408,7 @@ public sealed class Lexer : ILexer
                 if (IsAtEnd())
                 {
                     throw new LexerException(
+                        DiagnosticCodes.InvalidEscapeSequence,
                         "Secuencia de escape incompleta al final del archivo.",
                         _fileName, _line, _column);
                 }
@@ -409,6 +421,7 @@ public sealed class Lexer : ILexer
                     '"' => '"',
                     '\\' => '\\',
                     _ => throw new LexerException(
+                        DiagnosticCodes.InvalidEscapeSequence,
                         $"Secuencia de escape no válida: '\\{escapeChar}'. Use \\n, \\t, \\\" o \\\\\\",
                         _fileName, _line, _column)
                 };
@@ -423,6 +436,7 @@ public sealed class Lexer : ILexer
         if (IsAtEnd())
         {
             throw new LexerException(
+                DiagnosticCodes.UnterminatedString,
                 "Literal de cadena no cerrado. Se esperaba '\"' antes del fin de archivo.",
                 _fileName, _line, _column);
         }
@@ -443,6 +457,7 @@ public sealed class Lexer : ILexer
         if (IsAtEnd())
         {
             throw new LexerException(
+                DiagnosticCodes.MalformedCharacterLiteral,
                 "Literal de carácter incompleto al final del archivo.",
                 _fileName, _line, _column);
         }
@@ -453,6 +468,7 @@ public sealed class Lexer : ILexer
         if (c == '\n')
         {
             throw new LexerException(
+                DiagnosticCodes.MalformedCharacterLiteral,
                 "Literal de carácter no puede contener nueva línea.",
                 _fileName, _line, _column);
         }
@@ -463,6 +479,7 @@ public sealed class Lexer : ILexer
             if (IsAtEnd())
             {
                 throw new LexerException(
+                    DiagnosticCodes.InvalidEscapeSequence,
                     "Secuencia de escape incompleta en literal de carácter.",
                     _fileName, _line, _column);
             }
@@ -475,6 +492,7 @@ public sealed class Lexer : ILexer
                 '\'' => '\'',
                 '\\' => '\\',
                 _ => throw new LexerException(
+                    DiagnosticCodes.InvalidEscapeSequence,
                     $"Secuencia de escape no válida en carácter: '\\{escapeChar}'.",
                     _fileName, _line, _column)
             };
@@ -487,6 +505,7 @@ public sealed class Lexer : ILexer
         if (IsAtEnd() || Peek() != '\'')
         {
             throw new LexerException(
+                DiagnosticCodes.MalformedCharacterLiteral,
                 "Literal de carácter no cerrado o contiene múltiples caracteres. Se esperaba \"'\".",
                 _fileName, _line, _column);
         }
@@ -616,6 +635,7 @@ public sealed class Lexer : ILexer
             default:
                 Advance();
                 throw new LexerException(
+                    DiagnosticCodes.InvalidCharacter,
                     $"Carácter inesperado '{c}' (U+{(int)c:X4}). No forma parte del alfabeto léxico de TM.",
                     _fileName, startLine, startColumn);
         }

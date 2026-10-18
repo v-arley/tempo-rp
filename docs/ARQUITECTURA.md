@@ -137,8 +137,10 @@ Pasos:
    de entrada), ejecuta el proyecto con `Compilation.Run` sobre la E/S de
    consola.
 
-Los errores léxicos y sintácticos llevan el código genérico `E000`. Los errores
-de ejecución se imprimen como `R### (línea N): mensaje`, con código de salida 1.
+Los errores léxicos y sintácticos utilizan códigos específicos
+del E021 al E039, definidos en DiagnosticCodes y registrados
+en DiagnosticCatalog. Los errores de ejecución se imprimen 
+como `R### (línea N): mensaje`, con código de salida 1.
 
 ## `Tempo.Language.Tests`
 

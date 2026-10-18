@@ -33,6 +33,29 @@ public static class DiagnosticCatalog
             ["E019"] = "Matriz con filas de distinto tamano",
             ["E020"] = "Forward reference a funcion no resuelta",
 
+            // 7.2.2 — Errores léxicos
+            [DiagnosticCodes.InvalidCharacter] = "Caracter no valido",
+            [DiagnosticCodes.UnterminatedString] = "Literal de cadena no cerrado",
+            [DiagnosticCodes.MalformedCharacterLiteral] = "Literal de caracter mal formado",
+            [DiagnosticCodes.InvalidEscapeSequence] = "Secuencia de escape no valida",
+            [DiagnosticCodes.UnterminatedBlockComment] = "Comentario de bloque no cerrado",
+            [DiagnosticCodes.MalformedNumericLiteral] = "Literal numerico mal formado",
+
+            // 7.2.3 — Errores sintácticos
+            [DiagnosticCodes.MissingSemicolon] = "Se esperaba `;` al final de la sentencia",
+            [DiagnosticCodes.MissingBlockDelimiter] = "Delimitador de bloque esperado",
+            [DiagnosticCodes.MissingConditionBrackets] = "Condicion sin corchetes",
+            [DiagnosticCodes.MalformedFunctionDeclaration] = "Declaracion de funcion mal formada",
+            [DiagnosticCodes.MalformedParameterList] = "Lista de parametros mal formada",
+            [DiagnosticCodes.ExpectedExpression] = "Se esperaba una expresion",
+            [DiagnosticCodes.UnclosedGrouping] = "Agrupacion sin cerrar",
+            [DiagnosticCodes.MalformedVariableDeclaration] = "Declaracion de variable o constante mal formada",
+            [DiagnosticCodes.MalformedInputOutput] = "Sentencia de entrada/salida mal formada",
+            [DiagnosticCodes.MalformedLoopHeader] = "Cabecera de `loop` mal formada",
+            [DiagnosticCodes.MalformedMixStatement] = "Sentencia `mix` mal formada",
+            [DiagnosticCodes.InvalidStatement] = "Sentencia no valida",
+            [DiagnosticCodes.UnexpectedTopLevelElement] = "Elemento inesperado en el nivel superior",
+
             // §7.4 — Advertencias
             ["W001"] = "Variable declarada pero no utilizada",
             ["W002"] = "Sombreado de identificador (shadowing)",
