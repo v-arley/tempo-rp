@@ -36,6 +36,8 @@ public class LexerTests
     [InlineData("output", TokenType.Output)]
     [InlineData("input", TokenType.Input)]
     [InlineData("mix", TokenType.Mix)]
+    [InlineData("case", TokenType.Case)]
+    [InlineData("default", TokenType.Default)]
     [InlineData("loop", TokenType.Loop)]
     [InlineData("repeat", TokenType.Repeat)]
     [InlineData("if", TokenType.If)]
