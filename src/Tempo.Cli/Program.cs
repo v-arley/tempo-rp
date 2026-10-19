@@ -14,7 +14,7 @@ using Tempo.Language.Syntax;
 if (args.Length == 0)
 {
     Console.WriteLine(
-        "Uso: Tempo.Cli <directorio|archivo.tmpr|archivo.tm> [--tokens]");
+        "Uso: Tempo.Cli <directorio|archivo.tmpr|archivo.tm> [--tokens] [--ast]");
 
     return;
 }
@@ -28,6 +28,15 @@ bool showTokens =
             string.Equals(
                 argument,
                 "--tokens",
+                StringComparison.Ordinal));
+
+bool showAst =
+    Array.Exists(
+        args,
+        argument =>
+            string.Equals(
+                argument,
+                "--ast",
                 StringComparison.Ordinal));
 
 if (!File.Exists(path) && !Directory.Exists(path))
@@ -63,10 +72,13 @@ if (entry is { IsParsed: true })
                 entry.FileName));
     }
 
-    Console.WriteLine(
-        AstDiagnosticReporter.GenerateAstReport(
-            entry.Root,
-            entry.FileName));
+    if (showAst)
+    {
+        Console.WriteLine(
+            AstDiagnosticReporter.GenerateAstReport(
+                entry.Root,
+                entry.FileName));
+    }
 }
 
 // Un reporte por archivo: siempre el de entrada, y los demás solo si tienen
@@ -164,5 +176,5 @@ catch (TmRuntimeException ex)
     Console.Error.WriteLine(
         diagnostic.ToStandardFormat());
 
-    Environment.ExitCode = 1;
+    Environment.ExitCode = 2;
 }
