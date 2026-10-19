@@ -1,0 +1,4 @@
+session >
+    signal esMenor = 5 < 10;
+    output >> esMenor;
+<

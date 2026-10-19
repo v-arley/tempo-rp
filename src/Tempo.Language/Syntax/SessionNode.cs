@@ -4,5 +4,6 @@ namespace Tempo.Language.Syntax;
 /// Representa la sentencia session del lenguaje TM.
 /// </summary>
 public sealed record SessionNode(
-    BlockNode Body
+    BlockNode Body,
+    int Line
 ) : AstNode;

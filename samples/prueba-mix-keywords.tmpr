@@ -1,0 +1,15 @@
+session >
+    sample opcion = 2;
+
+    mix opcion >
+        case 1: >
+            output >> "Uno";
+        <
+        case 2: >
+            output >> "Dos";
+        <
+        default: >
+            output >> "Otro";
+        <
+    <
+<

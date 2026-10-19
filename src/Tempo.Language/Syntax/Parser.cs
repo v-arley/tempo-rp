@@ -63,6 +63,16 @@ public sealed class Parser : IParser
                 continue;
             }
 
+            if (Check(TokenType.Compose))
+            {
+                throw new ParserException(
+                    DiagnosticCodes.MalformedFunctionDeclaration,
+                    "Se esperaba el tipo de retorno antes de ':'.",
+                    _fileName,
+                    Current.Line,
+                    Current.Column);
+            }
+
             throw new ParserException(
                 DiagnosticCodes.UnexpectedTopLevelElement,
                 $"Se esperaba una declaración de función, 'session' o fin de archivo, pero se encontró '{Current.Lexeme}'.",
@@ -78,6 +88,14 @@ public sealed class Parser : IParser
             session = ParseSession();
         }
 
+        // Almacenar las declaraciones session adicionales
+        var additionalSessions = new List<SessionNode>();
+
+        while (Check(TokenType.Session))
+        {
+            additionalSessions.Add(ParseSession());
+        }
+
         Expect(
             TokenType.EndOfFile,
             "Se esperaba el fin del archivo.",
@@ -86,7 +104,10 @@ public sealed class Parser : IParser
         return new ProgramNode(
             imports,
             functions,
-            session);
+            session)
+        {
+            AdditionalSessions = additionalSessions
+        };
     }
 
     /// <summary>
@@ -217,14 +238,16 @@ public sealed class Parser : IParser
     /// </summary>
     private SessionNode ParseSession()
     {
-        Expect(
+        Token sessionToken = Expect(
             TokenType.Session,
             "Se esperaba la palabra reservada 'session'.",
             DiagnosticCodes.UnexpectedTopLevelElement);
 
         BlockNode body = ParseBlock();
 
-        return new SessionNode(body);
+        return new SessionNode(
+            body,
+            sessionToken.Line);
     }
 
     /// <summary>
@@ -933,15 +956,13 @@ public sealed class Parser : IParser
         while (!Check(TokenType.LessThan) &&
             !Check(TokenType.EndOfFile))
         {
-            if (Check(TokenType.Identifier) &&
-                string.Equals(Current.Lexeme, "case", StringComparison.Ordinal))
+            if (Check(TokenType.Case))
             {
                 cases.Add(ParseMixCase());
                 continue;
             }
 
-            if (Check(TokenType.Identifier) &&
-                string.Equals(Current.Lexeme, "default", StringComparison.Ordinal))
+            if (Check(TokenType.Default))
             {
                 if (defaultBlock is not null)
                 {
@@ -987,8 +1008,7 @@ public sealed class Parser : IParser
     {
         Token caseToken = Current;
 
-        if (caseToken.TokenType != TokenType.Identifier ||
-            !string.Equals(caseToken.Lexeme, "case", StringComparison.Ordinal))
+        if (caseToken.TokenType != TokenType.Case)
         {
             throw new ParserException(
                 DiagnosticCodes.MalformedMixStatement,
@@ -1023,8 +1043,7 @@ public sealed class Parser : IParser
     {
         Token defaultToken = Current;
 
-        if (defaultToken.TokenType != TokenType.Identifier ||
-            !string.Equals(defaultToken.Lexeme, "default", StringComparison.Ordinal))
+        if (defaultToken.TokenType != TokenType.Default)
         {
             throw new ParserException(
                 DiagnosticCodes.MalformedMixStatement,
@@ -1137,6 +1156,7 @@ public sealed class Parser : IParser
         ExpressionNode expression = ParseAdditiveExpression();
 
         while (!IsMixBlockStart() &&
+            !IsClosingBlockDelimiter() &&
             Match(
                 TokenType.GreaterThan,
                 TokenType.LessThan,
@@ -1491,6 +1511,34 @@ public sealed class Parser : IParser
         return _tokens[_position + 1].TokenType == tokenType;
     }
 
+    private bool IsClosingBlockDelimiter()
+    {
+        if (!Check(TokenType.LessThan))
+        {
+            return false;
+        }
+
+        // Cierre al final del archivo, antes de otro cierre
+        // o antes de un else.
+        if (CheckNext(TokenType.EndOfFile) ||
+            CheckNext(TokenType.LessThan) ||
+            CheckNext(TokenType.Else))
+        {
+            return true;
+        }
+
+        if (_position == 0 ||
+            _position + 1 >= _tokens.Count)
+        {
+            return false;
+        }
+
+        Token next = _tokens[_position + 1];
+
+        return Previous.Line < Current.Line &&
+            Current.Line < next.Line;
+    }
+
     /// <summary>
     /// Determina si el token '>' actual corresponde al inicio
     /// del bloque de una sentencia mix y no a un operador relacional.
@@ -1515,9 +1563,8 @@ public sealed class Parser : IParser
             return true;
         }
 
-        return next.TokenType == TokenType.Identifier &&
-            (string.Equals(next.Lexeme, "case", StringComparison.Ordinal) ||
-                string.Equals(next.Lexeme, "default", StringComparison.Ordinal));
+        return next.TokenType == TokenType.Case ||
+            next.TokenType == TokenType.Default;
     }
 
     /// <summary>
@@ -1609,11 +1656,18 @@ public sealed class Parser : IParser
 
         if (current.TokenType != expectedType)
         {
+            int errorLine =
+                expectedType == TokenType.Semicolon &&
+                current.TokenType == TokenType.LessThan &&
+                _position > 0
+                    ? Previous.Line
+                    : current.Line;
+
             throw new ParserException(
                 errorCode,
                 message,
                 _fileName,
-                current.Line,
+                errorLine,
                 current.Column);
         }
 

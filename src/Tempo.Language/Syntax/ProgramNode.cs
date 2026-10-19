@@ -8,4 +8,8 @@ public sealed record ProgramNode(
     IReadOnlyList<ImportNode> Imports,
     IReadOnlyList<FunctionDeclarationNode> Functions,
     SessionNode Session
-) : AstNode;
+) : AstNode
+{
+    public IReadOnlyList<SessionNode> AdditionalSessions { get; init; }
+        = Array.Empty<SessionNode>();
+}

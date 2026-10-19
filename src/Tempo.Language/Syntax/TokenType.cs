@@ -9,7 +9,7 @@ namespace Tempo.Language.Syntax;
 public enum TokenType
 {
     // ---- Palabras reservadas (keywords) ----
-    Compose, Session, Output, Input, Mix, Loop, Repeat,
+    Compose, Session, Output, Input, Mix, Case, Default, Loop, Repeat,
     If, Else, Ret, Import, Const, Sequence, Score,
     True, False, Silence, Sample, Wave, Tone, Phrase, Signal, Void,
     

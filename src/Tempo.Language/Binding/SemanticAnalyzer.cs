@@ -127,6 +127,22 @@ public sealed class SemanticAnalyzer : ISemanticAnalyzer
         DiagnosticBag diagnostics,
         StatementAnalyzer statements)
     {
+
+        // Detectar declaraciones session duplicadas en el archivo principal
+        if (_fileName.EndsWith(
+            ProjectFileExtension,
+            StringComparison.OrdinalIgnoreCase))
+        {
+            foreach (SessionNode duplicateSession in _program.AdditionalSessions)
+            {
+                diagnostics.ReportError(
+                    DiagnosticCodes.SessionMissingOrDuplicated,
+                    duplicateSession.Line,
+                    "El archivo de proyecto declara más de una sentencia 'session'.",
+                    "Conserve una sola sentencia 'session' en el archivo .tmpr.");
+            }
+        }
+
         if (_program.Session is null)
         {
             // Solo el archivo de proyecto está obligado a tener punto de entrada;

@@ -1,0 +1,7 @@
+session >
+    output >> 1;
+<
+
+session >
+    output >> 2;
+<

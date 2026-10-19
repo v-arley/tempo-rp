@@ -19,7 +19,7 @@ public sealed class ModulesDeclareNoSessionRule : IProjectRule
         {
             diagnostics.In(module.FileName).ReportError(
                 DiagnosticCodes.ModuleWithSession,
-                1,
+                module.Root.Session.Line,
                 $"El módulo '{module.FileName}' declara una sentencia 'session'.",
                 "Mueva el punto de entrada al archivo .tmpr del proyecto.");
         }

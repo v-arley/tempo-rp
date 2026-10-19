@@ -1863,7 +1863,7 @@ public class ParserTests
     }
 
     [Fact]
-    public void Parse_MultipleSessions_ThrowsParserException()
+    public void Parse_MultipleSessions_PreservesAdditionalSession()
     {
         const string source =
             """
@@ -1874,7 +1874,14 @@ public class ParserTests
             <
             """;
 
-        Assert.Throws<ParserException>(() => Parse(source));
+        ProgramNode program = Parse(source);
+
+        Assert.NotNull(program.Session);
+
+        SessionNode duplicateSession =
+            Assert.Single(program.AdditionalSessions);
+
+        Assert.Equal(4, duplicateSession.Line);
     }
 
     [Fact]

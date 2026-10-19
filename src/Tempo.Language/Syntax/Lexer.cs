@@ -45,6 +45,8 @@ public sealed class Lexer : ILexer
                 { "output", TokenType.Output },
                 { "input", TokenType.Input },
                 { "mix", TokenType.Mix },
+                { "case", TokenType.Case },
+                { "default", TokenType.Default },
                 { "loop", TokenType.Loop },
                 { "repeat", TokenType.Repeat },
                 { "if", TokenType.If },
