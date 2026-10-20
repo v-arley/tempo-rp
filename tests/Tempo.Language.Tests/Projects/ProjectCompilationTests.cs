@@ -202,6 +202,67 @@ public sealed class ProjectCompilationTests
         AssertReports(compilation, DiagnosticCodes.UndeclaredIdentifier, "principal.tmpr");
     }
 
+    [Fact]
+    public void OpenDocument_ReplacesTheContentOnDisk()
+    {
+        using var project = ProjectWorkspace.With(
+            ("principal.tmpr", "session > output >> y; <\n"));
+
+        Compilation compilation = project.CompileDirectoryWithOpen(
+            ("principal.tmpr", "session > output >> 1; <\n"));
+
+        Assert.False(compilation.HasErrors);
+    }
+
+    [Fact]
+    public void OpenDocument_NotYetSaved_IsPartOfTheProject()
+    {
+        using var project = ProjectWorkspace.With(
+            ("principal.tmpr", "import \"nuevo.tm\";\nsession > output >> doble(5); <\n"));
+
+        Compilation compilation = project.CompileDirectoryWithOpen(
+            ("nuevo.tm", Doubler));
+
+        Assert.False(compilation.HasErrors);
+        Assert.Equal(2, compilation.Project.Files.Count);
+    }
+
+    [Fact]
+    public void DiagnosticsOf_Path_ReturnsOnlyTheDiagnosticsOfThatFile()
+    {
+        using var project = ProjectWorkspace.With(
+            ("roto.tm", "sample : compose roto( > ret 1; <\n"),
+            ("principal.tmpr", "session > output >> y; <\n"));
+
+        Compilation compilation = project.CompileDirectory();
+
+        Diagnostic diagnostic = Assert.Single(compilation.DiagnosticsOf(project.PathOf("principal.tmpr")));
+        Assert.Equal(DiagnosticCodes.UndeclaredIdentifier, diagnostic.Code);
+    }
+
+    [Fact]
+    public void SyntaxError_ReportsTheColumnWhereItStarts()
+    {
+        using var project = ProjectWorkspace.With(
+            ("principal.tmpr", "session > output >> 1 @ 2; <\n"));
+
+        Compilation compilation = project.CompileDirectory();
+
+        Diagnostic diagnostic = Assert.Single(compilation.Diagnostics);
+        Assert.Equal(23, diagnostic.Column);
+    }
+
+    [Fact]
+    public void SemanticError_HasNoColumn()
+    {
+        using var project = ProjectWorkspace.With(
+            ("principal.tmpr", "session > output >> y; <\n"));
+
+        Compilation compilation = project.CompileDirectory();
+
+        Assert.Null(Assert.Single(compilation.Diagnostics).Column);
+    }
+
     private static void AssertReports(Compilation compilation, string code, string fileName)
     {
         Assert.Contains(

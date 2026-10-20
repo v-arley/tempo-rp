@@ -65,6 +65,7 @@ public sealed class SyntaxTree
                 fileName,
                 ex.Code,
                 ex.Line,
+                ex.Column,
                 ex.Message,
                 "Revise el texto señalado y corríjalo según el alfabeto léxico de TM.");
         }
@@ -75,6 +76,7 @@ public sealed class SyntaxTree
                 fileName,
                 ex.Code,
                 ex.Line,
+                ex.Column,
                 ex.Message,
                 "Revise la estructura de la sentencia según la gramática de TM.");
         }
@@ -85,6 +87,7 @@ public sealed class SyntaxTree
         string fileName,
         string code,
         int line,
+        int column,
         string description,
         string suggestion)
     {
@@ -95,7 +98,10 @@ public sealed class SyntaxTree
             fileName,
             line,
             description,
-            suggestion);
+            suggestion)
+        {
+            Column = column
+        };
 
         return new SyntaxTree(fullPath, fileName, null, new[] { diagnostic });
     }

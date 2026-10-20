@@ -54,6 +54,19 @@ public sealed class ProjectWorkspace : IDisposable
         return Compilation.FromPath(PathOf(fileName));
     }
 
+    /// <summary>
+    /// Compila el directorio con documentos abiertos en un editor: su texto
+    /// sustituye al del disco, y pueden no existir en disco todavía.
+    /// </summary>
+    public Compilation CompileDirectoryWithOpen(params (string FileName, string Text)[] openDocuments)
+    {
+        Dictionary<string, string> texts = openDocuments.ToDictionary(
+            document => PathOf(document.FileName),
+            document => document.Text);
+
+        return Compilation.FromPath(Directory, texts);
+    }
+
     /// <summary>Compila el directorio, lo ejecuta y devuelve lo que escribió el programa.</summary>
     public string RunDirectory()
     {
