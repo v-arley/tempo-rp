@@ -76,28 +76,15 @@
             <!-- Cuerpo de la pestaña Output: solo lectura. -->
             <DataTemplate DataType="{x:Type vm:OutputPaneViewModel}">
                 <Border Background="{DynamicResource SurfaceBackgroundBrush}">
-                    <ScrollViewer Margin="10,8" controls:AutoScroll.ToEnd="True"
-                                  VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
-                        <ItemsControl ItemsSource="{Binding Lines}">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <TextBlock Text="{Binding}"
-                                               FontFamily="{DynamicResource CodeFontFamily}"
-                                               FontSize="{DynamicResource CodeFontSize}"
-                                               Foreground="{DynamicResource SecondaryForegroundBrush}"
-                                               TextWrapping="NoWrap" />
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                    </ScrollViewer>
+                    <controls:LogView Lines="{Binding Lines}" />
                 </Border>
             </DataTemplate>
 
             <!-- Cuerpo de la pestaña Terminal: salida arriba, línea de entrada abajo. -->
             <DataTemplate DataType="{x:Type vm:TerminalPaneViewModel}">
                 <Border Background="{DynamicResource SurfaceBackgroundBrush}">
-                    <DockPanel Margin="10,8">
-                        <Grid DockPanel.Dock="Bottom" Margin="0,4,0,0">
+                    <DockPanel>
+                        <Grid DockPanel.Dock="Bottom" Margin="10,2,10,8">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="*" />
@@ -120,20 +107,7 @@
                                 </TextBox.InputBindings>
                             </TextBox>
                         </Grid>
-                        <ScrollViewer controls:AutoScroll.ToEnd="True"
-                                      VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
-                            <ItemsControl ItemsSource="{Binding Lines}">
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <TextBlock Text="{Binding}"
-                                                   FontFamily="{DynamicResource CodeFontFamily}"
-                                                   FontSize="{DynamicResource CodeFontSize}"
-                                                   Foreground="{DynamicResource SecondaryForegroundBrush}"
-                                                   TextWrapping="NoWrap" />
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                        </ScrollViewer>
+                        <controls:LogView Lines="{Binding Lines}" />
                     </DockPanel>
                 </Border>
             </DataTemplate>

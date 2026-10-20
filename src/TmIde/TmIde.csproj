@@ -12,6 +12,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="AvalonEdit" />
     <PackageReference Include="CommunityToolkit.Mvvm" />
   </ItemGroup>
 
@@ -23,7 +24,10 @@
     <Resource Include="..\Assets\IBMPlexMono-Medium.ttf" Link="Assets\IBMPlexMono-Medium.ttf" />
   </ItemGroup>
 
-  <!-- ProjectReference a TmCompiler.* : se añadirá cuando el IDE cablee el Lexer.
-       Esta iteración es solo el esqueleto visual. -->
+  <!-- Pipeline del compilador (Lexer, Parser, analizador semántico) para los
+       diagnósticos del editor. -->
+  <ItemGroup>
+    <ProjectReference Include="..\Tempo.Language\Tempo.Language.csproj" />
+  </ItemGroup>
 
 </Project>

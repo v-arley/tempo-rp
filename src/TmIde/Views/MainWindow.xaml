@@ -33,7 +33,9 @@
     <Grid x:Name="RootLayout">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="6" />
             <RowDefinition Height="*" MinHeight="160" />
+            <RowDefinition Height="6" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
@@ -43,8 +45,11 @@
             <shellviews:TitleMenuBarView DataContext="{Binding}" />
         </Grid>
 
-        <!-- Fila 1: zona central = explorador (izq., altura completa) | editor + terminal (der.) -->
-        <Grid Grid.Row="1">
+        <!-- Fila 1: separador header / centro, a todo el ancho -->
+        <Grid Grid.Row="1" Background="{DynamicResource DividerBrush}" />
+
+        <!-- Fila 2: zona central = explorador (izq., altura completa) | editor + terminal (der.) -->
+        <Grid Grid.Row="2">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="260" MinWidth="170" />
                 <ColumnDefinition Width="Auto" />
@@ -57,7 +62,7 @@
                 <explorer:FileExplorerView DataContext="{Binding Explorer}" />
             </Border>
 
-            <GridSplitter Grid.Column="1" Width="6" HorizontalAlignment="Center"
+            <GridSplitter Grid.Column="1" Width="2" HorizontalAlignment="Center"
                             VerticalAlignment="Stretch" />
 
             <!-- Sección derecha: editor arriba, terminal abajo -->
@@ -73,7 +78,7 @@
                     <editor:EditorHostView DataContext="{Binding EditorHost}" />
                 </Border>
 
-                <GridSplitter Grid.Row="1" Height="6" HorizontalAlignment="Stretch"
+                <GridSplitter Grid.Row="1" Height="2" HorizontalAlignment="Stretch"
                                 VerticalAlignment="Center"
                                 ResizeDirection="Rows" ResizeBehavior="PreviousAndNext" />
 
@@ -84,10 +89,12 @@
             </Grid>
         </Grid>
 
-        <!-- Fila 2: footer -->
-        <Border Grid.Row="2"
-                Background="{DynamicResource SurfaceBackgroundBrush}">
+        <!-- Fila 3: separador centro / footer, a todo el ancho -->
+        <Grid Grid.Row="3" Background="{DynamicResource DividerBrush}" />
+
+        <!-- Fila 4: footer -->
+        <Grid Grid.Row="4">
             <views:StatusBarView DataContext="{Binding StatusBar}" />
-        </Border>
+        </Grid>
     </Grid>
 </Window>

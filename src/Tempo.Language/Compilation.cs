@@ -42,9 +42,14 @@ public sealed class Compilation
         Project.EntryFile is { IsProjectFile: true, IsParsed: true } entry &&
         entry.Root.Session is not null;
 
-    public static Compilation FromPath(string path)
+    /// <summary>
+    /// Compila el proyecto de <paramref name="path"/> (directorio o archivo).
+    /// <paramref name="openDocuments"/> (ruta completa → texto) sustituye al
+    /// contenido en disco: un editor pasa ahí los documentos abiertos.
+    /// </summary>
+    public static Compilation FromPath(string path, IReadOnlyDictionary<string, string> openDocuments = null)
     {
-        return Create(TempoProject.Open(path));
+        return Create(TempoProject.Open(path, openDocuments));
     }
 
     public static Compilation Create(TempoProject project)
@@ -74,6 +79,14 @@ public sealed class Compilation
     public IEnumerable<Diagnostic> DiagnosticsOf(SyntaxTree file)
     {
         return Diagnostics.Where(diagnostic => diagnostic.FileName == file.FileName);
+    }
+
+    /// <summary>Diagnósticos del archivo con esa ruta; vacío si no forma parte del proyecto.</summary>
+    public IEnumerable<Diagnostic> DiagnosticsOf(string path)
+    {
+        SyntaxTree file = Project.FileAt(path);
+
+        return file is null ? Enumerable.Empty<Diagnostic>() : DiagnosticsOf(file);
     }
 
     /// <summary>

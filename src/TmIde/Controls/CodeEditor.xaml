@@ -1,0 +1,59 @@
+<UserControl x:Class="TmIde.Controls.CodeEditor"
+            xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+            xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+            xmlns:ae="http://icsharpcode.net/sharpdevelop/avalonedit"
+            xmlns:analysis="clr-namespace:TmIde.Services.Analysis"
+            mc:Ignorable="d"
+            d:DesignHeight="240" d:DesignWidth="480"
+            Background="{DynamicResource SurfaceBackgroundBrush}">
+
+    <UserControl.Resources>
+        <!-- Un diagnóstico dentro del tooltip: "código  título" con el color de su
+            severidad, la descripción y, si existe, la posible solución atenuada. -->
+        <DataTemplate x:Key="DiagnosticToolTipItemTemplate" DataType="{x:Type analysis:EditorDiagnostic}">
+            <StackPanel>
+                <TextBlock x:Name="Header" FontWeight="SemiBold"
+                        Foreground="{DynamicResource DiagnosticErrorBrush}">
+                    <Run Text="{Binding Code, Mode=OneWay}" /><Run Text="  " /><Run Text="{Binding Title, Mode=OneWay}" />
+                </TextBlock>
+                <TextBlock Text="{Binding Description}" TextWrapping="Wrap" Margin="0,2,0,0" />
+                <TextBlock x:Name="Suggestion" Text="{Binding Suggestion}" TextWrapping="Wrap"
+                        Margin="0,4,0,0" Opacity="0.75" />
+            </StackPanel>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding Severity}" Value="{x:Static analysis:EditorDiagnosticSeverity.Warning}">
+                    <Setter TargetName="Header" Property="Foreground" Value="{DynamicResource DiagnosticWarningBrush}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Suggestion}" Value="">
+                    <Setter TargetName="Suggestion" Property="Visibility" Value="Collapsed" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+
+        <!-- Contenido del tooltip: la lista de diagnósticos bajo el puntero. -->
+        <DataTemplate x:Key="DiagnosticToolTipTemplate">
+            <ItemsControl ItemsSource="{Binding}" MaxWidth="420"
+                    ItemTemplate="{StaticResource DiagnosticToolTipItemTemplate}" />
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <!--
+        Editor de código basado en AvalonEdit: números de línea propios, scroll
+        y coloreado de sintaxis TM (ver Controls/Syntax). Colores de fondo, texto
+        y números de línea enlazados al tema; selección y cursor se aplican en el
+        code-behind (no son propiedades de dependencia).
+    -->
+    <ae:TextEditor x:Name="Editor"
+                    ShowLineNumbers="True"
+                    WordWrap="False"
+                    HorizontalScrollBarVisibility="Auto"
+                    VerticalScrollBarVisibility="Auto"
+                    Background="{DynamicResource SurfaceBackgroundBrush}"
+                    Foreground="{DynamicResource PrimaryForegroundBrush}"
+                    LineNumbersForeground="{DynamicResource TertiaryForegroundBrush}"
+                    FontFamily="{DynamicResource CodeFontFamily}"
+                    FontSize="{DynamicResource CodeFontSize}"
+                    Padding="8,8,8,8" />
+</UserControl>

@@ -10,19 +10,35 @@ namespace Tempo.Language.Projects;
 ///   <item><see cref="FromFile"/>: el archivo indicado es la entrada, y el
 ///   proyecto se completa con los archivos que importa.</item>
 /// </list>
+/// Los documentos abiertos (ruta completa → texto) sustituyen al contenido en
+/// disco, y los que todavía no se guardaron también forman parte del proyecto.
+/// Es lo que permite a un editor compilar lo que el usuario ve, no lo último
+/// que guardó.
 /// </summary>
 
 public sealed class TempoProject
 {
     private const string SourcePattern = "*.tm*";
 
+    private static readonly IReadOnlyDictionary<string, string> _noOpenDocuments =
+        new Dictionary<string, string>();
+
     private readonly List<SyntaxTree> _files = new();
     private readonly Dictionary<string, SyntaxTree> _filesByPath = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, string> _openDocuments;
 
-    private TempoProject(string rootDirectory, bool isWholeDirectory)
+    private TempoProject(
+        string rootDirectory,
+        bool isWholeDirectory,
+        IReadOnlyDictionary<string, string> openDocuments)
     {
         RootDirectory = rootDirectory;
         IsWholeDirectory = isWholeDirectory;
+        _openDocuments = (openDocuments ?? _noOpenDocuments)
+            .ToDictionary(
+                document => Path.GetFullPath(document.Key),
+                document => document.Value,
+                StringComparer.OrdinalIgnoreCase);
     }
 
     public string RootDirectory { get; }
@@ -39,18 +55,27 @@ public sealed class TempoProject
 
     public IEnumerable<SyntaxTree> Modules => _files.Where(file => file.IsModule);
 
-    public static TempoProject Open(string path)
+    public static TempoProject Open(string path, IReadOnlyDictionary<string, string> openDocuments = null)
     {
-        return Directory.Exists(path) ? FromDirectory(path) : FromFile(path);
+        return Directory.Exists(path)
+            ? FromDirectory(path, openDocuments)
+            : FromFile(path, openDocuments);
     }
 
-    public static TempoProject FromDirectory(string directory)
+    public static TempoProject FromDirectory(string directory, IReadOnlyDictionary<string, string> openDocuments = null)
     {
-        var project = new TempoProject(Path.GetFullPath(directory), isWholeDirectory: true);
+        var project = new TempoProject(Path.GetFullPath(directory), isWholeDirectory: true, openDocuments);
 
-        IEnumerable<string> sources = Directory
+        IEnumerable<string> savedSources = Directory
             .EnumerateFiles(project.RootDirectory, SourcePattern)
-            .Where(IsSourceFile)
+            .Where(IsSourceFile);
+
+        IEnumerable<string> unsavedSources = project._openDocuments.Keys
+            .Where(path => IsSourceFile(path) && IsInDirectory(path, project.RootDirectory));
+
+        IEnumerable<string> sources = savedSources
+            .Concat(unsavedSources)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
             .OrderBy(path => path, StringComparer.OrdinalIgnoreCase);
 
         foreach (string source in sources)
@@ -62,10 +87,10 @@ public sealed class TempoProject
         return project;
     }
 
-    public static TempoProject FromFile(string filePath)
+    public static TempoProject FromFile(string filePath, IReadOnlyDictionary<string, string> openDocuments = null)
     {
         string fullPath = Path.GetFullPath(filePath);
-        var project = new TempoProject(Path.GetDirectoryName(fullPath), isWholeDirectory: false);
+        var project = new TempoProject(Path.GetDirectoryName(fullPath), isWholeDirectory: false, openDocuments);
 
         project.EntryFile = project.Add(fullPath);
         return project;
@@ -73,7 +98,8 @@ public sealed class TempoProject
 
     /// <summary>
     /// Devuelve el archivo con esa ruta, cargándolo si todavía no forma parte del
-    /// proyecto. Devuelve <c>null</c> si el archivo no existe.
+    /// proyecto. Devuelve <c>null</c> si no existe ni en disco ni entre los
+    /// documentos abiertos.
     /// </summary>
     public SyntaxTree FindOrLoad(string fullPath)
     {
@@ -82,7 +108,14 @@ public sealed class TempoProject
             return existing;
         }
 
-        return File.Exists(fullPath) ? Add(fullPath) : null;
+        return _openDocuments.ContainsKey(fullPath) || File.Exists(fullPath) ? Add(fullPath) : null;
+    }
+
+    /// <summary>Archivo del proyecto con esa ruta, o <c>null</c> si no forma parte de él.</summary>
+    public SyntaxTree FileAt(string path)
+    {
+        _filesByPath.TryGetValue(Path.GetFullPath(path), out SyntaxTree file);
+        return file;
     }
 
     private static bool IsSourceFile(string path)
@@ -93,10 +126,18 @@ public sealed class TempoProject
                extension.Equals(SyntaxTree.ProjectFileExtension, StringComparison.OrdinalIgnoreCase);
     }
 
+    private static bool IsInDirectory(string path, string directory)
+    {
+        return string.Equals(Path.GetDirectoryName(path), directory, StringComparison.OrdinalIgnoreCase);
+    }
+
     private SyntaxTree Add(string fullPath)
     {
         string fileName = Path.GetRelativePath(RootDirectory, fullPath);
-        SyntaxTree file = SyntaxTree.Load(fullPath, fileName);
+
+        SyntaxTree file = _openDocuments.TryGetValue(fullPath, out string openText)
+            ? SyntaxTree.Parse(openText, fullPath, fileName)
+            : SyntaxTree.Load(fullPath, fileName);
 
         _files.Add(file);
         _filesByPath.Add(fullPath, file);

@@ -1,6 +1,7 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                    xmlns:sys="clr-namespace:System;assembly=mscorlib">
+                    xmlns:sys="clr-namespace:System;assembly=mscorlib"
+                    xmlns:search="clr-namespace:ICSharpCode.AvalonEdit.Search;assembly=ICSharpCode.AvalonEdit">
 
     <!--
         Estilos compartidos: se mergean en App.xaml para que todas las ventanas
@@ -65,68 +66,40 @@
         </Setter>
     </Style>
 
-    <!-- Botón de barra de estado (COMPILE / DEBUG): pastilla con icono + texto en
-        versalitas. Usa la paleta teal fija de la barra de estado, no los brushes
-        del tema. Esquinas rectas; margen uniforme de 3. -->
+    <!-- Botón de barra de estado (COMPILE / RUN / DEBUG): paralelogramo oscuro
+        (#1B212A) con texto blanco. La forma es un Path con Stretch=Fill, así
+        que se adapta al Width/Height del botón manteniendo la inclinación.
+        Hover/pressed se pintan con una capa superpuesta de la misma forma. -->
     <Style x:Key="StatusActionButton" TargetType="Button">
-        <Setter Property="Foreground" Value="#063F48" />
-        <Setter Property="Background" Value="#A4B1C7" />
-        <Setter Property="BorderBrush" Value="#063F48" />
-        <Setter Property="BorderThickness" Value="1" />
-        <Setter Property="Padding" Value="11,4" />
-        <Setter Property="Margin" Value="3" />
+        <Setter Property="Foreground" Value="White" />
+        <Setter Property="Background" Value="{DynamicResource ChromeShapeBrush}" />
+        <Setter Property="Width" Value="90" />
+        <Setter Property="Height" Value="16" />
+        <Setter Property="Margin" Value="8,0,0,0" />
         <Setter Property="Cursor" Value="Hand" />
-        <Setter Property="SnapsToDevicePixels" Value="True" />
-        <Setter Property="FontFamily" Value="{DynamicResource CodeFontFamily}" />
+        <Setter Property="FontSize" Value="9" />
         <Setter Property="FontWeight" Value="Medium" />
-        <Setter Property="FontSize" Value="10.5" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
-                    <Border x:Name="Chrome"
-                            Background="{TemplateBinding Background}"
-                            BorderBrush="{TemplateBinding BorderBrush}"
-                            BorderThickness="{TemplateBinding BorderThickness}"
-                            Padding="{TemplateBinding Padding}">
-                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
-                    </Border>
+                    <Grid>
+                        <Path Stretch="Fill" Fill="{TemplateBinding Background}"
+                                Data="M0,0 L174,0 L180,32 L6,32 Z" />
+                        <Path x:Name="Overlay" Stretch="Fill" Fill="Transparent"
+                                Data="M0,0 L174,0 L180,32 L6,32 Z" />
+                        <!-- TextBlock explícito con Foreground local: un ContentPresenter
+                            generaría el TextBlock con el estilo implícito global
+                            (PrimaryForegroundBrush) y el texto no saldría blanco. -->
+                        <TextBlock Text="{TemplateBinding Content}"
+                                    Foreground="{TemplateBinding Foreground}"
+                                    HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="Chrome" Property="Background" Value="#95A3BB" />
+                            <Setter TargetName="Overlay" Property="Fill" Value="#1FFFFFFF" />
                         </Trigger>
                         <Trigger Property="IsPressed" Value="True">
-                            <Setter TargetName="Chrome" Property="Background" Value="#8695B0" />
-                        </Trigger>
-                        <Trigger Property="IsEnabled" Value="False">
-                            <Setter Property="Opacity" Value="0.4" />
-                        </Trigger>
-                    </ControlTemplate.Triggers>
-                </ControlTemplate>
-            </Setter.Value>
-        </Setter>
-    </Style>
-
-    <!-- Variante RUN: teal y blanco-azulado intercambiados respecto a StatusActionButton -->
-    <Style x:Key="StatusRunButton" TargetType="Button" BasedOn="{StaticResource StatusActionButton}">
-        <Setter Property="Foreground" Value="#A4B1C7" />
-        <Setter Property="Background" Value="#063F48" />
-        <Setter Property="BorderBrush" Value="#063F48" />
-        <Setter Property="Template">
-            <Setter.Value>
-                <ControlTemplate TargetType="Button">
-                    <Border x:Name="Chrome"
-                            Background="{TemplateBinding Background}"
-                            BorderBrush="{TemplateBinding BorderBrush}"
-                            BorderThickness="{TemplateBinding BorderThickness}"
-                            Padding="{TemplateBinding Padding}">
-                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
-                    </Border>
-                    <ControlTemplate.Triggers>
-                        <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="Chrome" Property="Background" Value="#0A555F" />
-                        </Trigger>
-                        <Trigger Property="IsPressed" Value="True">
-                            <Setter TargetName="Chrome" Property="Background" Value="#04323A" />
+                            <Setter TargetName="Overlay" Property="Fill" Value="#33000000" />
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter Property="Opacity" Value="0.4" />
@@ -253,19 +226,22 @@
 
     <!-- GridSplitter -->
 
+    <!-- La línea ocupa todo el splitter, sin márgenes ni relleno: su grosor es
+        el Width/Height que fije cada GridSplitter. Siempre visible en oscuro
+        (#1B212A); en hover pasa al rojo de acento (#BF3B2C). -->
     <Style TargetType="GridSplitter">
-        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Background" Value="{DynamicResource DividerBrush}" />
         <Setter Property="ShowsPreview" Value="True" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="GridSplitter">
-                    <Border Background="{TemplateBinding Background}" />
+                    <Rectangle Fill="{TemplateBinding Background}" />
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
         <Style.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
-                <Setter Property="Background" Value="{DynamicResource AccentBrush}" />
+                <Setter Property="Background" Value="#BF3B2C" />
             </Trigger>
         </Style.Triggers>
     </Style>
@@ -449,6 +425,108 @@
                             <Setter Property="Opacity" Value="0.4" />
                         </Trigger>
                     </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+
+    <!-- Panel de búsqueda del editor (Ctrl+F, AvalonEdit). Se reemplaza su plantilla
+        por defecto (fondo blanco, iconos de imagen) por una oscura como el
+        explorador, con los controles propios de la UI. Debe vivir a nivel de
+        aplicación: el panel se muestra en la capa de adorno de la ventana, fuera
+        del árbol del UserControl del editor. -->
+
+    <Style x:Key="SearchIconButton" TargetType="Button">
+        <Setter Property="Foreground" Value="#E7EBEF" />
+        <Setter Property="Width" Value="24" />
+        <Setter Property="Height" Value="24" />
+        <Setter Property="Focusable" Value="False" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="Chrome" Background="Transparent">
+                        <!-- TextBlock explícito con Foreground local: un ContentPresenter generaría el
+                            TextBlock con el estilo implícito global (color oscuro) -->
+                        <TextBlock Text="{TemplateBinding Content}" Foreground="{TemplateBinding Foreground}"
+                                   FontSize="{TemplateBinding FontSize}"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Chrome" Property="Background" Value="#3C4552" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="SearchToggleButton" TargetType="ToggleButton">
+        <Setter Property="Foreground" Value="#E7EBEF" />
+        <Setter Property="Width" Value="24" />
+        <Setter Property="Height" Value="24" />
+        <Setter Property="Focusable" Value="False" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ToggleButton">
+                    <Border x:Name="Chrome" Background="Transparent">
+                        <!-- TextBlock explícito con Foreground local: un ContentPresenter generaría el
+                            TextBlock con el estilo implícito global (color oscuro) -->
+                        <TextBlock Text="{TemplateBinding Content}" Foreground="{TemplateBinding Foreground}"
+                                   FontSize="{TemplateBinding FontSize}"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Chrome" Property="Background" Value="#3C4552" />
+                        </Trigger>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="Chrome" Property="Background" Value="{DynamicResource AccentBrush}" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style TargetType="search:SearchPanel">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="search:SearchPanel">
+                    <Border Background="{DynamicResource PanelOverlayBrush}"
+                            BorderBrush="{DynamicResource DividerBrush}" BorderThickness="1"
+                            HorizontalAlignment="Right" VerticalAlignment="Top"
+                            Margin="0,4,22,0" Padding="4" Cursor="Arrow">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBox x:Name="PART_searchTextBox" Width="190" Height="24" Focusable="True"
+                                     Padding="6,0" VerticalContentAlignment="Center"
+                                     Background="{DynamicResource InputBackgroundBrush}"
+                                     Foreground="#E7EBEF" CaretBrush="#E7EBEF"
+                                     FontFamily="{DynamicResource CodeFontFamily}" FontSize="12"
+                                     Text="{Binding SearchPattern, RelativeSource={RelativeSource TemplatedParent}, UpdateSourceTrigger=PropertyChanged}" />
+                            <ToggleButton Style="{StaticResource SearchToggleButton}" Margin="4,0,0,0" Content="Aa"
+                                          FontSize="11" ToolTip="{Binding Localization.MatchCaseText, RelativeSource={RelativeSource TemplatedParent}}"
+                                          IsChecked="{Binding MatchCase, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}" />
+                            <ToggleButton Style="{StaticResource SearchToggleButton}" Content="W"
+                                          FontSize="11" ToolTip="{Binding Localization.MatchWholeWordsText, RelativeSource={RelativeSource TemplatedParent}}"
+                                          IsChecked="{Binding WholeWords, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}" />
+                            <ToggleButton Style="{StaticResource SearchToggleButton}" Content=".*"
+                                          FontSize="11" ToolTip="{Binding Localization.UseRegexText, RelativeSource={RelativeSource TemplatedParent}}"
+                                          IsChecked="{Binding UseRegex, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}" />
+                            <Button Style="{StaticResource SearchIconButton}" Margin="4,0,0,0" Content="↑"
+                                    Command="search:SearchCommands.FindPrevious"
+                                    ToolTip="{Binding Localization.FindPreviousText, RelativeSource={RelativeSource TemplatedParent}}" />
+                            <Button Style="{StaticResource SearchIconButton}" Content="↓"
+                                    Command="search:SearchCommands.FindNext"
+                                    ToolTip="{Binding Localization.FindNextText, RelativeSource={RelativeSource TemplatedParent}}" />
+                            <Button Style="{StaticResource SearchIconButton}" Content="✕"
+                                    Command="search:SearchCommands.CloseSearchPanel" />
+                        </StackPanel>
+                    </Border>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>

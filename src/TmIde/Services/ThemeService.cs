@@ -34,6 +34,8 @@ public sealed class ThemeService : IThemeService
             merged.Remove(previous);
         }
 
+        // Los controles reaccionan solos: sus pinceles están enlazados con
+        // DynamicResource y WPF los actualiza al reemplazar el diccionario.
         Current = theme;
     }
 

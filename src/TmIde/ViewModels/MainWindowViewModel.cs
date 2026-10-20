@@ -1,3 +1,4 @@
+using System;
 using System.ComponentModel;
 
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -24,14 +25,18 @@ public sealed partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty]
     private string _title = "TMIDE";
 
-    public MainWindowViewModel(IThemeService themeService)
+    /// <param name="bottomPanel">
+    /// Se recibe ya creado porque otros servicios (el diálogo de inicio) también
+    /// escriben en él.
+    /// </param>
+    public MainWindowViewModel(IThemeService themeService, IStartDialogService startDialog, BottomPanelViewModel bottomPanel)
     {
         _themeService = themeService;
 
         EditorHost = new EditorHostViewModel();
-        BottomPanel = new BottomPanelViewModel();
+        BottomPanel = bottomPanel;
         Explorer = new FileExplorerViewModel();
-        MenuBar = new MenuBarViewModel(themeService, BottomPanel.Log);
+        MenuBar = new MenuBarViewModel(themeService, startDialog, BottomPanel.Log);
         StatusBar = new StatusBarViewModel(EditorHost);
 
         EditorHost.PropertyChanged += OnEditorHostPropertyChanged;

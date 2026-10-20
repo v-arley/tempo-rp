@@ -33,5 +33,33 @@
     <SolidColorBrush x:Key="TertiaryForegroundBrush"    Color="#6F7B87" />
     <SolidColorBrush x:Key="CloseButtonHoverBrush"      Color="#E81123" />
     <SolidColorBrush x:Key="TitleMenuForegroundBrush"   Color="#A0B2D6" />
+    <SolidColorBrush x:Key="ChromeShapeBrush"           Color="#3A4452" />
+    <SolidColorBrush x:Key="ChromeShapeHoverBrush"      Color="#4A5566" />
+
+    <!-- Colores de sintaxis del editor (sobre SurfaceBackgroundBrush) -->
+    <SolidColorBrush x:Key="SyntaxKeywordBrush"         Color="#E0604F" />
+    <SolidColorBrush x:Key="SyntaxTypeBrush"            Color="#6CB6E8" />
+    <SolidColorBrush x:Key="SyntaxLiteralBrush"         Color="#C792EA" />
+    <SolidColorBrush x:Key="SyntaxNumberBrush"          Color="#7FD1B0" />
+    <SolidColorBrush x:Key="SyntaxStringBrush"          Color="#E5C07B" />
+    <SolidColorBrush x:Key="SyntaxCommentBrush"         Color="#6F7B87" />
+
+    <!-- Subrayado de diagnósticos del editor -->
+    <SolidColorBrush x:Key="DiagnosticErrorBrush"       Color="#FF6B5E" />
+    <SolidColorBrush x:Key="DiagnosticWarningBrush"     Color="#E5B04A" />
+
+    <!-- Pantalla de inicio: fondo central, rótulos de sección y mensaje de error -->
+    <SolidColorBrush x:Key="StartCentralBrush"          Color="#1B212A" />
+    <SolidColorBrush x:Key="StartBarBrush"              Color="#12161C" />
+    <SolidColorBrush x:Key="StartFrameBrush"            Color="#12161C" />
+    <SolidColorBrush x:Key="StartCaptionBrush"          Color="#8C99AD" />
+    <SolidColorBrush x:Key="StartErrorBrush"            Color="#E0604F" />
+    <SolidColorBrush x:Key="StartTextStrongBrush"       Color="#FFFFFF" />
+    <SolidColorBrush x:Key="StartTextBrush"             Color="#B6C1D3" />
+    <SolidColorBrush x:Key="StartTextMutedBrush"        Color="#6F7B87" />
+    <SolidColorBrush x:Key="StartTextDimBrush"          Color="#8C99AD" />
+    <SolidColorBrush x:Key="StartVeilHoverBrush"        Color="#0DFFFFFF" />
+    <SolidColorBrush x:Key="StartVeilSelectedBrush"     Color="#14FFFFFF" />
+    <SolidColorBrush x:Key="StartAccentTextBrush"       Color="#E0604F" />
 
 </ResourceDictionary>

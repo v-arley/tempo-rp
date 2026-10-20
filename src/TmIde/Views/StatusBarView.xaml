@@ -7,53 +7,67 @@
             mc:Ignorable="d"
             d:DataContext="{x:Static design:DesignData.StatusBar}"
             d:DesignWidth="900"
-            Height="36">
+            Height="34">
 
-    <!-- Barra de estado. Las acciones COMPILE / RUN / DEBUG usan una paleta
-        teal propia y fija (segundo acento de marca, no sigue el tema). -->
-    <Border Background="{DynamicResource SurfaceBackgroundBrush}"
-            BorderBrush="{DynamicResource DividerBrush}"
-            BorderThickness="0,1,0,0"
-            Padding="4,3">
-        <Grid>
+    <!-- Footer: misma distribución que el header, reflejada. Contenedor principal
+            a todo el ancho con dos hijos en columna.
+            Fila 0: barra en tres secciones de igual ancho
+                    (indicadores | reservado | acciones).
+            Fila 1: franja inferior oscura de 6px.
+            Sin Border: los fondos van en Grid. -->
+    <Grid Background="{DynamicResource WindowBackgroundBrush}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="28" />
+            <RowDefinition Height="6" />
+        </Grid.RowDefinitions>
+
+        <!-- Hijo superior: izquierda / centro / derecha, un tercio cada una -->
+        <Grid Grid.Row="0">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
-        <!-- Botones decorativos: sin acción asociada -->
-        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="3,0,0,0">
-            <Button Style="{StaticResource StatusActionButton}">
-                <StackPanel Orientation="Horizontal">
-                    <Path Style="{StaticResource IconPath}" Width="12" Height="12" Data="{StaticResource IconCompile}"
-                            Fill="#063F48" />
-                    <TextBlock Text="COMPILE" Margin="6,0,0,0" Foreground="#063F48" />
-                </StackPanel>
-            </Button>
-            <Button Style="{StaticResource StatusRunButton}">
-                <StackPanel Orientation="Horizontal">
-                    <Path Style="{StaticResource IconPath}" Width="12" Height="12" Data="{StaticResource IconRun}"
-                            Fill="#A4B1C7" />
-                    <TextBlock Text="RUN" Margin="6,0,0,0" Foreground="#A4B1C7" />
-                </StackPanel>
-            </Button>
-            <Button Style="{StaticResource StatusActionButton}">
-                <StackPanel Orientation="Horizontal">
-                    <Path Style="{StaticResource IconPath}" Width="12" Height="12" Data="{StaticResource IconDebug}"
-                            Fill="#063F48" />
-                    <TextBlock Text="DEBUG" Margin="6,0,0,0" Foreground="#063F48" />
-                </StackPanel>
-            </Button>
-        </StackPanel>
+            <!-- Izquierda: posición del cursor y codificación del documento activo -->
+            <TextBlock Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center"
+                        Margin="11,0,0,0"
+                        FontFamily="{DynamicResource CodeFontFamily}" FontWeight="Medium" FontSize="11"
+                        Foreground="{DynamicResource TitleMenuForegroundBrush}">
+                <Run Text="{Binding CaretPosition, Mode=OneWay}" />
+                <Run Text="   " />
+                <Run Text="{Binding Encoding, Mode=OneWay}" />
+                <Run Text="   " />
+                <Run Text="{Binding ProblemsSummary, Mode=OneWay}" />
+            </TextBlock>
 
-        <!-- Posición del cursor y codificación del documento activo -->
-        <TextBlock Grid.Column="2" VerticalAlignment="Center" Margin="0,0,14,0"
-                    FontSize="10.5" Foreground="{DynamicResource SecondaryForegroundBrush}">
-            <Run Text="{Binding CaretPosition, Mode=OneWay}" />
-            <Run Text="   " />
-            <Run Text="{Binding Encoding, Mode=OneWay}" />
-        </TextBlock>
+            <!-- Centro: contenedor que ocupa todo el segmento central y, dentro, la
+                placa trapezoidal que sube desde la franja inferior (reflejo de la
+                del header). Decorativa; queda libre para contenido futuro. -->
+            <Grid Grid.Column="1">
+                <Path HorizontalAlignment="Center" VerticalAlignment="Bottom"
+                        Width="212" Height="22" IsHitTestVisible="False"
+                        Stretch="Fill" Fill="{DynamicResource DividerBrush}"
+                        Data="M14,0 L198,0 L212,22 L0,22 Z" />
+            </Grid>
+
+            <!-- Derecha: botones decorativos, sin acción asociada. Botones de 16 en
+                una barra de 28: 6px arriba y abajo. Cierra el grupo una figura con la
+                misma forma pero con el lateral derecho recto, pegada al borde. -->
+            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center"
+                        HorizontalAlignment="Right">
+                <Button Style="{StaticResource StatusActionButton}" Content="COMPILE" />
+                <Button Style="{StaticResource StatusActionButton}" Content="RUN" />
+                <Button Style="{StaticResource StatusActionButton}" Content="DEBUG" />
+                <!-- 22x16 (25% del ancho de un botón). Geometría a tamaño real, sin
+                    Stretch, para conservar la inclinación de 3px de los botones. -->
+                <Path Width="22" Height="16" Margin="8,0,0,0" IsHitTestVisible="False"
+                        Fill="{DynamicResource ChromeShapeBrush}"
+                        Data="M0,0 L22,0 L22,16 L3,16 Z" />
+            </StackPanel>
         </Grid>
-    </Border>
+
+        <!-- Hijo inferior: franja oscura -->
+        <Grid Grid.Row="1" Background="{DynamicResource DividerBrush}" />
+    </Grid>
 </UserControl>

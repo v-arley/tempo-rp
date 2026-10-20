@@ -1,9 +1,11 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 
 using CommunityToolkit.Mvvm.ComponentModel;
 
+using TmIde.Services.Analysis;
 using TmIde.ViewModels;
 
 namespace TmIde.ViewModels.Editor;
@@ -18,10 +20,15 @@ public sealed partial class EditorHostViewModel : ViewModelBase
     [ObservableProperty]
     private EditorDocumentViewModel? _selectedDocument;
 
-    public EditorHostViewModel()
+    private readonly ICodeAnalysisService _analysisService;
+
+    public EditorHostViewModel(ICodeAnalysisService? analysis = null)
     {
+        _analysisService = analysis ?? new CodeAnalysisService();
         Documents = new ObservableCollection<EditorDocumentViewModel>();
         Breadcrumb = new ObservableCollection<BreadcrumbSegmentViewModel>();
+
+        AddPlaceholderDocuments();
     }
 
     public ObservableCollection<EditorDocumentViewModel> Documents { get; }
@@ -38,10 +45,43 @@ public sealed partial class EditorHostViewModel : ViewModelBase
             return;
         }
 
-        var document = new EditorDocumentViewModel(fileName, fileName, string.Empty, CloseDocument);
+        var document = new EditorDocumentViewModel(
+            fileName, fileName, string.Empty, CloseDocument, _analysisService, openDocumentTexts: OpenDocumentTexts);
 
         Documents.Add(document);
         SelectedDocument = document;
+    }
+
+    // TEMPORAL: documentos de relleno para visualizar las pestañas del editor
+    // mientras no hay apertura real de archivos. Eliminar al conectar el explorador.
+    private void AddPlaceholderDocuments()
+    {
+        Documents.Add(new EditorDocumentViewModel(
+            "main.tm", "src/main.tm",
+            "# main.tm — documento de relleno\n# Punto de entrada del programa TM.\n",
+            CloseDocument, _analysisService, openDocumentTexts: OpenDocumentTexts));
+        Documents.Add(new EditorDocumentViewModel(
+            "matematicas.tm", "src/lib/matematicas.tm",
+            "# matematicas.tm — documento de relleno\n# Funciones auxiliares importadas desde main.tm.\n",
+            CloseDocument, _analysisService, openDocumentTexts: OpenDocumentTexts));
+
+        SelectedDocument = Documents[0];
+    }
+
+    /// <summary>
+    /// Texto de cada documento abierto, por ruta completa. El compilador lo usa
+    /// en lugar del contenido en disco. Solo desde el hilo de la UI.
+    /// </summary>
+    private IReadOnlyDictionary<string, string> OpenDocumentTexts()
+    {
+        var texts = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var document in Documents)
+        {
+            texts[document.FilePath] = document.Content;
+        }
+
+        return texts;
     }
 
     private void CloseDocument(EditorDocumentViewModel document)

@@ -19,6 +19,13 @@ public sealed record Diagnostic(
     string Description,
     string Suggestion)
 {
+    /// <summary>
+    /// Columna donde empieza el error, o <c>null</c> cuando la fase solo conoce
+    /// la línea (análisis semántico). No forma parte del formato de la §7.1; la
+    /// usan los hosts que subrayan el texto, como el IDE.
+    /// </summary>
+    public int? Column { get; init; }
+
     public bool IsError => Severity == DiagnosticSeverity.Error;
 
     /// <summary>
