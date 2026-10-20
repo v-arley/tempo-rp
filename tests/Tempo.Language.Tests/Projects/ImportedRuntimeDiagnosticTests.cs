@@ -39,5 +39,9 @@ public sealed class ImportedRuntimeDiagnosticTests
         Assert.Equal(
             2,
             exception.Line);
+
+        Assert.Equal(
+            "matematicas.tm",
+            exception.ToDiagnostic("principal.tmpr").FileName);
     }
 }
