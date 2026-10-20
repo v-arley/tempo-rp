@@ -98,4 +98,13 @@ public sealed class DiagnosticTests
         Assert.Equal("principal.tmpr", bag.Diagnostics[0].FileName);
         Assert.True(bag.HasErrors);
     }
+
+    [Theory]
+    [InlineData("E027", "Se esperaba ';' al final de la sentencia")]
+    [InlineData("E036", "Cabecera de 'loop' mal formada")]
+    [InlineData("E037", "Sentencia 'mix' mal formada")]
+    public void TitleOf_SyntaxCode_HasNoMarkdownBackticks(string code, string expected)
+    {
+        Assert.Equal(expected, DiagnosticCatalog.TitleOf(code));
+    }
 }

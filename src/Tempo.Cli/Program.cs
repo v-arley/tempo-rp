@@ -135,43 +135,9 @@ try
 }
 catch (TmRuntimeException ex)
 {
-    string suggestion = ex.Code switch
-    {
-        RuntimeErrorCodes.DivisionByZero =>
-            "Verifique que el divisor sea diferente de cero.",
-
-        RuntimeErrorCodes.IndexOutOfBounds =>
-            "Verifique que el indice este dentro de los limites de la coleccion.",
-
-        RuntimeErrorCodes.ArithmeticOverflow =>
-            "Utilice valores que no excedan el rango permitido por el tipo de dato.",
-
-        RuntimeErrorCodes.InputParseError =>
-            "Ingrese un valor compatible con el tipo de dato esperado.",
-
-        RuntimeErrorCodes.UndefinedFunction =>
-            "Verifique que la funcion exista y este correctamente declarada.",
-
-        RuntimeErrorCodes.InputEndOfFile =>
-            "Proporcione los datos de entrada necesarios antes de finalizar la entrada.",
-
-        RuntimeErrorCodes.InvalidToneInput =>
-            "Ingrese un caracter valido para el tipo tone.",
-
-        _ => "Revise la operacion que produjo el error."
-    };
-
-    string fileName =
-        ex.FileName ?? compilation.Project.EntryFile.FileName;
-
-    var diagnostic = new Diagnostic(
-        DiagnosticSeverity.Error,
-        ex.Code,
-        DiagnosticCatalog.TitleOf(ex.Code),
-        fileName,
-        ex.Line,
-        ex.Message,
-        suggestion);
+    Diagnostic diagnostic =
+        ex.ToDiagnostic(
+            compilation.Project.EntryFile.FileName);
 
     Console.Error.WriteLine(
         diagnostic.ToStandardFormat());
