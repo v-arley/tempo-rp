@@ -14,7 +14,10 @@ namespace TmIde.Design;
 
 public static class DesignData
 {
-    public static MainWindowViewModel MainWindow { get; } = new(new NoopThemeService());
+    public static MainWindowViewModel MainWindow { get; } = new(
+        new NoopThemeService(),
+        new NoopStartDialogService(),
+        new BottomPanelViewModel());
 
     public static FileExplorerViewModel Explorer => MainWindow.Explorer;
 
@@ -31,5 +34,12 @@ public static class DesignData
         public void Apply(AppTheme theme) => Current = theme;
 
         public void Toggle() => Current = Current == AppTheme.Light ? AppTheme.Dark : AppTheme.Light;
+    }
+
+    private sealed class NoopStartDialogService : IStartDialogService
+    {
+        public void Show()
+        {
+        }
     }
 }

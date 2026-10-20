@@ -1,0 +1,190 @@
+<Window x:Class="TmIde.Views.Start.StartHelpWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Guía de inicio"
+        Width="620" SizeToContent="Height" MaxHeight="640"
+        WindowStartupLocation="CenterOwner"
+        WindowStyle="None"
+        ResizeMode="NoResize"
+        ShowInTaskbar="False"
+        Background="{DynamicResource WindowBackgroundBrush}"
+        KeyDown="OnKeyDown"
+        TextOptions.TextFormattingMode="Ideal"
+        UseLayoutRounding="True">
+
+    <Window.Resources>
+        <!-- Título de cada punto de la guía -->
+        <Style x:Key="HelpTitle" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="{DynamicResource CodeFontFamily}" />
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="FontWeight" Value="Medium" />
+            <Setter Property="Foreground" Value="#E4E9F0" />
+        </Style>
+
+        <!-- Descripción del punto -->
+        <Style x:Key="HelpBody" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Foreground" Value="#8C99AD" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="Margin" Value="0,3,0,0" />
+        </Style>
+
+        <!-- Un punto = marca roja de 3px + título + descripción -->
+        <Style x:Key="HelpItem" TargetType="Grid">
+            <Setter Property="Margin" Value="0,0,0,14" />
+        </Style>
+
+        <Style x:Key="HelpCloseButton" TargetType="Button">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Width" Value="24" />
+            <Setter Property="Height" Value="24" />
+            <Setter Property="Margin" Value="0,0,3,0" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Grid x:Name="Chrome" Background="{TemplateBinding Background}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Chrome" Property="Background" Value="{DynamicResource CloseButtonHoverBrush}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- Header: misma barra que la ventana de inicio -->
+        <Grid Grid.Row="0" MouseLeftButtonDown="OnTitleBarMouseLeftButtonDown">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="6" />
+                <RowDefinition Height="28" />
+            </Grid.RowDefinitions>
+            <Grid Grid.Row="0" Background="{DynamicResource StartFrameBrush}" />
+            <Grid Grid.Row="1" Background="{DynamicResource StartBarBrush}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="INICIO / AYUDA" VerticalAlignment="Center" Margin="20,0,0,0"
+                            FontFamily="{DynamicResource HeaderFontFamily}" FontSize="11" FontWeight="Medium"
+                            Foreground="#8C99AD" />
+                <Button Grid.Column="1" Style="{StaticResource HelpCloseButton}" Click="OnClose"
+                        ToolTip="Cerrar (Esc)">
+                    <Path Width="8" Height="8" Stretch="None" Stroke="#8C99AD" StrokeThickness="1"
+                            Data="{StaticResource IconCaptionClose}" />
+                </Button>
+            </Grid>
+        </Grid>
+
+        <!-- Resumen de la pantalla de inicio -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Background="{DynamicResource StartCentralBrush}">
+            <StackPanel Margin="28,22,28,10">
+                <TextBlock Text="GUÍA DE INICIO" Style="{StaticResource HelpTitle}"
+                            Foreground="{DynamicResource StartCaptionBrush}" Margin="0,0,0,16" />
+
+                <Grid Style="{StaticResource HelpItem}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="3" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Rectangle Fill="#BF3B2C" />
+                    <StackPanel Grid.Column="1" Margin="14,0,0,0">
+                        <TextBlock Text="NUEVO PROYECTO" Style="{StaticResource HelpTitle}" Foreground="{DynamicResource StartCaptionBrush}" />
+                        <TextBlock Style="{StaticResource HelpBody}" Foreground="{DynamicResource StartCaptionBrush}"
+                                    Text="Crea un proyecto desde cero: eliges un nombre y una carpeta, y se genera con una sesión «Hola, Mundo» lista para ejecutar." />
+                    </StackPanel>
+                </Grid>
+
+                <Grid Style="{StaticResource HelpItem}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="3" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Rectangle Fill="#BF3B2C" />
+                    <StackPanel Grid.Column="1" Margin="14,0,0,0">
+                        <TextBlock Text="ABRIR PROYECTO" Style="{StaticResource HelpTitle}" Foreground="{DynamicResource StartCaptionBrush}" />
+                        <TextBlock Style="{StaticResource HelpBody}" Foreground="{DynamicResource StartCaptionBrush}"
+                                    Text="Selecciona un proyecto existente del disco. Aún está pendiente de implementar: por ahora solo queda registrado en el panel inferior." />
+                    </StackPanel>
+                </Grid>
+
+                <Grid Style="{StaticResource HelpItem}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="3" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Rectangle Fill="#BF3B2C" />
+                    <StackPanel Grid.Column="1" Margin="14,0,0,0">
+                        <TextBlock Text="PROYECTOS RECIENTES" Style="{StaticResource HelpTitle}" Foreground="{DynamicResource StartCaptionBrush}" />
+                        <TextBlock Style="{StaticResource HelpBody}" Foreground="{DynamicResource StartCaptionBrush}"
+                                    Text="Un clic selecciona un proyecto y muestra su detalle; un segundo clic sobre el mismo lo abre." />
+                    </StackPanel>
+                </Grid>
+
+                <Grid Style="{StaticResource HelpItem}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="3" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Rectangle Fill="#BF3B2C" />
+                    <StackPanel Grid.Column="1" Margin="14,0,0,0">
+                        <TextBlock Text="DETALLE" Style="{StaticResource HelpTitle}" Foreground="{DynamicResource StartCaptionBrush}" />
+                        <TextBlock Style="{StaticResource HelpBody}" Foreground="{DynamicResource StartCaptionBrush}"
+                                    Text="El recuadro inferior muestra el nombre, la ruta y la última apertura del proyecto seleccionado." />
+                    </StackPanel>
+                </Grid>
+
+                <Grid Style="{StaticResource HelpItem}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="3" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Rectangle Fill="#BF3B2C" />
+                    <StackPanel Grid.Column="1" Margin="14,0,0,0">
+                        <TextBlock Text="TECLADO" Style="{StaticResource HelpTitle}" Foreground="{DynamicResource StartCaptionBrush}" />
+                        <TextBlock Style="{StaticResource HelpBody}" Foreground="{DynamicResource StartCaptionBrush}"
+                                    Text="Esc vuelve al inicio desde el formulario y cierra la ventana desde el inicio. F1 abre esta guía." />
+                    </StackPanel>
+                </Grid>
+
+                <Grid Style="{StaticResource HelpItem}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="3" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Rectangle Fill="#BF3B2C" />
+                    <StackPanel Grid.Column="1" Margin="14,0,0,0">
+                        <TextBlock Text="BARRA INFERIOR" Style="{StaticResource HelpTitle}" Foreground="{DynamicResource StartCaptionBrush}" />
+                        <TextBlock Style="{StaticResource HelpBody}" Foreground="{DynamicResource StartCaptionBrush}"
+                                    Text="Indica la versión del IDE, el runtime de .NET y las fases del compilador disponibles (léxico, sintaxis y semántica)." />
+                    </StackPanel>
+                </Grid>
+
+                <Grid Style="{StaticResource HelpItem}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="3" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Rectangle Fill="#BF3B2C" />
+                    <StackPanel Grid.Column="1" Margin="14,0,0,0">
+                        <TextBlock Text="TEMA" Style="{StaticResource HelpTitle}" Foreground="{DynamicResource StartCaptionBrush}" />
+                        <TextBlock Style="{StaticResource HelpBody}" Foreground="{DynamicResource StartCaptionBrush}"
+                                    Text="El tema claro u oscuro se alterna desde el menú VER de la ventana principal." />
+                    </StackPanel>
+                </Grid>
+            </StackPanel>
+        </ScrollViewer>
+
+        <Grid Grid.Row="2" Background="{DynamicResource StartFrameBrush}" Height="6" />
+    </Grid>
+</Window>
