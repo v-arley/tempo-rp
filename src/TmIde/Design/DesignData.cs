@@ -17,7 +17,8 @@ public static class DesignData
     public static MainWindowViewModel MainWindow { get; } = new(
         new NoopThemeService(),
         new NoopStartDialogService(),
-        new BottomPanelViewModel());
+        new BottomPanelViewModel(),
+        _ => true);
 
     public static FileExplorerViewModel Explorer => MainWindow.Explorer;
 
@@ -38,8 +39,6 @@ public static class DesignData
 
     private sealed class NoopStartDialogService : IStartDialogService
     {
-        public void Show()
-        {
-        }
+        public string? Show() => null;
     }
 }

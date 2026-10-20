@@ -7,21 +7,24 @@ using TmIde.ViewModels;
 namespace TmIde.ViewModels.Shell;
 
 /// <summary>
-/// Barra de menú del título. En esta iteración las acciones son stubs que
-/// escriben una línea en el panel inferior; la única acción funcional es el
-/// cambio de tema (menú VER).
+/// Barra de menú del título. Funcionan Inicio, Guardar, Salir y el cambio de
+/// tema (menú VER); el resto son stubs que escriben una línea en el panel inferior.
 /// </summary>
 
 public sealed partial class MenuBarViewModel : ViewModelBase
 {
     private readonly IThemeService _themeService;
-    private readonly IStartDialogService _startDialog;
+    private readonly Action _showStart;
+    private readonly Action _save;
     private readonly Action<string> _log;
 
-    public MenuBarViewModel(IThemeService themeService, IStartDialogService startDialog, Action<string> log)
+    /// <param name="showStart">Abre la ventana de inicio y carga el proyecto elegido.</param>
+    /// <param name="save">Guarda el documento activo.</param>
+    public MenuBarViewModel(IThemeService themeService, Action showStart, Action save, Action<string> log)
     {
         _themeService = themeService;
-        _startDialog = startDialog;
+        _showStart = showStart;
+        _save = save;
         _log = log;
 
         Roots = new ObservableCollection<MenuEntryViewModel>
@@ -38,10 +41,9 @@ public sealed partial class MenuBarViewModel : ViewModelBase
     private MenuEntryViewModel BuildFileMenu()
     {
         var menu = new MenuEntryViewModel("MENU");
-        // TEMPORAL: acceso a la ventana de inicio mientras se desarrolla; más adelante
-        // se mostrará al arrancar la aplicación.
-        menu.Add(new MenuEntryViewModel("Inicio (temporal)", _startDialog.Show));
+        menu.Add(new MenuEntryViewModel("Inicio", _showStart));
         menu.Add(new MenuEntryViewModel("Nuevo archivo", () => _log("MENU → Nuevo archivo (pendiente)")));
+        menu.Add(new MenuEntryViewModel("Guardar (Ctrl+S)", _save));
         menu.Add(new MenuEntryViewModel("Salir", () => System.Windows.Application.Current.Shutdown()));
         return menu;
     }

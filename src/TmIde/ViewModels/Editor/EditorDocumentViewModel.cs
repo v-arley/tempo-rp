@@ -88,6 +88,16 @@ public sealed partial class EditorDocumentViewModel : ViewModelBase
     /// <summary>Ruta completa del archivo; identifica al documento ante el compilador.</summary>
     public string FilePath { get; }
 
+    /// <summary>
+    /// Escribe el texto en <see cref="FilePath"/> y lo marca como guardado.
+    /// Lanza <see cref="IOException"/> si no se puede escribir.
+    /// </summary>
+    public void Save()
+    {
+        File.WriteAllText(FilePath, Document.Text);
+        Document.UndoStack.MarkAsOriginalFile();
+    }
+
     [RelayCommand]
     private void Close()
     {

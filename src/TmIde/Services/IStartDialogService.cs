@@ -8,5 +8,9 @@ namespace TmIde.Services;
 
 public interface IStartDialogService
 {
-    void Show();
+    /// <returns>
+    /// Carpeta del proyecto que el usuario abrió o creó, o <c>null</c> si cerró
+    /// el diálogo sin elegir ninguno.
+    /// </returns>
+    string? Show();
 }

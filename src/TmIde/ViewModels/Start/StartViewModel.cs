@@ -1,5 +1,6 @@
 using System;
 using System.Collections.ObjectModel;
+using System.IO;
 
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -15,8 +16,8 @@ namespace TmIde.ViewModels.Start;
 /// detalle del proyecto seleccionado. Un primer clic en un reciente lo
 /// selecciona y muestra su detalle; un segundo clic sobre el mismo lo abre.
 /// "Nuevo proyecto" cambia la ventana al formulario <see cref="NewProjectForm"/>,
-/// que crea el proyecto en disco. Abrir (proyecto o reciente) aún no está
-/// implementado: registra la acción en el panel inferior y cierra el diálogo.
+/// que crea el proyecto en disco. Abrir, crear o activar un reciente deja la
+/// carpeta en <see cref="ProjectToOpen"/> y cierra el diálogo.
 /// </summary>
 
 public sealed partial class StartViewModel : ViewModelBase
@@ -77,11 +78,16 @@ public sealed partial class StartViewModel : ViewModelBase
 
     public string CompilerStatus => "Léxico · Sintaxis · Semántica";
 
+    /// <summary>Carpeta del proyecto elegido al cerrar el diálogo; <c>null</c> si no se eligió ninguno.</summary>
+    public string? ProjectToOpen { get; private set; }
+
     [RelayCommand]
     private void OpenProject()
     {
-        _log("INICIO → Abrir proyecto (pendiente)");
-        Close();
+        if (_pickFolder(string.Empty) is { } folder)
+        {
+            OpenAndClose(folder);
+        }
     }
 
     [RelayCommand]
@@ -90,8 +96,13 @@ public sealed partial class StartViewModel : ViewModelBase
 
     private void OnProjectCreated(string projectPath)
     {
-        // Pendiente: cargar el proyecto en el explorador / editor (igual que Abrir).
         _log($"INICIO → Proyecto creado: {projectPath}");
+        OpenAndClose(projectPath);
+    }
+
+    private void OpenAndClose(string projectPath)
+    {
+        ProjectToOpen = projectPath;
         Close();
     }
 
@@ -126,8 +137,13 @@ public sealed partial class StartViewModel : ViewModelBase
             return;
         }
 
-        _log($"INICIO → Abrir reciente: {project.Path} (pendiente)");
-        Close();
+        if (!Directory.Exists(project.Path))
+        {
+            _log($"INICIO → El proyecto ya no existe: {project.Path}");
+            return;
+        }
+
+        OpenAndClose(project.Path);
     }
 
     partial void OnSelectedProjectChanged(RecentProjectViewModel? oldValue, RecentProjectViewModel? newValue)

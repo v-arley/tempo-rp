@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -27,18 +28,26 @@ public sealed partial class EditorHostViewModel : ViewModelBase
         _analysisService = analysis ?? new CodeAnalysisService();
         Documents = new ObservableCollection<EditorDocumentViewModel>();
         Breadcrumb = new ObservableCollection<BreadcrumbSegmentViewModel>();
-
-        AddPlaceholderDocuments();
     }
 
     public ObservableCollection<EditorDocumentViewModel> Documents { get; }
 
     public ObservableCollection<BreadcrumbSegmentViewModel> Breadcrumb { get; }
 
-    /// <summary>Abre (o activa, si ya existe) un documento por nombre de archivo.</summary>
-    public void OpenDocument(string fileName)
+    /// <summary>Carpeta del proyecto abierto; el breadcrumb parte de ella.</summary>
+    public string? ProjectDirectory { get; set; }
+
+    public bool HasUnsavedChanges => Documents.Any(document => document.IsModified);
+
+    /// <summary>
+    /// Abre (o activa, si ya está abierto) el archivo de <paramref name="filePath"/>
+    /// con su contenido en disco. Lanza <see cref="IOException"/> si no se puede leer.
+    /// </summary>
+    public void OpenDocument(string filePath)
     {
-        var existing = Documents.FirstOrDefault(d => d.FileName == fileName);
+        var fullPath = Path.GetFullPath(filePath);
+
+        var existing = Documents.FirstOrDefault(d => string.Equals(d.FilePath, fullPath, StringComparison.OrdinalIgnoreCase));
         if (existing is not null)
         {
             SelectedDocument = existing;
@@ -46,26 +55,34 @@ public sealed partial class EditorHostViewModel : ViewModelBase
         }
 
         var document = new EditorDocumentViewModel(
-            fileName, fileName, string.Empty, CloseDocument, _analysisService, openDocumentTexts: OpenDocumentTexts);
+            Path.GetFileName(fullPath), RelativePathOf(fullPath), File.ReadAllText(fullPath),
+            CloseDocument, _analysisService, filePath: fullPath, openDocumentTexts: OpenDocumentTexts);
 
         Documents.Add(document);
         SelectedDocument = document;
     }
 
-    // TEMPORAL: documentos de relleno para visualizar las pestañas del editor
-    // mientras no hay apertura real de archivos. Eliminar al conectar el explorador.
-    private void AddPlaceholderDocuments()
+    /// <summary>Cierra todos los documentos sin guardarlos.</summary>
+    public void CloseAll()
     {
-        Documents.Add(new EditorDocumentViewModel(
-            "main.tm", "src/main.tm",
-            "# main.tm — documento de relleno\n# Punto de entrada del programa TM.\n",
-            CloseDocument, _analysisService, openDocumentTexts: OpenDocumentTexts));
-        Documents.Add(new EditorDocumentViewModel(
-            "matematicas.tm", "src/lib/matematicas.tm",
-            "# matematicas.tm — documento de relleno\n# Funciones auxiliares importadas desde main.tm.\n",
-            CloseDocument, _analysisService, openDocumentTexts: OpenDocumentTexts));
+        foreach (var document in Documents.ToList())
+        {
+            document.CloseCommand.Execute(null);
+        }
+    }
 
-        SelectedDocument = Documents[0];
+    // Ruta desde la carpeta del proyecto, incluida, separada por '/': "importaciones/principal.tmpr".
+    private string RelativePathOf(string fullPath)
+    {
+        if (ProjectDirectory is null)
+        {
+            return Path.GetFileName(fullPath);
+        }
+
+        var projectName = Path.GetFileName(Path.TrimEndingDirectorySeparator(ProjectDirectory));
+        var relative = Path.GetRelativePath(ProjectDirectory, fullPath);
+
+        return $"{projectName}/{relative.Replace(Path.DirectorySeparatorChar, '/')}";
     }
 
     /// <summary>

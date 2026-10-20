@@ -30,6 +30,10 @@
                             UseAeroCaptionButtons="False" />
     </WindowChrome.WindowChrome>
 
+    <Window.InputBindings>
+        <KeyBinding Modifiers="Control" Key="S" Command="{Binding SaveCommand}" />
+    </Window.InputBindings>
+
     <Grid x:Name="RootLayout">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />

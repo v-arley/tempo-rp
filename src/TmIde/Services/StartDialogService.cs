@@ -10,8 +10,8 @@ using TmIde.Views.Start;
 namespace TmIde.Services;
 
 /// <summary>
-/// Abre <see cref="StartWindow"/> como diálogo modal sobre la ventana principal.
-/// Las acciones del diálogo que aún no tienen implementación se notifican por
+/// Abre <see cref="StartWindow"/> como diálogo modal sobre la ventana principal
+/// y devuelve el proyecto elegido. Los avisos del diálogo se notifican por
 /// <c>log</c> (panel inferior).
 /// </summary>
 
@@ -24,22 +24,25 @@ public sealed class StartDialogService : IStartDialogService
         _log = log;
     }
 
-    public void Show()
+    public string? Show()
     {
         var window = new StartWindow
         {
             Owner = Application.Current.MainWindow,
         };
 
-        window.DataContext = new StartViewModel(_log, new ProjectScaffolder(), initial => PickFolder(window, initial));
+        var viewModel = new StartViewModel(_log, new ProjectScaffolder(), initial => PickFolder(window, initial));
+        window.DataContext = viewModel;
         window.ShowDialog();
+
+        return viewModel.ProjectToOpen;
     }
 
     private static string? PickFolder(Window owner, string initialDirectory)
     {
         var dialog = new OpenFolderDialog
         {
-            Title = "Ubicación del proyecto",
+            Title = "Seleccionar carpeta",
             InitialDirectory = Directory.Exists(initialDirectory) ? initialDirectory : string.Empty,
         };
 
