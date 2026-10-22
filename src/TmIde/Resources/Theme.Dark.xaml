@@ -9,7 +9,7 @@
         Rampa de fondo, de más oscuro a más claro: PanelHeaderBrush (cabecera del
         explorador) < WindowBackgroundBrush (marco / título) < PanelOverlayBrush
         (cuerpo del explorador) < InputBackgroundBrush (campo de búsqueda) <
-        SurfaceBackgroundBrush (editor / terminal / barra de estado, la superficie
+        SurfaceBackgroundBrush (editor / panel inferior / barra de estado, la superficie
         de trabajo más clara).
 
         DividerBrush es negro e InputBorderBrush transparente: en oscuro los

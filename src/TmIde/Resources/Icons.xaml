@@ -9,7 +9,7 @@
 
         Los glifos de ventana / play / pause / stop / maximize / restore provienen
         de los sets Iconamoon y Mingcute ya presentes en src/Assets/*.svg.
-        El resto (carpeta, archivo, búsqueda, chevron, compilar, depurar, terminal)
+        El resto (carpeta, archivo, búsqueda, chevron, compilar)
         están dibujados a mano.
     -->
 
@@ -36,7 +36,6 @@
     <Geometry x:Key="IconPause">M4 7a3 3 0 0 1 3-3h1a3 3 0 0 1 3 3v10a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3zm12-3a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h1a3 3 0 0 0 3-3V7a3 3 0 0 0-3-3z</Geometry>
 
     <Geometry x:Key="IconCompile">M12 2.5 3.5 7v10L12 21.5 20.5 17V7L12 2.5Zm0 2.2 6 3.2-6 3.2-6-3.2 6-3.2ZM5.5 9.1l5.5 3v6.6l-5.5-3V9.1Zm13 0v6.6l-5.5 3V12l5.5-3Z</Geometry>
-    <Geometry x:Key="IconDebug">M12 6.5c-1.7 0-3 1.3-3 3v.5h6V9.5c0-1.7-1.3-3-3-3Zm-4 5v3c0 .5 0 1 .2 1.5H5v2h3.9c.7 1.2 2 2 3.6 2s2.9-.8 3.6-2H20v-2h-3.2c.2-.5.2-1 .2-1.5v-3H8Zm.8-6.9L7 6.4 8.4 7.8 10.2 6 8.8 4.6Zm6.4 0L13.8 6l1.8 1.8L17.4 6l-1.4-1.4ZM4 11.5v2h3v-2H4Zm13 0v2h3v-2h-3ZM7 16.7l-2 1.8 1.4 1.4 2-1.8L7 16.7Zm10 0-1.4 1.4 2 1.8 1.4-1.4-2-1.8Z</Geometry>
 
     <!-- Explorador de archivos -->
 
@@ -46,7 +45,6 @@
     <Geometry x:Key="IconFileCode">M6 2.5h7.2a1 1 0 0 1 .7.29l4.8 4.8a1 1 0 0 1 .3.71V20.5a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-17a1 1 0 0 1 1-1Zm7.5 1.8V8a1 1 0 0 0 1 1h3.7L13.5 4.3ZM9.7 12.3 7 15l2.7 2.7 1.1-1.1L9.2 15l1.6-1.6-1.1-1.1Zm4.6 0-1.1 1.1L14.8 15l-1.6 1.6 1.1 1.1L17 15l-2.7-2.7Z</Geometry>
     <Geometry x:Key="IconSearch">M10 3a7 7 0 1 0 4.19 12.6l4.1 4.1 1.42-1.42-4.1-4.1A7 7 0 0 0 10 3Zm0 2a5 5 0 1 1 0 10 5 5 0 0 1 0-10Z</Geometry>
     <Geometry x:Key="IconChevron">M9.5 7 15 12l-5.5 5V7Z</Geometry>
-    <Geometry x:Key="IconTerminal">M4 4.5A1.5 1.5 0 0 1 5.5 3h13A1.5 1.5 0 0 1 20 4.5v15A1.5 1.5 0 0 1 18.5 21h-13A1.5 1.5 0 0 1 4 19.5v-15Zm3.2 3.3L6 9l3 3-3 3 1.2 1.2L11.4 12 7.2 7.8ZM12 15h5v1.6h-5V15Z</Geometry>
     <Geometry x:Key="IconKebab">M10.5 5C10.5 4.17157 11.1716 3.5 12 3.5H12.01C12.8384 3.5 13.51 4.17157 13.51 5V5.01C13.51 5.83843 12.8384 6.51 12.01 6.51H12C11.1716 6.51 10.5 5.83843 10.5 5.01V5ZM10.5 12C10.5 11.1716 11.1716 10.5 12 10.5H12.01C12.8384 10.5 13.51 11.1716 13.51 12V12.01C13.51 12.8384 12.8384 13.51 12.01 13.51H12C11.1716 13.51 10.5 12.8384 10.5 12.01V12ZM12 17.5C11.1716 17.5 10.5 18.1716 10.5 19V19.01C10.5 19.8384 11.1716 20.51 12 20.51H12.01C12.8384 20.51 13.51 19.8384 13.51 19.01V19C13.51 18.1716 12.8384 17.5 12.01 17.5H12Z</Geometry>
 
     <!-- Estilo base de icono -->

@@ -11,10 +11,10 @@ using System.Windows.Media;
 namespace TmIde.Controls;
 
 /// <summary>
-/// Muestra una colección de líneas (Output, salida de la terminal) en un
+/// Muestra una colección de líneas (Output, salida del programa en Run) en un
 /// <c>TextEditor</c> de solo lectura. Las altas se añaden al final del documento
-/// sin reconstruirlo; cualquier otro cambio (limpiar, quitar, reemplazar) lo
-/// reconstruye. Si el usuario estaba al final, sigue la salida; si subió para
+/// sin reconstruirlo, igual que el reemplazo de la última línea; cualquier otro
+/// cambio (limpiar, quitar, reemplazar otra) lo reconstruye. Si el usuario estaba al final, sigue la salida; si subió para
 /// leer, no le mueve la vista.
 /// </summary>
 
@@ -87,9 +87,29 @@ public partial class LogView : UserControl
         {
             Append(e.NewItems.Cast<string>());
         }
+        else if (e.Action == NotifyCollectionChangedAction.Replace
+            && e.NewStartingIndex == _lineCount - 1
+            && e.NewItems is [string lastLine])
+        {
+            ReplaceLastLine(lastLine);
+        }
         else
         {
             Rebuild();
+        }
+    }
+
+    // La salida de un programa llega en trozos que completan la última línea.
+    private void ReplaceLastLine(string text)
+    {
+        var atBottom = IsAtBottom();
+        var document = Editor.Document;
+        var lastLine = document.GetLineByNumber(document.LineCount);
+        document.Replace(lastLine.Offset, lastLine.Length, text);
+
+        if (atBottom)
+        {
+            Editor.ScrollToEnd();
         }
     }
 

@@ -14,7 +14,7 @@
                 SelectedItem="{Binding SelectedPane, Mode=TwoWay}"
                 Background="Transparent">
         <TabControl.Resources>
-            <!-- Pestañas Terminal / Output / Debug Console. El hover despliega un
+            <!-- Pestañas Output / Run. El hover despliega un
                 subrayado inferior de izquierda a derecha. -->
             <Style TargetType="TabItem" BasedOn="{StaticResource {x:Type TabItem}}">
                 <Setter Property="Margin" Value="0,0,4,0" />
@@ -80,16 +80,18 @@
                 </Border>
             </DataTemplate>
 
-            <!-- Cuerpo de la pestaña Terminal: salida arriba, línea de entrada abajo. -->
-            <DataTemplate DataType="{x:Type vm:TerminalPaneViewModel}">
+            <!-- Cuerpo de la pestaña Run: salida del programa arriba; la línea de
+                entrada solo se activa mientras el programa espera un input <<. -->
+            <DataTemplate DataType="{x:Type vm:RunPaneViewModel}">
                 <Border Background="{DynamicResource SurfaceBackgroundBrush}">
                     <DockPanel>
-                        <Grid DockPanel.Dock="Bottom" Margin="10,2,10,8">
+                        <Grid DockPanel.Dock="Bottom" Margin="10,2,10,8"
+                              IsEnabled="{Binding IsWaitingForInput}">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0" Text="{Binding Prompt}"
+                            <TextBlock Grid.Column="0" Text="input &lt;&lt;"
                                        VerticalAlignment="Center" Margin="0,0,6,0"
                                        FontFamily="{DynamicResource CodeFontFamily}"
                                        FontSize="{DynamicResource CodeFontSize}"
@@ -102,8 +104,6 @@
                                      Foreground="{DynamicResource PrimaryForegroundBrush}">
                                 <TextBox.InputBindings>
                                     <KeyBinding Key="Enter" Command="{Binding SubmitCommand}" />
-                                    <KeyBinding Key="Up" Command="{Binding HistoryPreviousCommand}" />
-                                    <KeyBinding Key="Down" Command="{Binding HistoryNextCommand}" />
                                 </TextBox.InputBindings>
                             </TextBox>
                         </Grid>

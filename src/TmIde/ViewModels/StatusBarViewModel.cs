@@ -1,20 +1,20 @@
 using System.ComponentModel;
 
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Messaging;
 
 using TmIde.ViewModels.Editor;
 
 namespace TmIde.ViewModels;
 
 /// <summary>
-/// Barra de estado: a la izquierda muestra <c>LN x, COL y   UTF-8</c>; los botones
-/// COMPILE / RUN / DEBUG a la derecha son solo visuales (sin acción).
+/// Barra de estado: a la izquierda muestra <c>LN x, COL y   UTF-8</c> y el
+/// recuento de problemas; a la derecha, COMPILE, RUN y STOP sobre el proyecto
+/// abierto.
 /// </summary>
 
 public sealed partial class StatusBarViewModel : ViewModelBase
 {
-    private readonly EditorHostViewModel _editor;
-
     [ObservableProperty]
     private string _caretPosition = "LN 1, COL 1";
 
@@ -24,23 +24,20 @@ public sealed partial class StatusBarViewModel : ViewModelBase
 
     private EditorDocumentViewModel? _trackedDocument;
 
-    public StatusBarViewModel(EditorHostViewModel editor)
+    /// <param name="messenger">Por él llega la pestaña activa (<see cref="ActiveDocumentChangedMessage"/>).</param>
+    public StatusBarViewModel(ProjectCommands commands, IMessenger messenger)
     {
-        _editor = editor;
+        Commands = commands;
 
-        _editor.PropertyChanged += OnEditorPropertyChanged;
-        TrackDocument(_editor.SelectedDocument);
+        messenger.Register<StatusBarViewModel, ActiveDocumentChangedMessage>(
+            this, static (statusBar, message) => statusBar.TrackDocument(message.Document));
+        TrackDocument(null);
     }
 
     public string Encoding => "UTF-8";
 
-    private void OnEditorPropertyChanged(object? sender, PropertyChangedEventArgs e)
-    {
-        if (e.PropertyName == nameof(EditorHostViewModel.SelectedDocument))
-        {
-            TrackDocument(_editor.SelectedDocument);
-        }
-    }
+    /// <summary>Comandos de los botones COMPILE / RUN / STOP.</summary>
+    public ProjectCommands Commands { get; }
 
     private void TrackDocument(EditorDocumentViewModel? document)
     {
