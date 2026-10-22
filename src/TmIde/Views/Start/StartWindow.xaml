@@ -1,6 +1,8 @@
 <Window x:Class="TmIde.Views.Start.StartWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:b="http://schemas.microsoft.com/xaml/behaviors"
+        xmlns:behaviors="clr-namespace:TmIde.Views.Behaviors"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:vm="clr-namespace:TmIde.ViewModels.Start"        mc:Ignorable="d"
@@ -511,8 +513,10 @@
 
         <!-- Header (zona de arrastre): barra de 28px con el texto "INICIO", el
             acceso a la ayuda y el de cerrar. -->
-        <Grid Grid.Row="0" Background="{DynamicResource WindowBackgroundBrush}"
-                MouseLeftButtonDown="OnTitleBarMouseLeftButtonDown">
+        <Grid Grid.Row="0" Background="{DynamicResource WindowBackgroundBrush}">
+            <b:Interaction.Behaviors>
+                <behaviors:WindowDragBehavior />
+            </b:Interaction.Behaviors>
             <Grid Height="28" Background="{DynamicResource StartBarBrush}">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
@@ -723,8 +727,12 @@
                     </Grid>
 
                     <TextBlock Text="NOMBRE" Style="{StaticResource FieldLabel}" />
-                    <TextBox x:Name="NewProjectNameBox" Style="{StaticResource StartTextBox}"
-                            Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" />
+                    <TextBox Style="{StaticResource StartTextBox}"
+                            Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}">
+                        <b:Interaction.Behaviors>
+                            <behaviors:FocusWhenVisibleBehavior />
+                        </b:Interaction.Behaviors>
+                    </TextBox>
 
                     <TextBlock Text="UBICACIÓN" Margin="0,8,0,4" Style="{StaticResource SectionCaption}" />
                     <Grid>

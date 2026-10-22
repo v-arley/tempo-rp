@@ -14,7 +14,8 @@ public sealed class FunctionInvoker : IFunctionInvoker
     public FunctionInvoker(
         FunctionRegistry registry,
         IRuntimeInput input,
-        IRuntimeOutput output)
+        IRuntimeOutput output,
+        CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(registry);
         ArgumentNullException.ThrowIfNull(input);
@@ -31,7 +32,8 @@ public sealed class FunctionInvoker : IFunctionInvoker
             new StatementExecutor(
                 _expressions,
                 input,
-                output);
+                output,
+                cancellationToken);
     }
 
     public RuntimeCallTracker CallStack { get; }

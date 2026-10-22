@@ -1,6 +1,6 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
 
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -24,14 +24,18 @@ public sealed partial class FileNodeViewModel : ViewModelBase
     [ObservableProperty]
     private bool _isVisible = true;
 
-    public FileNodeViewModel(string name, bool isDirectory, Action<FileNodeViewModel>? onOpen, params FileNodeViewModel[] children)
+    public FileNodeViewModel(string fullPath, bool isDirectory, Action<FileNodeViewModel>? onOpen, IEnumerable<FileNodeViewModel> children)
     {
-        Name = name;
+        FullPath = fullPath;
+        Name = System.IO.Path.GetFileName(fullPath);
         IsDirectory = isDirectory;
         _onOpen = onOpen;
 
         Children = new ObservableCollection<FileNodeViewModel>(children);
     }
+
+    /// <summary>Ruta completa en disco.</summary>
+    public string FullPath { get; }
 
     public string Name { get; }
 

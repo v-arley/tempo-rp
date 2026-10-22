@@ -47,18 +47,20 @@ public sealed partial class EditorDocumentViewModel : ViewModelBase
     [ObservableProperty]
     private IReadOnlyList<EditorDiagnostic> _diagnostics = [];
 
+    /// <param name="filePath">Ruta completa del archivo.</param>
+    /// <param name="relativePath">Ruta para el breadcrumb, separada por <c>/</c>.</param>
+    /// <param name="content">Texto inicial (el del disco).</param>
     public EditorDocumentViewModel(
-        string fileName,
+        string filePath,
         string relativePath,
         string content,
         Action<EditorDocumentViewModel>? onClose = null,
         ICodeAnalysisService? analysis = null,
-        string? filePath = null,
         Func<IReadOnlyDictionary<string, string>>? openDocumentTexts = null)
     {
-        FileName = fileName;
+        FilePath = Path.GetFullPath(filePath);
+        FileName = Path.GetFileName(FilePath);
         RelativePath = relativePath;
-        FilePath = Path.GetFullPath(filePath ?? relativePath);
         _onClose = onClose;
         _analysisService = analysis;
         _openDocumentTexts = openDocumentTexts;
@@ -70,6 +72,9 @@ public sealed partial class EditorDocumentViewModel : ViewModelBase
 
         ScheduleAnalysis(content);
     }
+
+    /// <summary>Se dispara tras cada cambio de texto, en el hilo de la UI.</summary>
+    public event EventHandler? ContentChanged;
 
     public TextDocument Document { get; }
 
@@ -88,16 +93,38 @@ public sealed partial class EditorDocumentViewModel : ViewModelBase
     /// <summary>Ruta completa del archivo; identifica al documento ante el compilador.</summary>
     public string FilePath { get; }
 
+    /// <summary>
+    /// Escribe el texto en <see cref="FilePath"/> y lo marca como guardado.
+    /// Lanza <see cref="IOException"/> si no se puede escribir.
+    /// </summary>
+    public void Save()
+    {
+        File.WriteAllText(FilePath, Document.Text);
+        Document.UndoStack.MarkAsOriginalFile();
+    }
+
+    /// <summary>Cierra la pestaña sin guardar; también lo hace la X de la pestaña.</summary>
     [RelayCommand]
-    private void Close()
+    public void Close()
     {
         _pendingAnalysis?.Cancel();
+        Document.TextChanged -= OnDocumentTextChanged;
         _onClose?.Invoke(this);
     }
 
     // Se toma una copia del texto en el hilo de la UI: el análisis corre en otro
     // hilo y TextDocument no se puede leer desde allí.
-    private void OnDocumentTextChanged(object? sender, EventArgs e) => ScheduleAnalysis(Document.Text);
+    private void OnDocumentTextChanged(object? sender, EventArgs e)
+    {
+        ScheduleAnalysis(Document.Text);
+        ContentChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>
+    /// Vuelve a analizar el texto actual. Para cuando cambia otro documento del
+    /// que dependen sus diagnósticos (importaciones, W003 entre archivos).
+    /// </summary>
+    public void Reanalyze() => ScheduleAnalysis(Document.Text);
 
     private void OnUndoStackPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {

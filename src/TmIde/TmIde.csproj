@@ -14,6 +14,19 @@
   <ItemGroup>
     <PackageReference Include="AvalonEdit" />
     <PackageReference Include="CommunityToolkit.Mvvm" />
+    <!-- Behaviors de XAML: comportamiento de vista reutilizable fuera del code-behind. -->
+    <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" />
+    <!-- Generic Host: contenedor de DI, logging, configuración y ciclo de vida. -->
+    <PackageReference Include="Microsoft.Extensions.Hosting" />
+    <!-- Log interno a archivo en %LOCALAPPDATA%\TmIde\logs. -->
+    <PackageReference Include="Serilog.Extensions.Hosting" />
+    <PackageReference Include="Serilog.Sinks.File" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Configuración de la app (sección "Ide" → IdeOptions); el Host la lee
+         junto al ejecutable. -->
+    <None Update="appsettings.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,5 +1,9 @@
+using System;
+using System.Globalization;
+
 using CommunityToolkit.Mvvm.ComponentModel;
 
+using TmIde.Services.Settings;
 using TmIde.ViewModels;
 
 namespace TmIde.ViewModels.Start;
@@ -17,6 +21,26 @@ public sealed partial class RecentProjectViewModel : ViewModelBase
         Name = name;
         Path = path;
         LastOpened = lastOpened;
+    }
+
+    /// <summary>Entrada del historial guardado, con la fecha relativa a <paramref name="now"/>.</summary>
+    public static RecentProjectViewModel From(RecentProjectEntry entry, DateTimeOffset now) =>
+        new(System.IO.Path.GetFileName(entry.Path), entry.Path, FormatLastOpened(entry.LastOpened, now));
+
+    /// <summary>"hoy", "ayer", "hace N días", "hace N semanas" o la fecha (dd/MM/yyyy).</summary>
+    public static string FormatLastOpened(DateTimeOffset lastOpened, DateTimeOffset now)
+    {
+        var days = (now.Date - lastOpened.ToOffset(now.Offset).Date).Days;
+
+        return days switch
+        {
+            <= 0 => "hoy",
+            1 => "ayer",
+            < 7 => $"hace {days} días",
+            < 14 => "hace 1 semana",
+            < 31 => $"hace {days / 7} semanas",
+            _ => lastOpened.ToOffset(now.Offset).ToString("dd/MM/yyyy", CultureInfo.InvariantCulture),
+        };
     }
 
     public string Name { get; }

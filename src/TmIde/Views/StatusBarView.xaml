@@ -51,14 +51,17 @@
                         Data="M14,0 L198,0 L212,22 L0,22 Z" />
             </Grid>
 
-            <!-- Derecha: botones decorativos, sin acción asociada. Botones de 16 en
-                una barra de 28: 6px arriba y abajo. Cierra el grupo una figura con la
-                misma forma pero con el lateral derecho recto, pegada al borde. -->
+            <!-- Derecha: acciones del proyecto (STOP solo activo durante RUN). Botones
+                de 16 en una barra de 28: 6px arriba y abajo. Cierra el grupo una figura
+                con la misma forma pero con el lateral derecho recto, pegada al borde. -->
             <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center"
                         HorizontalAlignment="Right">
-                <Button Style="{StaticResource StatusActionButton}" Content="COMPILE" />
-                <Button Style="{StaticResource StatusActionButton}" Content="RUN" />
-                <Button Style="{StaticResource StatusActionButton}" Content="DEBUG" />
+                <Button Style="{StaticResource StatusActionButton}" Content="COMPILE"
+                        Command="{Binding Commands.Compile}" />
+                <Button Style="{StaticResource StatusActionButton}" Content="RUN"
+                        Command="{Binding Commands.Run}" />
+                <Button Style="{StaticResource StatusActionButton}" Content="STOP"
+                        Command="{Binding Commands.Stop}" />
                 <!-- 22x16 (25% del ancho de un botón). Geometría a tamaño real, sin
                     Stretch, para conservar la inclinación de 3px de los botones. -->
                 <Path Width="22" Height="16" Margin="8,0,0,0" IsHitTestVisible="False"

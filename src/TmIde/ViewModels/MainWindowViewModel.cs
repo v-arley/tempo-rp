@@ -1,10 +1,6 @@
-using System;
-using System.ComponentModel;
-
 using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 
-using TmIde.Services;
 using TmIde.ViewModels.Editor;
 using TmIde.ViewModels.Explorer;
 using TmIde.ViewModels.Panel;
@@ -13,35 +9,41 @@ using TmIde.ViewModels.Shell;
 namespace TmIde.ViewModels;
 
 /// <summary>
-/// ViewModel raíz de la ventana principal. Agrega los ViewModels de cada región
-/// del shell y los conecta entre sí (el explorador abre documentos en el editor;
-/// menús y barra de estado escriben en el panel inferior).
+/// ViewModel raíz de la ventana principal: agrega los ViewModels de cada región
+/// del shell, que llegan del contenedor de DI, y mantiene el título. Las
+/// operaciones del proyecto viven en <see cref="ProjectWorkspaceViewModel"/>.
 /// </summary>
 
 public sealed partial class MainWindowViewModel : ViewModelBase
 {
-    private readonly IThemeService _themeService;
-
     [ObservableProperty]
     private string _title = "TMIDE";
 
-    /// <param name="bottomPanel">
-    /// Se recibe ya creado porque otros servicios (el diálogo de inicio) también
-    /// escriben en él.
-    /// </param>
-    public MainWindowViewModel(IThemeService themeService, IStartDialogService startDialog, BottomPanelViewModel bottomPanel)
+    public MainWindowViewModel(
+        ProjectWorkspaceViewModel workspace,
+        MenuBarViewModel menuBar,
+        FileExplorerViewModel explorer,
+        EditorHostViewModel editorHost,
+        BottomPanelViewModel bottomPanel,
+        StatusBarViewModel statusBar,
+        IMessenger messenger)
     {
-        _themeService = themeService;
-
-        EditorHost = new EditorHostViewModel();
+        Workspace = workspace;
+        MenuBar = menuBar;
+        Explorer = explorer;
+        EditorHost = editorHost;
         BottomPanel = bottomPanel;
-        Explorer = new FileExplorerViewModel();
-        MenuBar = new MenuBarViewModel(themeService, startDialog, BottomPanel.Log);
-        StatusBar = new StatusBarViewModel(EditorHost);
+        StatusBar = statusBar;
 
-        EditorHost.PropertyChanged += OnEditorHostPropertyChanged;
-        UpdateTitle();
+        messenger.Register<MainWindowViewModel, ActiveDocumentChangedMessage>(
+            this, static (window, message) => window.UpdateTitle(message.Document));
+        UpdateTitle(EditorHost.SelectedDocument);
     }
+
+    public ProjectWorkspaceViewModel Workspace { get; }
+
+    /// <summary>Comandos del proyecto, para los atajos de teclado de la ventana.</summary>
+    public ProjectCommands Commands => Workspace.Commands;
 
     public MenuBarViewModel MenuBar { get; }
 
@@ -53,24 +55,9 @@ public sealed partial class MainWindowViewModel : ViewModelBase
 
     public StatusBarViewModel StatusBar { get; }
 
-    [RelayCommand]
-    private void ToggleTheme()
+    private void UpdateTitle(EditorDocumentViewModel? document)
     {
-        _themeService.Toggle();
-        BottomPanel.Log($"Tema activo: {_themeService.Current}");
-    }
-
-    private void OnEditorHostPropertyChanged(object? sender, PropertyChangedEventArgs e)
-    {
-        if (e.PropertyName == nameof(EditorHostViewModel.SelectedDocument))
-        {
-            UpdateTitle();
-        }
-    }
-
-    private void UpdateTitle()
-    {
-        Title = EditorHost.SelectedDocument is { } document
+        Title = document is not null
             ? document.FileName.ToUpperInvariant()
             : "TMIDE";
     }

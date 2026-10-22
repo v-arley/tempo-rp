@@ -7,8 +7,8 @@ using TmIde.ViewModels;
 namespace TmIde.ViewModels.Panel;
 
 /// <summary>
-/// Área inferior con pestañas Terminal / Output. La Terminal es un shell mínimo
-/// funcional; Output recibe los mensajes de la aplicación.
+/// Área inferior con pestañas Output / Run. Output recibe los mensajes de la
+/// aplicación y de COMPILE; Run muestra la ejecución del programa.
 /// </summary>
 
 public sealed partial class BottomPanelViewModel : ViewModelBase
@@ -18,18 +18,18 @@ public sealed partial class BottomPanelViewModel : ViewModelBase
 
     public BottomPanelViewModel()
     {
-        Terminal = new TerminalPaneViewModel();
         Output = new OutputPaneViewModel("Output");
+        Run = new RunPaneViewModel();
 
-        Panes = new ObservableCollection<BottomPaneViewModel> { Terminal, Output };
-        _selectedPane = Terminal;
+        Panes = new ObservableCollection<BottomPaneViewModel> { Output, Run };
+        _selectedPane = Output;
     }
 
     public ObservableCollection<BottomPaneViewModel> Panes { get; }
 
-    public TerminalPaneViewModel Terminal { get; }
-
     public OutputPaneViewModel Output { get; }
+
+    public RunPaneViewModel Run { get; }
 
     /// <summary>Escribe una línea en Output y trae ese panel al frente.</summary>
     public void Log(string message)

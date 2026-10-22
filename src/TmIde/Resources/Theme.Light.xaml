@@ -8,7 +8,7 @@
 
         Roles de fondo:
           WindowBackgroundBrush  marco de la ventana y barra de título
-          SurfaceBackgroundBrush editor, panel inferior (terminal) y barra de estado
+          SurfaceBackgroundBrush editor, panel inferior y barra de estado
           PanelOverlayBrush      cuerpo del explorador (área del árbol)
           PanelHeaderBrush       cabecera del explorador (sección de búsqueda)
           InputBackgroundBrush   fondo de los campos de texto (caja de búsqueda)

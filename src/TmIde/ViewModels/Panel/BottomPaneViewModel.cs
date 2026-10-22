@@ -5,7 +5,7 @@ using TmIde.ViewModels;
 namespace TmIde.ViewModels.Panel;
 
 /// <summary>
-/// Base de un panel del área inferior (Output, Terminal): una cabecera y un
+/// Base de un panel del área inferior (Output, Run): una cabecera y un
 /// búfer de líneas emitidas.
 /// </summary>
 
@@ -20,5 +20,15 @@ public abstract class BottomPaneViewModel : ViewModelBase
 
     public ObservableCollection<string> Lines { get; } = new();
 
-    public void AppendLine(string line) => Lines.Add(line);
+    /// <summary>
+    /// Añade el texto al final; si tiene saltos de línea (un diagnóstico de la
+    /// §7.1), cada línea es una entrada, como espera <c>LogView</c>.
+    /// </summary>
+    public void AppendLine(string text)
+    {
+        foreach (var line in text.ReplaceLineEndings("\n").Split('\n'))
+        {
+            Lines.Add(line);
+        }
+    }
 }
