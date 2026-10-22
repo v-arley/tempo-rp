@@ -6,5 +6,6 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Tempo.Language.Tests/Tempo.Language.Tests.csproj" />
+    <Project Path="tests/TmIde.Tests/TmIde.Tests.csproj" />
   </Folder>
 </Solution>
