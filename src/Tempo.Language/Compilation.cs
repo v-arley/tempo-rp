@@ -94,7 +94,11 @@ public sealed class Compilation
     /// ejecuta es el archivo de entrada junto con las funciones de todos los
     /// archivos que importa.
     /// </summary>
-    public void Run(IRuntimeInput input, IRuntimeOutput output)
+    /// <param name="cancellationToken">
+    /// Detiene la ejecución con <see cref="OperationCanceledException"/> antes
+    /// de la siguiente sentencia.
+    /// </param>
+    public void Run(IRuntimeInput input, IRuntimeOutput output, CancellationToken cancellationToken = default)
     {
         if (!IsExecutable)
         {
@@ -124,7 +128,8 @@ public sealed class Compilation
             input,
             output,
             sourceFiles,
-            entry.FileName).Execute();
+            entry.FileName,
+            cancellationToken).Execute();
     }
 
     private ProgramNode EntryProgramWithImports()

@@ -11,11 +11,17 @@ public sealed class StatementExecutor
     private readonly IExpressionEvaluator _expressions;
     private readonly IRuntimeInput _input;
     private readonly IRuntimeOutput _output;
+    private readonly CancellationToken _cancellationToken;
 
+    /// <param name="cancellationToken">
+    /// Detiene la ejecución con <see cref="OperationCanceledException"/> antes
+    /// de la siguiente sentencia; un host (el IDE) lo usa para el botón de detener.
+    /// </param>
     public StatementExecutor(
         IExpressionEvaluator expressions,
         IRuntimeInput input,
-        IRuntimeOutput output)
+        IRuntimeOutput output,
+        CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(expressions);
         ArgumentNullException.ThrowIfNull(input);
@@ -24,6 +30,7 @@ public sealed class StatementExecutor
         _expressions = expressions;
         _input = input;
         _output = output;
+        _cancellationToken = cancellationToken;
     }
 
     public void ExecuteBlock(
@@ -32,6 +39,9 @@ public sealed class StatementExecutor
     {
         ArgumentNullException.ThrowIfNull(block);
         ArgumentNullException.ThrowIfNull(parentEnvironment);
+
+        // También aquí: un bucle con cuerpo vacío no ejecuta ninguna sentencia.
+        _cancellationToken.ThrowIfCancellationRequested();
 
         var environment =
             new RuntimeEnvironment(parentEnvironment);
@@ -73,6 +83,8 @@ public sealed class StatementExecutor
     {
         ArgumentNullException.ThrowIfNull(statement);
         ArgumentNullException.ThrowIfNull(environment);
+
+        _cancellationToken.ThrowIfCancellationRequested();
 
         switch (statement)
         {
