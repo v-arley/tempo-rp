@@ -2,8 +2,8 @@
             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <!--
-        Sin StartupUri: la ventana se construye a mano en App.OnStartup
-        (composición manual, sin contenedor de DI).
+        Sin StartupUri: App.OnStartup arma el contenedor de DI y abre primero
+        el diálogo de inicio; la ventana principal la muestra FlowService.
 
         El tema por defecto (Theme.Light) se mergea estáticamente para que no
         haya parpadeo antes de que ThemeService aplique el tema elegido.

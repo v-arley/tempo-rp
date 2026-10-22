@@ -1,6 +1,8 @@
 <Window x:Class="TmIde.Views.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:b="http://schemas.microsoft.com/xaml/behaviors"
+        xmlns:behaviors="clr-namespace:TmIde.Views.Behaviors"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
@@ -31,7 +33,7 @@
     </WindowChrome.WindowChrome>
 
     <Window.InputBindings>
-        <KeyBinding Modifiers="Control" Key="S" Command="{Binding SaveCommand}" />
+        <KeyBinding Modifiers="Control" Key="S" Command="{Binding Commands.Save}" />
     </Window.InputBindings>
 
     <Grid x:Name="RootLayout">
@@ -44,15 +46,17 @@
         </Grid.RowDefinitions>
 
         <!-- Fila 0: header (zona de arrastre) -->
-        <Grid Grid.Row="0" Background="Transparent"
-                MouseLeftButtonDown="OnTitleBarMouseLeftButtonDown">
+        <Grid Grid.Row="0" Background="Transparent">
+            <b:Interaction.Behaviors>
+                <behaviors:WindowDragBehavior MaximizeOnDoubleClick="True" />
+            </b:Interaction.Behaviors>
             <shellviews:TitleMenuBarView DataContext="{Binding}" />
         </Grid>
 
         <!-- Fila 1: separador header / centro, a todo el ancho -->
         <Grid Grid.Row="1" Background="{DynamicResource DividerBrush}" />
 
-        <!-- Fila 2: zona central = explorador (izq., altura completa) | editor + terminal (der.) -->
+        <!-- Fila 2: zona central = explorador (izq., altura completa) | editor + panel inferior (der.) -->
         <Grid Grid.Row="2">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="260" MinWidth="170" />
@@ -69,7 +73,7 @@
             <GridSplitter Grid.Column="1" Width="2" HorizontalAlignment="Center"
                             VerticalAlignment="Stretch" />
 
-            <!-- Sección derecha: editor arriba, terminal abajo -->
+            <!-- Sección derecha: editor arriba, panel inferior (Output / Run) abajo -->
             <Grid Grid.Column="2">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="*" MinHeight="120" />

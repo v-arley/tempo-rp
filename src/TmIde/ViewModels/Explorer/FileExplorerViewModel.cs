@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Messaging;
 
 using TmIde.ViewModels;
 
@@ -23,10 +24,12 @@ public sealed partial class FileExplorerViewModel : ViewModelBase
     [ObservableProperty]
     private string _searchText = string.Empty;
 
-    private Action<string>? _openFile;
+    private readonly IMessenger _messenger;
 
-    public FileExplorerViewModel()
+    /// <param name="messenger">Por él se pide abrir un archivo (<see cref="OpenFileRequestedMessage"/>).</param>
+    public FileExplorerViewModel(IMessenger messenger)
     {
+        _messenger = messenger;
         Roots = new ObservableCollection<FileNodeViewModel>();
     }
 
@@ -34,15 +37,9 @@ public sealed partial class FileExplorerViewModel : ViewModelBase
 
     public string HeaderTitle => "EXPLORE";
 
-    /// <summary>
-    /// Sustituye el árbol por el de <paramref name="rootDirectory"/>, con la
-    /// raíz expandida. Abrir un archivo llama a <paramref name="openFile"/> con su
-    /// ruta completa.
-    /// </summary>
-    public void Load(string rootDirectory, Action<string> openFile)
+    /// <summary>Sustituye el árbol por el de <paramref name="rootDirectory"/>, con la raíz expandida.</summary>
+    public void Load(string rootDirectory)
     {
-        _openFile = openFile;
-
         Roots.Clear();
         var root = CreateDirectoryNode(rootDirectory);
         root.IsExpanded = true;
@@ -73,7 +70,8 @@ public sealed partial class FileExplorerViewModel : ViewModelBase
         return name.StartsWith('.') || IgnoredDirectories.Contains(name);
     }
 
-    private void OpenFile(FileNodeViewModel node) => _openFile?.Invoke(node.FullPath);
+    // Doble clic en un archivo del árbol.
+    private void OpenFile(FileNodeViewModel node) => _messenger.Send(new OpenFileRequestedMessage(node.FullPath));
 
     partial void OnSearchTextChanged(string value)
     {

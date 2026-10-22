@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Messaging;
 
 using TmIde.Services.Analysis;
 using TmIde.ViewModels;
@@ -22,10 +23,13 @@ public sealed partial class EditorHostViewModel : ViewModelBase
     private EditorDocumentViewModel? _selectedDocument;
 
     private readonly ICodeAnalysisService _analysisService;
+    private readonly IMessenger _messenger;
 
-    public EditorHostViewModel(ICodeAnalysisService? analysis = null)
+    /// <param name="messenger">Por él se avisa el cambio de pestaña activa (<see cref="ActiveDocumentChangedMessage"/>).</param>
+    public EditorHostViewModel(ICodeAnalysisService analysis, IMessenger messenger)
     {
-        _analysisService = analysis ?? new CodeAnalysisService();
+        _analysisService = analysis;
+        _messenger = messenger;
         Documents = new ObservableCollection<EditorDocumentViewModel>();
         Breadcrumb = new ObservableCollection<BreadcrumbSegmentViewModel>();
     }
@@ -35,9 +39,20 @@ public sealed partial class EditorHostViewModel : ViewModelBase
     public ObservableCollection<BreadcrumbSegmentViewModel> Breadcrumb { get; }
 
     /// <summary>Carpeta del proyecto abierto; el breadcrumb parte de ella.</summary>
-    public string? ProjectDirectory { get; set; }
+    public string? ProjectDirectory { get; private set; }
 
     public bool HasUnsavedChanges => Documents.Any(document => document.IsModified);
+
+    /// <summary>Cierra los documentos del proyecto anterior, sin guardarlos, y pasa al nuevo.</summary>
+    public void SwitchToProject(string projectDirectory)
+    {
+        foreach (var document in Documents.ToList())
+        {
+            document.Close();
+        }
+
+        ProjectDirectory = projectDirectory;
+    }
 
     /// <summary>
     /// Abre (o activa, si ya está abierto) el archivo de <paramref name="filePath"/>
@@ -55,20 +70,12 @@ public sealed partial class EditorHostViewModel : ViewModelBase
         }
 
         var document = new EditorDocumentViewModel(
-            Path.GetFileName(fullPath), RelativePathOf(fullPath), File.ReadAllText(fullPath),
-            CloseDocument, _analysisService, filePath: fullPath, openDocumentTexts: OpenDocumentTexts);
+            fullPath, RelativePathOf(fullPath), File.ReadAllText(fullPath),
+            CloseDocument, _analysisService, OpenDocumentTexts);
+        document.ContentChanged += OnDocumentContentChanged;
 
         Documents.Add(document);
         SelectedDocument = document;
-    }
-
-    /// <summary>Cierra todos los documentos sin guardarlos.</summary>
-    public void CloseAll()
-    {
-        foreach (var document in Documents.ToList())
-        {
-            document.CloseCommand.Execute(null);
-        }
     }
 
     // Ruta desde la carpeta del proyecto, incluida, separada por '/': "importaciones/principal.tmpr".
@@ -87,9 +94,10 @@ public sealed partial class EditorHostViewModel : ViewModelBase
 
     /// <summary>
     /// Texto de cada documento abierto, por ruta completa. El compilador lo usa
-    /// en lugar del contenido en disco. Solo desde el hilo de la UI.
+    /// en lugar del contenido en disco: lo que se compila es lo que el usuario ve,
+    /// aunque no lo haya guardado. Solo desde el hilo de la UI.
     /// </summary>
-    private IReadOnlyDictionary<string, string> OpenDocumentTexts()
+    public IReadOnlyDictionary<string, string> OpenDocumentTexts()
     {
         var texts = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
@@ -109,6 +117,7 @@ public sealed partial class EditorHostViewModel : ViewModelBase
             return;
         }
 
+        document.ContentChanged -= OnDocumentContentChanged;
         Documents.Remove(document);
 
         if (SelectedDocument == document)
@@ -117,10 +126,39 @@ public sealed partial class EditorHostViewModel : ViewModelBase
                 ? null
                 : Documents[Math.Min(index, Documents.Count - 1)];
         }
+
+        // Sin la pestaña, el compilador vuelve a leer ese archivo de disco.
+        ReanalyzeDocumentsAffectedBy(document);
+    }
+
+    private void OnDocumentContentChanged(object? sender, EventArgs e)
+    {
+        if (sender is EditorDocumentViewModel document)
+        {
+            ReanalyzeDocumentsAffectedBy(document);
+        }
+    }
+
+    // Los diagnósticos de un archivo dependen de los demás de su proyecto (la
+    // misma carpeta, §6.6): al cambiar uno se vuelven a analizar los otros.
+    private void ReanalyzeDocumentsAffectedBy(EditorDocumentViewModel changed)
+    {
+        var projectDirectory = Path.GetDirectoryName(changed.FilePath);
+
+        var affected = Documents.Where(document =>
+            document != changed &&
+            string.Equals(Path.GetDirectoryName(document.FilePath), projectDirectory, StringComparison.OrdinalIgnoreCase));
+
+        foreach (var document in affected)
+        {
+            document.Reanalyze();
+        }
     }
 
     partial void OnSelectedDocumentChanged(EditorDocumentViewModel? value)
     {
+        _messenger.Send(new ActiveDocumentChangedMessage(value));
+
         Breadcrumb.Clear();
         if (value is null)
         {
