@@ -5,10 +5,10 @@
     Cada .csproj puede sobrescribir una propiedad declarándola de nuevo en su
     propio <PropertyGroup> (se aplica después de importar este archivo).
 
-    Nota: los proyectos de TmCompiler declaran <Nullable>disable</Nullable> de
-    forma explícita y, por tanto, conservan ese valor; solo TmIde (nuevo) nace
-    con nullable habilitado. Migrar TmCompiler a nullable enable es una tarea
-    aparte (ver docs).
+    Nota: Tempo.Language, Tempo.Cli y Tempo.Language.Tests declaran
+    <Nullable>annotations</Nullable> de forma explícita y conservan ese valor;
+    TmIde y TmIde.Tests usan el enable de aquí. Migrar el compilador a
+    nullable enable es una tarea aparte (ver docs).
   -->
 
   <PropertyGroup>
