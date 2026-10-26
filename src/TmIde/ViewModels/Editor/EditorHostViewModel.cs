@@ -109,6 +109,85 @@ public sealed partial class EditorHostViewModel : ViewModelBase
         return texts;
     }
 
+    public IReadOnlyList<EditorDocumentViewModel> DocumentsAtOrUnder(string path)
+    {
+        var fullPath = Path.TrimEndingDirectorySeparator(
+            Path.GetFullPath(path));
+
+        var prefix = fullPath + Path.DirectorySeparatorChar;
+
+        return Documents
+            .Where(document =>
+                string.Equals(
+                    document.FilePath,
+                    fullPath,
+                    StringComparison.OrdinalIgnoreCase) ||
+                document.FilePath.StartsWith(
+                    prefix,
+                    StringComparison.OrdinalIgnoreCase))
+            .ToList();
+    }
+
+    public void ApplyPathRename(
+        string originalPath,
+        string renamedPath)
+    {
+        var oldPath = Path.TrimEndingDirectorySeparator(
+            Path.GetFullPath(originalPath));
+
+        var newPath = Path.TrimEndingDirectorySeparator(
+            Path.GetFullPath(renamedPath));
+
+        var affectedDocuments =
+            DocumentsAtOrUnder(oldPath);
+
+        foreach (var document in affectedDocuments)
+        {
+            string updatedPath;
+
+            if (string.Equals(
+                document.FilePath,
+                oldPath,
+                StringComparison.OrdinalIgnoreCase))
+            {
+                updatedPath = newPath;
+            }
+            else
+            {
+                var relative = Path.GetRelativePath(
+                    oldPath,
+                    document.FilePath);
+
+                updatedPath = Path.Combine(
+                    newPath,
+                    relative);
+            }
+
+            document.UpdateLocation(
+                updatedPath,
+                RelativePathOf(updatedPath));
+        }
+
+        foreach (var document in affectedDocuments)
+        {
+            document.Reanalyze();
+        }
+
+        // Actualizar breadcrumb, título y documento activo
+        OnSelectedDocumentChanged(SelectedDocument);
+    }
+
+    public void CloseDocumentsAtOrUnder(string path)
+    {
+        var affectedDocuments =
+            DocumentsAtOrUnder(path);
+
+        foreach (var document in affectedDocuments)
+        {
+            document.Close();
+        }
+    }
+
     private void CloseDocument(EditorDocumentViewModel document)
     {
         var index = Documents.IndexOf(document);

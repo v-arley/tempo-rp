@@ -82,11 +82,25 @@ public sealed class ActiveDocumentMessageTests
         var bottomPanel = new BottomPanelViewModel();
         var commands = Commands();
 
-        // El título no usa el workspace; solo se lee a través de Commands.
+        var output = Substitute.For<IOutputLog>();
+
+        var explorer = new FileExplorerViewModel(
+            _messenger,
+            new ProjectFileService(),
+            Substitute.For<INamePromptService>(),
+            output);
+
+        var menuBar = new MenuBarViewModel(
+            Substitute.For<IThemeService>(),
+            Substitute.For<IFlowService>(),
+            commands,
+            output,
+            explorer);
+
         return new MainWindowViewModel(
             workspace: null!,
-            new MenuBarViewModel(Substitute.For<IThemeService>(), Substitute.For<IFlowService>(), commands, Substitute.For<IOutputLog>()),
-            new FileExplorerViewModel(_messenger),
+            menuBar,
+            explorer,
             editorHost,
             bottomPanel,
             new StatusBarViewModel(commands, _messenger),

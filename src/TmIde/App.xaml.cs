@@ -150,6 +150,8 @@ public partial class App : Application
         services.AddSingleton<IThemeService, ThemeService>();
         services.AddSingleton<IConfirmDialogService, ConfirmDialogService>();
         services.AddSingleton<IProjectScaffolder, ProjectScaffolder>();
+        services.AddSingleton<IProjectFileService, ProjectFileService>();
+        services.AddSingleton<INamePromptService, NamePromptService>();
         services.AddSingleton<IStartDialogService, StartDialogService>();
         services.AddSingleton<ICodeAnalysisService, CodeAnalysisService>();
 

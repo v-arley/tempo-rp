@@ -24,6 +24,9 @@ public sealed partial class FileNodeViewModel : ViewModelBase
     [ObservableProperty]
     private bool _isVisible = true;
 
+    [ObservableProperty]
+    private bool _isSelected;
+
     public FileNodeViewModel(string fullPath, bool isDirectory, Action<FileNodeViewModel>? onOpen, IEnumerable<FileNodeViewModel> children)
     {
         FullPath = fullPath;
@@ -41,22 +44,39 @@ public sealed partial class FileNodeViewModel : ViewModelBase
 
     public bool IsDirectory { get; }
 
+    /// <summary>
+    /// Identifica los archivos principales de Tempo (.tmpr).
+    /// </summary>
+    public bool IsMainProjectFile => !IsDirectory && string.Equals(System.IO.Path.GetExtension(Name), ".tmpr", StringComparison.OrdinalIgnoreCase);
+
     public ObservableCollection<FileNodeViewModel> Children { get; }
 
-    /// <summary>Clave de geometría en Icons.xaml según tipo / estado / extensión.</summary>
+    /// <summary>
+    /// Devuelve el icono correspondiente al tipo de archivo.
+    /// </summary>
     public string IconKey
     {
         get
         {
             if (IsDirectory)
             {
-                return IsExpanded ? "IconFolderOpen" : "IconFolder";
+                return IsExpanded
+                    ? "IconFolderOpen"
+                    : "IconFolder";
             }
 
-            var ext = System.IO.Path.GetExtension(Name).ToLowerInvariant();
-            return ext is ".tm" or ".tmpr" or ".ts" or ".tsx" or ".js" ? "IconFileCode" : "IconFile";
+            var extension = System.IO.Path
+                .GetExtension(Name)
+                .ToLowerInvariant();
+
+            return extension switch
+            {
+                ".tmpr" => "IconMainFile",
+                ".tm" => "IconFileCode",
+                _ => "IconFile"
+            };
         }
-    }
+}
 
     [RelayCommand]
     private void Open()

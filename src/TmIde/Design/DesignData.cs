@@ -41,7 +41,7 @@ public static class DesignData
         var messenger = new WeakReferenceMessenger();
         var bottomPanel = new BottomPanelViewModel();
         var editorHost = new EditorHostViewModel(new NoopCodeAnalysisService(), messenger);
-        var explorer = new FileExplorerViewModel(messenger);
+        var explorer = new FileExplorerViewModel(messenger, new ProjectFileService(), new NoopNamePromptService(), new OutputLog(bottomPanel));
         var workspace = new ProjectWorkspaceViewModel(
             new NoopStartDialogService(),
             new NoopConfirmDialogService(),
@@ -54,7 +54,7 @@ public static class DesignData
 
         return new MainWindowViewModel(
             workspace,
-            new MenuBarViewModel(new NoopThemeService(), new NoopFlowService(), workspace.Commands, new OutputLog(bottomPanel)),
+            new MenuBarViewModel(new NoopThemeService(), new NoopFlowService(), workspace.Commands, new OutputLog(bottomPanel), explorer),
             explorer,
             editorHost,
             bottomPanel,
@@ -114,5 +114,16 @@ public static class DesignData
     private sealed class NoopConfirmDialogService : IConfirmDialogService
     {
         public bool Confirm(string message) => true;
+    }
+
+    private sealed class NoopNamePromptService : INamePromptService
+    {
+        public string? RequestName(
+            string title,
+            string message,
+            string initialName = "")
+        {
+            return null;
+        }
     }
 }

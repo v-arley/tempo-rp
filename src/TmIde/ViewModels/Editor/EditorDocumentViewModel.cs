@@ -85,13 +85,24 @@ public sealed partial class EditorDocumentViewModel : ViewModelBase
 
     public int WarningCount => Diagnostics.Count(diagnostic => diagnostic.Severity == EditorDiagnosticSeverity.Warning);
 
-    public string FileName { get; }
+    public string FileName { get; private set; }
 
     /// <summary>Ruta relativa del archivo, separada por <c>/</c>, que alimenta el breadcrumb.</summary>
-    public string RelativePath { get; }
+    public string RelativePath { get; private set; }
 
     /// <summary>Ruta completa del archivo; identifica al documento ante el compilador.</summary>
-    public string FilePath { get; }
+    public string FilePath { get; private set; }
+
+    public void UpdateLocation(string newFilePath, string newRelativePath)
+    {
+        FilePath = Path.GetFullPath(newFilePath);
+        FileName = Path.GetFileName(FilePath);
+        RelativePath = newRelativePath;
+
+        OnPropertyChanged(nameof(FilePath));
+        OnPropertyChanged(nameof(FileName));
+        OnPropertyChanged(nameof(RelativePath));
+    }
 
     /// <summary>
     /// Escribe el texto en <see cref="FilePath"/> y lo marca como guardado.

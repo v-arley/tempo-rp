@@ -69,6 +69,7 @@ public sealed partial class ProjectWorkspaceViewModel : ViewModelBase
         _bottomPanel = bottomPanel;
         _recentProjects = recentProjects;
         _logger = logger;
+        _explorer.ConfigureFileOperations(_editorHost, _confirmDialog);
 
         Commands = new ProjectCommands(ShowStartCommand, SaveCommand, CompileCommand, RunCommand, StopCommand);
 

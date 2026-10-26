@@ -45,7 +45,7 @@ public sealed class ProjectWorkspaceViewModelTests : IDisposable
         var analysis = Substitute.For<ICodeAnalysisService>();
         analysis.Analyze(default!, default!).ReturnsForAnyArgs([]);
         _editorHost = new EditorHostViewModel(analysis, _messenger);
-        _explorer = new FileExplorerViewModel(_messenger);
+        _explorer = new FileExplorerViewModel(_messenger, new ProjectFileService(), Substitute.For<INamePromptService>(), Substitute.For<IOutputLog>());
 
         _workspace = new ProjectWorkspaceViewModel(
             _startDialog,

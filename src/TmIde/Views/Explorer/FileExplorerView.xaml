@@ -90,16 +90,36 @@
                                     VerticalAlignment="Center"
                                     FontSize="11" FontWeight="SemiBold"
                                     Foreground="{DynamicResource PrimaryForegroundBrush}" />
-                        <!-- Botones decorativos: sin acción asociada -->
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                            <Button Style="{StaticResource ExplorerHeaderIconButton}" ToolTip="Nuevo archivo">
-                                <Path Style="{StaticResource IconPath}" Width="13" Height="13"
-                                        Data="{StaticResource IconFile}" Fill="{DynamicResource PrimaryForegroundBrush}" />
+                        <!-- Acciones del explorador -->
+                        <StackPanel Orientation="Horizontal"
+                                    HorizontalAlignment="Right">
+
+                            <Button
+                                Style="{StaticResource ExplorerHeaderIconButton}"
+                                ToolTip="Nuevo archivo"
+                                Command="{Binding CreateFileCommand}">
+
+                                <Path
+                                    Style="{StaticResource IconPath}"
+                                    Width="13"
+                                    Height="13"
+                                    Data="{StaticResource IconFile}"
+                                    Fill="{DynamicResource PrimaryForegroundBrush}" />
                             </Button>
-                            <Button Style="{StaticResource ExplorerHeaderIconButton}" ToolTip="Nueva carpeta">
-                                <Path Style="{StaticResource IconPath}" Width="13" Height="13"
-                                        Data="{StaticResource IconFolder}" Fill="{DynamicResource PrimaryForegroundBrush}" />
+
+                            <Button
+                                Style="{StaticResource ExplorerHeaderIconButton}"
+                                ToolTip="Nueva carpeta"
+                                Command="{Binding CreateFolderCommand}">
+
+                                <Path
+                                    Style="{StaticResource IconPath}"
+                                    Width="13"
+                                    Height="13"
+                                    Data="{StaticResource IconFolder}"
+                                    Fill="{DynamicResource PrimaryForegroundBrush}" />
                             </Button>
+
                         </StackPanel>
                     </Grid>
 
@@ -131,9 +151,202 @@
             </Border>
 
             <!-- Árbol de archivos del proyecto -->
-            <TreeView Grid.Row="1" ItemsSource="{Binding Roots}"
-                        BorderThickness="0" Background="Transparent"
+            <TreeView   Grid.Row="1"
+                        ItemsSource="{Binding Roots}"
+                        SelectedItemChanged="Tree_SelectedItemChanged"
+                        PreviewMouseRightButtonDown="Tree_PreviewMouseRightButtonDown"
+                        PreviewKeyDown="Tree_PreviewKeyDown"
+                        BorderThickness="0"
+                        Background="Transparent"
                         Padding="8,10">
+
+                <TreeView.ItemContainerStyle>
+                    <Style TargetType="{x:Type TreeViewItem}">
+
+                        <Setter Property="IsExpanded"
+                                Value="{Binding IsExpanded, Mode=TwoWay}" />
+
+                        <Setter Property="IsSelected"
+                                Value="{Binding IsSelected, Mode=TwoWay}" />
+
+                        <Setter Property="Tag"
+                                Value="{Binding DataContext,
+                                    RelativeSource={RelativeSource AncestorType=TreeView}}" />
+
+                        <Setter Property="ContextMenu">
+                            <Setter.Value>
+
+                                <ContextMenu
+                                    Background="{DynamicResource SurfaceBackgroundBrush}"
+                                    Foreground="{DynamicResource PrimaryForegroundBrush}"
+                                    BorderBrush="{DynamicResource DividerBrush}"
+                                    BorderThickness="1"
+                                    Padding="4"
+                                    MinWidth="190">
+
+                                    <ContextMenu.Template>
+                                        <ControlTemplate TargetType="{x:Type ContextMenu}">
+
+                                            <Border
+                                                Background="{TemplateBinding Background}"
+                                                BorderBrush="{TemplateBinding BorderBrush}"
+                                                BorderThickness="{TemplateBinding BorderThickness}"
+                                                Padding="{TemplateBinding Padding}"
+                                                SnapsToDevicePixels="True">
+
+                                                <ItemsPresenter
+                                                    KeyboardNavigation.DirectionalNavigation="Cycle" />
+
+                                            </Border>
+
+                                        </ControlTemplate>
+                                    </ContextMenu.Template>
+
+                                    <!-- Estilos exclusivos de este menú -->
+                                    <ContextMenu.Resources>
+
+                                        <Style TargetType="{x:Type MenuItem}">
+
+                                            <Setter Property="Foreground"
+                                                    Value="{DynamicResource PrimaryForegroundBrush}" />
+
+                                            <Setter Property="Background"
+                                                    Value="Transparent" />
+
+                                            <Setter Property="Padding"
+                                                    Value="12,9" />
+
+                                            <Setter Property="MinHeight"
+                                                    Value="34" />
+
+                                            <Setter Property="Cursor"
+                                                    Value="Hand" />
+
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+
+                                                    <ControlTemplate TargetType="{x:Type MenuItem}">
+
+                                                        <Border
+                                                            x:Name="ItemBackground"
+                                                            Background="{TemplateBinding Background}"
+                                                            Padding="{TemplateBinding Padding}">
+
+                                                            <Grid>
+
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="*" />
+                                                                    <ColumnDefinition Width="Auto" />
+                                                                </Grid.ColumnDefinitions>
+
+                                                                <!-- Nombre de la opción -->
+                                                                <TextBlock
+                                                                    Grid.Column="0"
+                                                                    Text="{TemplateBinding Header}"
+                                                                    Foreground="{TemplateBinding Foreground}"
+                                                                    FontSize="12"
+                                                                    VerticalAlignment="Center" />
+
+                                                                <!-- Atajo de teclado -->
+                                                                <TextBlock
+                                                                    Grid.Column="1"
+                                                                    Text="{TemplateBinding InputGestureText}"
+                                                                    Foreground="{DynamicResource SecondaryForegroundBrush}"
+                                                                    FontSize="11"
+                                                                    Margin="20,0,0,0"
+                                                                    VerticalAlignment="Center" />
+
+                                                            </Grid>
+
+                                                        </Border>
+
+                                                        <ControlTemplate.Triggers>
+
+                                                            <!-- Resaltado al pasar el cursor -->
+                                                            <Trigger Property="IsHighlighted"
+                                                                    Value="True">
+
+                                                                <Setter
+                                                                    TargetName="ItemBackground"
+                                                                    Property="Background"
+                                                                    Value="{DynamicResource HoverBackgroundBrush}" />
+
+                                                            </Trigger>
+
+                                                            <!-- Opciones deshabilitadas -->
+                                                            <Trigger Property="IsEnabled"
+                                                                    Value="False">
+
+                                                                <Setter Property="Opacity"
+                                                                        Value="0.4" />
+
+                                                            </Trigger>
+
+                                                        </ControlTemplate.Triggers>
+
+                                                    </ControlTemplate>
+
+                                                </Setter.Value>
+                                            </Setter>
+
+                                        </Style>
+
+                                        <!-- Separador del menú -->
+                                        <Style TargetType="{x:Type Separator}">
+
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+
+                                                    <ControlTemplate TargetType="{x:Type Separator}">
+
+                                                        <Border
+                                                            Height="1"
+                                                            Margin="8,5"
+                                                            Background="{DynamicResource DividerBrush}" />
+
+                                                    </ControlTemplate>
+
+                                                </Setter.Value>
+                                            </Setter>
+
+                                        </Style>
+
+                                    </ContextMenu.Resources>
+
+                                    <!-- Opciones del menú -->
+
+                                    <MenuItem
+                                        Header="Nuevo archivo"
+                                        Command="{Binding PlacementTarget.Tag.CreateFileCommand,
+                                            RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+
+                                    <MenuItem
+                                        Header="Nueva carpeta"
+                                        Command="{Binding PlacementTarget.Tag.CreateFolderCommand,
+                                            RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+
+                                    <Separator />
+
+                                    <MenuItem
+                                        Header="Renombrar"
+                                        InputGestureText="F2"
+                                        Command="{Binding PlacementTarget.Tag.RenameSelectedCommand,
+                                            RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+
+                                    <MenuItem
+                                        Header="Eliminar"
+                                        InputGestureText="Supr"
+                                        Command="{Binding PlacementTarget.Tag.DeleteSelectedCommand,
+                                            RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+
+                                </ContextMenu>
+
+                            </Setter.Value>
+                        </Setter>
+
+                    </Style>
+                </TreeView.ItemContainerStyle>
+                
                 <TreeView.ItemTemplate>
                     <HierarchicalDataTemplate ItemsSource="{Binding Children}">
                         <Grid Background="Transparent">
@@ -141,13 +354,89 @@
                                 <MouseBinding Gesture="LeftDoubleClick" Command="{Binding OpenCommand}" />
                             </Grid.InputBindings>
                             <StackPanel Orientation="Horizontal">
-                                <Path Style="{StaticResource IconPath}" Width="13" Height="13"
-                                        VerticalAlignment="Center"
-                                        Fill="{DynamicResource PrimaryForegroundBrush}"
-                                        Data="{Binding IconKey, Converter={StaticResource KeyToGeometry}}" />
-                                <TextBlock Text="{Binding Name}" Margin="6,0,0,0"
-                                            VerticalAlignment="Center" FontSize="12"
-                                            Foreground="{DynamicResource PrimaryForegroundBrush}" />
+
+                                <!-- Icono del archivo o carpeta -->
+                                <Path
+                                    Width="13"
+                                    Height="13"
+                                    VerticalAlignment="Center"
+                                    Data="{Binding IconKey,
+                                        Converter={StaticResource KeyToGeometry}}">
+
+                                    <Path.Style>
+                                        <Style
+                                            TargetType="Path"
+                                            BasedOn="{StaticResource IconPath}">
+
+                                            <Setter
+                                                Property="Fill"
+                                                Value="{DynamicResource PrimaryForegroundBrush}" />
+
+                                            <Style.Triggers>
+                                                <DataTrigger
+                                                    Binding="{Binding IsMainProjectFile}"
+                                                    Value="True">
+
+                                                    <Setter
+                                                        Property="Fill"
+                                                        Value="#7EC8E3" />
+
+                                                </DataTrigger>
+                                            </Style.Triggers>
+
+                                        </Style>
+                                    </Path.Style>
+
+                                </Path>
+
+                                <!-- Nombre del archivo -->
+                                <TextBlock
+                                    Text="{Binding Name}"
+                                    Margin="6,0,0,0"
+                                    VerticalAlignment="Center"
+                                    FontSize="12">
+
+                                    <TextBlock.Style>
+                                        <Style
+                                            TargetType="TextBlock"
+                                            BasedOn="{StaticResource {x:Type TextBlock}}">
+
+                                            <Setter
+                                                Property="Foreground"
+                                                Value="{DynamicResource PrimaryForegroundBrush}" />
+
+                                            <Style.Triggers>
+                                                <DataTrigger
+                                                    Binding="{Binding IsMainProjectFile}"
+                                                    Value="True">
+
+                                                    <Setter
+                                                        Property="FontWeight"
+                                                        Value="SemiBold" />
+
+                                                    <Setter
+                                                        Property="Foreground"
+                                                        Value="#7EC8E3" />
+
+                                                </DataTrigger>
+                                            </Style.Triggers>
+
+                                        </Style>
+                                    </TextBlock.Style>
+
+                                </TextBlock>
+
+                                <!-- Etiqueta exclusiva de los archivos .tmpr -->
+                                <TextBlock
+                                    Text="PRINCIPAL"
+                                    Margin="9,0,0,0"
+                                    VerticalAlignment="Center"
+                                    FontSize="9"
+                                    FontWeight="SemiBold"
+                                    Foreground="#7EC8E3"
+                                    Visibility="{Binding IsMainProjectFile,
+                                                Converter={StaticResource BoolToVisibility}}" />
+
                             </StackPanel>
                         </Grid>
                     </HierarchicalDataTemplate>

@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using TmIde.Services;
 using TmIde.Services.Navigation;
 using TmIde.ViewModels;
+using TmIde.ViewModels.Explorer;
 
 namespace TmIde.ViewModels.Shell;
 
@@ -19,13 +20,15 @@ public sealed partial class MenuBarViewModel : ViewModelBase
     private readonly IFlowService _flow;
     private readonly ProjectCommands _commands;
     private readonly IOutputLog _output;
+    private readonly FileExplorerViewModel _explorer;
 
-    public MenuBarViewModel(IThemeService themeService, IFlowService flow, ProjectCommands commands, IOutputLog output)
+    public MenuBarViewModel(IThemeService themeService, IFlowService flow, ProjectCommands commands, IOutputLog output, FileExplorerViewModel explorer)
     {
         _themeService = themeService;
         _flow = flow;
         _commands = commands;
         _output = output;
+        _explorer = explorer;
 
         Roots = new ObservableCollection<MenuEntryViewModel>
         {
@@ -42,7 +45,7 @@ public sealed partial class MenuBarViewModel : ViewModelBase
     {
         var menu = new MenuEntryViewModel("MENU");
         menu.Add(new MenuEntryViewModel("Inicio", _commands.ShowStart));
-        menu.Add(new MenuEntryViewModel("Nuevo archivo", () => _output.WriteLine("MENU → Nuevo archivo (pendiente)")));
+        menu.Add(new MenuEntryViewModel("Nuevo archivo", () => _explorer.CreateFileCommand.Execute(null)));
         menu.Add(new MenuEntryViewModel("Guardar (Ctrl+S)", _commands.Save));
         menu.Add(new MenuEntryViewModel("Salir", _flow.Shutdown));
         return menu;
