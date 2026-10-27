@@ -4,6 +4,7 @@ using TmIde.Services;
 using TmIde.Services.Navigation;
 using TmIde.ViewModels;
 using TmIde.ViewModels.Explorer;
+using CommunityToolkit.Mvvm.Input;
 
 namespace TmIde.ViewModels.Shell;
 
@@ -21,14 +22,19 @@ public sealed partial class MenuBarViewModel : ViewModelBase
     private readonly ProjectCommands _commands;
     private readonly IOutputLog _output;
     private readonly FileExplorerViewModel _explorer;
+    private readonly ILanguageReferenceService? _languageReference;
 
-    public MenuBarViewModel(IThemeService themeService, IFlowService flow, ProjectCommands commands, IOutputLog output, FileExplorerViewModel explorer)
+    public MenuBarViewModel(IThemeService themeService, IFlowService flow, ProjectCommands commands, IOutputLog output, FileExplorerViewModel explorer, 
+        ILanguageReferenceService? languageReference = null)
     {
         _themeService = themeService;
         _flow = flow;
         _commands = commands;
         _output = output;
         _explorer = explorer;
+        _languageReference = languageReference;
+
+        ShowLanguageReferenceCommand = new RelayCommand(() => _languageReference?.Show());
 
         Roots = new ObservableCollection<MenuEntryViewModel>
         {
@@ -40,6 +46,7 @@ public sealed partial class MenuBarViewModel : ViewModelBase
     }
 
     public ObservableCollection<MenuEntryViewModel> Roots { get; }
+    public IRelayCommand ShowLanguageReferenceCommand { get; }
 
     private MenuEntryViewModel BuildFileMenu()
     {
@@ -73,8 +80,12 @@ public sealed partial class MenuBarViewModel : ViewModelBase
 
     private MenuEntryViewModel BuildOtherMenu()
     {
-        var menu = new MenuEntryViewModel("OTROS");
-        menu.Add(new MenuEntryViewModel("Acerca de TmIde", () => _output.WriteLine("TmIde — esqueleto de UI para el lenguaje TM (v0)")));
+        var menu = new MenuEntryViewModel("AYUDA");
+
+        menu.Add(new MenuEntryViewModel("Referencia del lenguaje (F1)", ShowLanguageReferenceCommand));
+
+        menu.Add(new MenuEntryViewModel("Acerca de TmIde", () => _output.WriteLine("TmIde — Entorno de desarrollo del lenguaje Tempo")));
+
         return menu;
     }
 }

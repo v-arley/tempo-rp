@@ -119,7 +119,7 @@
                     <StackPanel Grid.Column="1" Margin="14,0,0,0">
                         <TextBlock Text="ABRIR PROYECTO" Style="{StaticResource HelpTitle}" Foreground="{DynamicResource StartCaptionBrush}" />
                         <TextBlock Style="{StaticResource HelpBody}" Foreground="{DynamicResource StartCaptionBrush}"
-                                    Text="Selecciona un proyecto existente del disco. Aún está pendiente de implementar: por ahora solo queda registrado en el panel inferior." />
+                                    Text="Permite seleccionar una carpeta que contiene un proyecto Tempo existente. Al abrirlo, el IDE carga sus archivos y permite continuar trabajando." />
                     </StackPanel>
                 </Grid>
 
@@ -158,7 +158,7 @@
                     <StackPanel Grid.Column="1" Margin="14,0,0,0">
                         <TextBlock Text="TECLADO" Style="{StaticResource HelpTitle}" Foreground="{DynamicResource StartCaptionBrush}" />
                         <TextBlock Style="{StaticResource HelpBody}" Foreground="{DynamicResource StartCaptionBrush}"
-                                    Text="Esc vuelve al inicio desde el formulario y cierra la ventana desde el inicio. F1 abre esta guía." />
+                                    Text="Esc permite regresar desde el formulario o cerrar la ventana de inicio. F1 abre esta guía en la pantalla de inicio y la referencia del lenguaje desde el editor." />
                     </StackPanel>
                 </Grid>
 
@@ -171,7 +171,7 @@
                     <StackPanel Grid.Column="1" Margin="14,0,0,0">
                         <TextBlock Text="BARRA INFERIOR" Style="{StaticResource HelpTitle}" Foreground="{DynamicResource StartCaptionBrush}" />
                         <TextBlock Style="{StaticResource HelpBody}" Foreground="{DynamicResource StartCaptionBrush}"
-                                    Text="Indica la versión del IDE, el runtime de .NET y las fases del compilador disponibles (léxico, sintaxis y semántica)." />
+                                    Text="Muestra información del entorno, como la versión del IDE, el runtime de .NET y las fases disponibles: análisis léxico, sintáctico, semántico y ejecución." />
                     </StackPanel>
                 </Grid>
 

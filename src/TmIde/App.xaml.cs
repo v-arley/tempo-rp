@@ -148,6 +148,7 @@ public partial class App : Application
             provider.GetRequiredService<ILogger<JsonUserSettingsStore>>()));
         services.AddSingleton<IRecentProjectsService, RecentProjectsService>();
         services.AddSingleton<IThemeService, ThemeService>();
+        services.AddSingleton<ILanguageReferenceService, LanguageReferenceService>();
         services.AddSingleton<IConfirmDialogService, ConfirmDialogService>();
         services.AddSingleton<IProjectScaffolder, ProjectScaffolder>();
         services.AddSingleton<IProjectFileService, ProjectFileService>();

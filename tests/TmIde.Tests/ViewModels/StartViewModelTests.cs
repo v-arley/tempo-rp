@@ -138,6 +138,17 @@ public sealed class StartViewModelTests : IDisposable
         Assert.True(CreateViewModel().IsRecentEmpty);
     }
 
+    [Fact]
+    public void CompilerStatus_IncludesExecution()
+    {
+        var viewModel = CreateViewModel();
+
+        Assert.Contains(
+            "Ejecución",
+            viewModel.CompilerStatus,
+            StringComparison.Ordinal);
+    }
+
     private StartViewModel CreateViewModel(params RecentProjectViewModel[] recentProjects)
     {
         var viewModel = new StartViewModel(_output, new ProjectScaffolder(), _ => _pickedFolder, recentProjects);

@@ -77,7 +77,7 @@ public sealed partial class StartViewModel : ViewModelBase, ICloseable
 
     public string RuntimeVersion => $".NET {Environment.Version}";
 
-    public string CompilerStatus => "Léxico · Sintaxis · Semántica";
+    public string CompilerStatus => "Léxico · Sintaxis · Semántica · Ejecución";
 
     /// <summary>Carpeta del proyecto elegido al cerrar el diálogo; <c>null</c> si no se eligió ninguno.</summary>
     public string? ProjectToOpen { get; private set; }

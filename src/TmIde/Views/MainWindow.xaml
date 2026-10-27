@@ -33,7 +33,18 @@
     </WindowChrome.WindowChrome>
 
     <Window.InputBindings>
-        <KeyBinding Modifiers="Control" Key="S" Command="{Binding Commands.Save}" />
+
+        <!-- Guardar documento -->
+        <KeyBinding
+            Modifiers="Control"
+            Key="S"
+            Command="{Binding Commands.Save}" />
+
+        <!-- Abrir referencia del lenguaje -->
+        <KeyBinding
+            Key="F1"
+            Command="{Binding MenuBar.ShowLanguageReferenceCommand}" />
+
     </Window.InputBindings>
 
     <Grid x:Name="RootLayout">
