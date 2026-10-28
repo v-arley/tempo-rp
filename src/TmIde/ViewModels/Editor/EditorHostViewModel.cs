@@ -22,6 +22,10 @@ public sealed partial class EditorHostViewModel : ViewModelBase
     [ObservableProperty]
     private EditorDocumentViewModel? _selectedDocument;
 
+    /// Solicitud de navegacion hacia una posicion del editor.
+    [ObservableProperty]
+    private EditorNavigationRequest? _navigationRequest;
+
     private readonly ICodeAnalysisService _analysisService;
     private readonly IMessenger _messenger;
 
@@ -53,6 +57,82 @@ public sealed partial class EditorHostViewModel : ViewModelBase
 
         ProjectDirectory = projectDirectory;
     }
+
+    
+    /// Abre un archivo, selecciona su pestaña y solicita mover el cursor a la línea y columna del diagnóstico
+    public void NavigateToDiagnostic(
+        string filePath,
+        int line,
+        int? column)
+    {
+        // Abre el archivo si todavía no está abierto
+        // Si ya existe su pestaña, solamente la activa
+        OpenDocument(filePath);
+
+        if (SelectedDocument is not { } selected)
+        {
+            return;
+        }
+
+        var document = selected.Document;
+
+        // El compilador puede informar una línea fuera del rango del archivo si este fue modificado
+        var safeLine = Math.Clamp(
+            line,
+            1,
+            document.LineCount);
+
+        var documentLine = document.GetLineByNumber(safeLine);
+
+        var safeColumn = Math.Clamp(
+            column ?? 1,
+            1,
+            documentLine.Length + 1);
+
+        var offset = documentLine.Offset + safeColumn - 1;
+
+        // Cada solicitud es una instancia nueva
+        NavigationRequest = new EditorNavigationRequest(
+            document,
+            offset);
+    }
+
+
+    /// Inserta un ejemplo en la posicion actual del cursor del documento activo.
+    /// No reemplaza todo el archivo.
+    /// No guarda automaticamente.
+    public bool InsertExampleAtCaret(string example)
+    {
+        if (SelectedDocument is not { } selected ||
+            string.IsNullOrEmpty(example))
+        {
+            return false;
+        }
+
+        var document = selected.Document;
+
+        var lineNumber = Math.Clamp(
+            selected.CaretLine,
+            1,
+            document.LineCount);
+
+        var line = document.GetLineByNumber(lineNumber);
+
+        var column = Math.Clamp(
+            selected.CaretColumn,
+            1,
+            line.Length + 1);
+
+        var offset = line.Offset + column - 1;
+
+        document.Insert(offset, example);
+
+        NavigationRequest = new EditorNavigationRequest(
+            document,
+            offset + example.Length);
+
+        return true;
+}
 
     /// <summary>
     /// Abre (o activa, si ya está abierto) el archivo de <paramref name="filePath"/>

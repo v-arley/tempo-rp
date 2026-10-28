@@ -252,11 +252,26 @@
                             FontWeight="SemiBold"
                             Foreground="{DynamicResource PrimaryForegroundBrush}" />
 
-                        <Button
+                        <StackPanel
                             Grid.Column="1"
-                            Content="Copiar ejemplo"
-                            Style="{StaticResource ReferenceButton}"
-                            Click="CopyExample_Click" />
+                            Orientation="Horizontal">
+
+                            <!-- Copiar el codigo al portapapeles -->
+                            <Button
+                                Content="Copiar ejemplo"
+                                Style="{StaticResource ReferenceButton}"
+                                Margin="0,0,8,0"
+                                Click="CopyExample_Click" />
+
+                            <!-- Insertar el codigo en el documento activo -->
+                            <Button
+                                x:Name="InsertExampleButton"
+                                Content="Insertar en el editor"
+                                Style="{StaticResource ReferenceButton}"
+                                Click="InsertExample_Click"
+                                ToolTip="Inserta este ejemplo en la posicion del cursor" />
+                        </StackPanel>
+
                     </Grid>
 
                     <!-- Recuadro de código -->

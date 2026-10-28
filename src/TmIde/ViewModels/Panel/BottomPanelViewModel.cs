@@ -1,16 +1,11 @@
 using System.Collections.ObjectModel;
-
 using CommunityToolkit.Mvvm.ComponentModel;
-
+using Tempo.Language.Diagnostics;
 using TmIde.ViewModels;
 
 namespace TmIde.ViewModels.Panel;
 
-/// <summary>
-/// Área inferior con pestañas Output / Run. Output recibe los mensajes de la
-/// aplicación y de COMPILE; Run muestra la ejecución del programa.
-/// </summary>
-
+/// Área inferior con las pestañas Output y Run.
 public sealed partial class BottomPanelViewModel : ViewModelBase
 {
     [ObservableProperty]
@@ -21,7 +16,12 @@ public sealed partial class BottomPanelViewModel : ViewModelBase
         Output = new OutputPaneViewModel("Output");
         Run = new RunPaneViewModel();
 
-        Panes = new ObservableCollection<BottomPaneViewModel> { Output, Run };
+        Panes = new ObservableCollection<BottomPaneViewModel>
+        {
+            Output,
+            Run
+        };
+
         _selectedPane = Output;
     }
 
@@ -31,10 +31,19 @@ public sealed partial class BottomPanelViewModel : ViewModelBase
 
     public RunPaneViewModel Run { get; }
 
-    /// <summary>Escribe una línea en Output y trae ese panel al frente.</summary>
+    /// Escribe un mensaje normal y muestra Output
     public void Log(string message)
     {
         Output.AppendLine(message);
+        SelectedPane = Output;
+    }
+
+    /// Escribe un diagnóstico navegable y muestra Output
+    public void LogDiagnostic(
+        Diagnostic diagnostic,
+        string? filePath)
+    {
+        Output.AppendDiagnostic(diagnostic, filePath);
         SelectedPane = Output;
     }
 }

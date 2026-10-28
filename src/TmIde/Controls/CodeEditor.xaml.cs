@@ -15,6 +15,7 @@ using ICSharpCode.AvalonEdit.Search;
 using TmIde.Controls.Diagnostics;
 using TmIde.Controls.Syntax;
 using TmIde.Services.Analysis;
+using TmIde.ViewModels.Editor;
 
 namespace TmIde.Controls;
 
@@ -46,6 +47,12 @@ public partial class CodeEditor : UserControl
         typeof(int),
         typeof(CodeEditor),
         new FrameworkPropertyMetadata(1, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault));
+
+    public static readonly DependencyProperty NavigationRequestProperty = DependencyProperty.Register(
+        nameof(NavigationRequest),
+        typeof(EditorNavigationRequest),
+        typeof(CodeEditor),
+        new PropertyMetadata(null, OnNavigationRequestChanged));    
 
     public static readonly DependencyProperty DiagnosticsProperty = DependencyProperty.Register(
         nameof(Diagnostics),
@@ -124,6 +131,14 @@ public partial class CodeEditor : UserControl
     {
         get => (TextDocument?)GetValue(DocumentProperty);
         set => SetValue(DocumentProperty, value);
+    }
+
+    public EditorNavigationRequest? NavigationRequest
+    {
+        get => (EditorNavigationRequest?)
+            GetValue(NavigationRequestProperty);
+
+        set => SetValue(NavigationRequestProperty, value);
     }
 
     public int CaretLine
@@ -225,6 +240,48 @@ public partial class CodeEditor : UserControl
     }
 
     private void OnTextViewMouseHoverStopped(object? sender, MouseEventArgs e) => _diagnosticToolTip.IsOpen = false;
+
+    /// <summary>
+    /// Atiende solicitudes externas para mover el cursor.
+    /// </summary>
+    private static void OnNavigationRequestChanged(
+        DependencyObject d,
+        DependencyPropertyChangedEventArgs e)
+    {
+        if (e.NewValue is not EditorNavigationRequest request)
+        {
+            return;
+        }
+
+        var control = (CodeEditor)d;
+
+        control.Dispatcher.BeginInvoke(
+            DispatcherPriority.Loaded,
+            new Action(() =>
+            {
+                // La solicitud pertenece al documento activo
+                if (!ReferenceEquals(
+                        control.Document,
+                        request.Document))
+                {
+                    return;
+                }
+
+                var offset = Math.Clamp(
+                    request.Offset,
+                    0,
+                    control.Editor.Document.TextLength);
+
+                control.Editor.TextArea.Caret.Offset = offset;
+
+                // Mostrar la linea donde queda el cursor
+                control.Editor.ScrollToLine(
+                    control.Editor.TextArea.Caret.Line);
+
+                // Devolver el foco al editor
+                control.Editor.TextArea.Focus();
+            }));
+    }
 
     private static void OnDocumentChanged(DependencyObject d, DependencyPropertyChangedEventArgs e) =>
         ((CodeEditor)d).SwitchDocument((TextDocument?)e.OldValue, (TextDocument?)e.NewValue);

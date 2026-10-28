@@ -69,6 +69,7 @@ public sealed partial class ProjectWorkspaceViewModel : ViewModelBase
         _bottomPanel = bottomPanel;
         _recentProjects = recentProjects;
         _logger = logger;
+        _bottomPanel.Output.DiagnosticActivated += OnDiagnosticActivated;
         _explorer.ConfigureFileOperations(_editorHost, _confirmDialog);
 
         Commands = new ProjectCommands(ShowStartCommand, SaveCommand, CompileCommand, RunCommand, StopCommand);
@@ -120,9 +121,43 @@ public sealed partial class ProjectWorkspaceViewModel : ViewModelBase
         }
 
         _editorHost.SwitchToProject(fullPath);
+        _bottomPanel.Output.ClearDiagnosticLinks();
         ProjectDirectory = fullPath;
         _recentProjects.Add(fullPath);
         _bottomPanel.Log($"Proyecto abierto: {fullPath}");
+    }
+
+    /// Navega al archivo, línea y columna de un diagnóstico seleccionado desde el panel Output
+    private void OnDiagnosticActivated(
+        DiagnosticNavigationTarget target)
+    {
+        if (ProjectDirectory is null)
+        {
+            return;
+        }
+
+        if (!File.Exists(target.FilePath))
+        {
+            _bottomPanel.Log(
+                $"OUTPUT → El archivo ya no existe: {target.FilePath}");
+
+            return;
+        }
+
+        try
+        {
+            _editorHost.NavigateToDiagnostic(
+                target.FilePath,
+                target.Line,
+                target.Column);
+        }
+        catch (Exception exception) when (
+            IsFileSystemError(exception))
+        {
+            _bottomPanel.Log(
+                $"OUTPUT → No se pudo abrir el archivo: " +
+                exception.Message);
+        }
     }
 
     private void OpenFile(string filePath)
@@ -195,10 +230,23 @@ public sealed partial class ProjectWorkspaceViewModel : ViewModelBase
             return null;
         }
 
+        
         foreach (var diagnostic in compilation.Diagnostics)
         {
-            _bottomPanel.Log(diagnostic.ToStandardFormat());
+            var sourceFile = compilation.Project.Files
+                .FirstOrDefault(file =>
+                    string.Equals(
+                        file.FileName,
+                        diagnostic.FileName,
+                        StringComparison.Ordinal));
+
+            var filePath = sourceFile?.FullPath;
+
+            _bottomPanel.LogDiagnostic(
+                diagnostic,
+                filePath);
         }
+
 
         var errors = compilation.Diagnostics.Count(diagnostic => diagnostic.IsError);
         var warnings = compilation.Diagnostics.Count - errors;

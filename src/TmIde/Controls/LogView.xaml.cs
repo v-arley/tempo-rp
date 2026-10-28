@@ -6,6 +6,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Windows.Input;
 
 
 namespace TmIde.Controls;
@@ -38,13 +39,20 @@ public partial class LogView : UserControl
     private INotifyCollectionChanged? _observedLines;
     private int _lineCount;
 
+    /// Se dispara al hacer doble clic sobre una línea del log
+    public event EventHandler<LogLineDoubleClickedEventArgs>? LineDoubleClicked;
+
     public LogView()
     {
         InitializeComponent();
 
-        // Solo lectura: el cursor no aporta nada visual.
+        // Ocultar el cursor visual del log de solo lectura
         Editor.TextArea.Caret.CaretBrush = Brushes.Transparent;
+
         SetResourceReference(SelectionAccentBrushProperty, "AccentBrush");
+
+        // Detectar doble clic sobre el texto de AvalonEdit
+        Editor.PreviewMouseLeftButtonDown += OnLogPreviewMouseLeftButtonDown;
     }
 
     public IEnumerable<string>? Lines
@@ -149,4 +157,57 @@ public partial class LogView : UserControl
             EditorThemeBrushes.ApplySelection(((LogView)d).Editor.TextArea, accent);
         }
     }
+
+    
+    private void OnLogPreviewMouseLeftButtonDown(
+        object sender,
+        MouseButtonEventArgs e)
+    {
+        // Un clic simple no debe activar la navegación.
+        if (e.ClickCount != 2)
+        {
+            return;
+        }
+
+        if (LineDoubleClicked is null)
+        {
+            return;
+        }
+
+        var textView = Editor.TextArea.TextView;
+
+        // Obtener la ubicación real bajo el puntero, teniendo en cuenta el desplazamiento del log
+        var position = textView.GetPositionFloor(
+            e.GetPosition(textView) + textView.ScrollOffset);
+
+        if (position is null)
+        {
+            return;
+        }
+
+        // AvalonEdit utiliza líneas que comienzan en 1
+        var lineNumber = position.Value.Location.Line;
+
+        if (lineNumber < 1 ||
+            lineNumber > Editor.Document.LineCount)
+        {
+            return;
+        }
+
+        LineDoubleClicked?.Invoke(
+            this,
+            new LogLineDoubleClickedEventArgs(lineNumber));
+    }
+
+}
+
+/// Información sobre la línea activada en LogView
+public sealed class LogLineDoubleClickedEventArgs : EventArgs
+{
+    public LogLineDoubleClickedEventArgs(int lineNumber)
+    {
+        LineNumber = lineNumber;
+    }
+
+    public int LineNumber { get; }
 }

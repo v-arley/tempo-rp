@@ -73,12 +73,17 @@
                 </Setter>
             </Style>
 
-            <!-- Cuerpo de la pestaña Output: solo lectura. -->
+            
+            <!-- Cuerpo de Output: diagnósticos navegables -->
             <DataTemplate DataType="{x:Type vm:OutputPaneViewModel}">
-                <Border Background="{DynamicResource SurfaceBackgroundBrush}">
-                    <controls:LogView Lines="{Binding Lines}" />
+                <Border
+                    Background="{DynamicResource SurfaceBackgroundBrush}">
+                    <controls:LogView
+                        Lines="{Binding Lines}"
+                        LineDoubleClicked="OnOutputLineDoubleClicked" />
                 </Border>
             </DataTemplate>
+
 
             <!-- Cuerpo de la pestaña Run: salida del programa arriba; la línea de
                 entrada solo se activa mientras el programa espera un input <<. -->

@@ -171,10 +171,16 @@
         </ItemsControl>
 
         <!-- Área de edición del documento activo -->
-        <controls:CodeEditor Grid.Row="2"
-                                        Document="{Binding SelectedDocument.Document}"
-                                        CaretLine="{Binding SelectedDocument.CaretLine, Mode=TwoWay, FallbackValue=1}"
-                                        CaretColumn="{Binding SelectedDocument.CaretColumn, Mode=TwoWay, FallbackValue=1}"
-                                        Diagnostics="{Binding SelectedDocument.Diagnostics}" />
+        <controls:CodeEditor
+                Grid.Row="2"
+                Document="{Binding SelectedDocument.Document}"
+                CaretLine="{Binding SelectedDocument.CaretLine,
+                            Mode=TwoWay,
+                            FallbackValue=1}"
+                CaretColumn="{Binding SelectedDocument.CaretColumn,
+                            Mode=TwoWay,
+                            FallbackValue=1}"
+                Diagnostics="{Binding SelectedDocument.Diagnostics}"
+                NavigationRequest="{Binding NavigationRequest}" />
     </Grid>
 </UserControl>

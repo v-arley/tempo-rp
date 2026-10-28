@@ -1,6 +1,5 @@
-
 using System.Windows;
-
+using TmIde.ViewModels.Editor;
 using TmIde.Views.Help;
 
 namespace TmIde.Services;
@@ -8,9 +7,22 @@ namespace TmIde.Services;
 public sealed class LanguageReferenceService
     : ILanguageReferenceService
 {
+    private readonly EditorHostViewModel _editorHost;
+
+    public LanguageReferenceService(
+        EditorHostViewModel editorHost)
+    {
+        _editorHost = editorHost;
+    }
+
     public void Show()
     {
-        var dialog = new LanguageReferenceWindow();
+        // Consultar si existe un documento abierto
+        var hasActiveDocument =
+            _editorHost.SelectedDocument is not null;
+
+        var dialog = new LanguageReferenceWindow(
+            hasActiveDocument);
 
         var owner = Application.Current?.MainWindow;
 
@@ -26,6 +38,14 @@ public sealed class LanguageReferenceService
                 WindowStartupLocation.CenterScreen;
         }
 
-        dialog.ShowDialog();
+        // Mostrar la ventana de referencia
+        var result = dialog.ShowDialog();
+
+        // Solo insertar si el usuario presiono expresamente "Insertar en el editor"
+        if (result == true &&
+            dialog.RequestedExample is { } example)
+        {
+            _editorHost.InsertExampleAtCaret(example);
+        }
     }
 }
