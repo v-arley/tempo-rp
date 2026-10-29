@@ -4,6 +4,7 @@
             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
             xmlns:design="clr-namespace:TmIde.Design"
+            xmlns:vm="clr-namespace:TmIde.ViewModels"
             mc:Ignorable="d"
             d:DataContext="{x:Static design:DesignData.StatusBar}"
             d:DesignWidth="900"
@@ -41,15 +42,91 @@
                 <Run Text="{Binding ProblemsSummary, Mode=OneWay}" />
             </TextBlock>
 
-            <!-- Centro: contenedor que ocupa todo el segmento central y, dentro, la
-                placa trapezoidal que sube desde la franja inferior (reflejo de la
-                del header). Decorativa; queda libre para contenido futuro. -->
+            
+            <!-- Centro: indicador del estado del proyecto -->
             <Grid Grid.Column="1">
-                <Path HorizontalAlignment="Center" VerticalAlignment="Bottom"
-                        Width="212" Height="22" IsHitTestVisible="False"
-                        Stretch="Fill" Fill="{DynamicResource DividerBrush}"
-                        Data="M14,0 L198,0 L212,22 L0,22 Z" />
+
+                <!-- Decoración original de Tempo -->
+                <Path
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Bottom"
+                    Width="212"
+                    Height="22"
+                    IsHitTestVisible="False"
+                    Stretch="Fill"
+                    Fill="{DynamicResource DividerBrush}"
+                    Data="M14,0 L198,0 L212,22 L0,22 Z" />
+
+                <!-- Estado de compilación y ejecución -->
+                <TextBlock
+                    Text="{Binding ProjectStatusText}"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    FontFamily="{DynamicResource CodeFontFamily}"
+                    FontWeight="SemiBold"
+                    FontSize="11">
+
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+
+                            <Setter
+                                Property="Foreground"
+                                Value="{DynamicResource TitleMenuForegroundBrush}" />
+
+                            <Style.Triggers>
+
+                                <!-- Compilando -->
+                                <DataTrigger
+                                    Binding="{Binding ProjectState}"
+                                    Value="{x:Static vm:ProjectActivityState.Compiling}">
+
+                                    <Setter
+                                        Property="Foreground"
+                                        Value="{DynamicResource SyntaxTypeBrush}" />
+
+                                </DataTrigger>
+
+                                <!-- Compilación correcta -->
+                                <DataTrigger
+                                    Binding="{Binding ProjectState}"
+                                    Value="{x:Static vm:ProjectActivityState.Compiled}">
+
+                                    <Setter
+                                        Property="Foreground"
+                                        Value="{DynamicResource SyntaxNumberBrush}" />
+
+                                </DataTrigger>
+
+                                <!-- Proyecto con errores -->
+                                <DataTrigger
+                                    Binding="{Binding ProjectState}"
+                                    Value="{x:Static vm:ProjectActivityState.WithErrors}">
+
+                                    <Setter
+                                        Property="Foreground"
+                                        Value="{DynamicResource DiagnosticErrorBrush}" />
+
+                                </DataTrigger>
+
+                                <!-- Ejecutando programa -->
+                                <DataTrigger
+                                    Binding="{Binding ProjectState}"
+                                    Value="{x:Static vm:ProjectActivityState.Running}">
+
+                                    <Setter
+                                        Property="Foreground"
+                                        Value="{DynamicResource SyntaxTypeBrush}" />
+
+                                </DataTrigger>
+
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+
+                </TextBlock>
+
             </Grid>
+
 
             <!-- Derecha: acciones del proyecto (STOP solo activo durante RUN). Botones
                 de 16 en una barra de 28: 6px arriba y abajo. Cierra el grupo una figura

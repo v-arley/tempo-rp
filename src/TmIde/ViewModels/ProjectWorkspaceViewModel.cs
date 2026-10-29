@@ -40,6 +40,7 @@ public sealed partial class ProjectWorkspaceViewModel : ViewModelBase
     private readonly BottomPanelViewModel _bottomPanel;
     private readonly IRecentProjectsService _recentProjects;
     private readonly ILogger<ProjectWorkspaceViewModel> _logger;
+    private readonly IMessenger _messenger;
 
     // Dispatcher del hilo de la UI, donde se crea este ViewModel: la ejecución
     // escribe en el panel Run a través de él desde el hilo del intérprete.
@@ -69,6 +70,7 @@ public sealed partial class ProjectWorkspaceViewModel : ViewModelBase
         _bottomPanel = bottomPanel;
         _recentProjects = recentProjects;
         _logger = logger;
+        _messenger = messenger;
         _bottomPanel.Output.DiagnosticActivated += OnDiagnosticActivated;
         _explorer.ConfigureFileOperations(_editorHost, _confirmDialog);
 
@@ -80,8 +82,15 @@ public sealed partial class ProjectWorkspaceViewModel : ViewModelBase
 
     public ProjectCommands Commands { get; }
 
-    /// <summary>Carpeta del proyecto abierto, o <c>null</c> si no hay ninguno.</summary>
+    ///Carpeta del proyecto abierto, o <c>null</c> si no hay ninguno
     public string? ProjectDirectory { get; private set; }
+
+    /// Notifica a la barra inferior un cambio en el estado del proyecto
+    private void PublishProjectState(ProjectActivityState state)
+    {
+        _messenger.Send(
+            new ProjectActivityChangedMessage(state));
+}
 
     /// <summary>Abre la ventana de inicio y carga el proyecto que se elija en ella.</summary>
     [RelayCommand]
@@ -123,6 +132,7 @@ public sealed partial class ProjectWorkspaceViewModel : ViewModelBase
         _editorHost.SwitchToProject(fullPath);
         _bottomPanel.Output.ClearDiagnosticLinks();
         ProjectDirectory = fullPath;
+        PublishProjectState(ProjectActivityState.Ready);
         _recentProjects.Add(fullPath);
         _bottomPanel.Log($"Proyecto abierto: {fullPath}");
     }
@@ -204,9 +214,15 @@ public sealed partial class ProjectWorkspaceViewModel : ViewModelBase
     {
         if (ProjectDirectory is not { } projectDirectory)
         {
-            _bottomPanel.Log("COMPILE → Abre un proyecto antes de compilar.");
+            PublishProjectState(ProjectActivityState.NoProject);
+
+            _bottomPanel.Log(
+                "COMPILE → Abre un proyecto antes de compilar.");
+
             return null;
         }
+
+        PublishProjectState(ProjectActivityState.Compiling);
 
         // Instantánea en el hilo de la UI; la compilación corre fuera de él.
         var openDocuments = _editorHost.OpenDocumentTexts();
@@ -220,6 +236,7 @@ public sealed partial class ProjectWorkspaceViewModel : ViewModelBase
         catch (Exception exception) when (IsFileSystemError(exception))
         {
             _bottomPanel.Log($"COMPILE → No se pudo leer el proyecto: {exception.Message}");
+            PublishProjectState(ProjectActivityState.WithErrors);
             return null;
         }
         catch (Exception exception)
@@ -227,9 +244,13 @@ public sealed partial class ProjectWorkspaceViewModel : ViewModelBase
             // Un fallo interno del compilador no debe tumbar el IDE.
             LogCompilerFailure(exception, projectDirectory);
             _bottomPanel.Log($"COMPILE → Error interno del compilador: {exception.Message}");
+            PublishProjectState(ProjectActivityState.WithErrors);
             return null;
         }
 
+        // Iniciar los encabezados de esta compilacion
+        // Se conserva el historial anterior de Output
+        _bottomPanel.Output.BeginDiagnosticBatch();
         
         foreach (var diagnostic in compilation.Diagnostics)
         {
@@ -242,7 +263,7 @@ public sealed partial class ProjectWorkspaceViewModel : ViewModelBase
 
             var filePath = sourceFile?.FullPath;
 
-            _bottomPanel.LogDiagnostic(
+            _bottomPanel.LogCategorizedDiagnostic(
                 diagnostic,
                 filePath);
         }
@@ -250,6 +271,21 @@ public sealed partial class ProjectWorkspaceViewModel : ViewModelBase
 
         var errors = compilation.Diagnostics.Count(diagnostic => diagnostic.IsError);
         var warnings = compilation.Diagnostics.Count - errors;
+
+        if (errors == 0)
+        {
+            _bottomPanel.Log("COMPILE → Compilación exitosa.");
+
+            PublishProjectState(ProjectActivityState.Compiled);
+        }
+        else
+        {
+            _bottomPanel.Log(
+                $"COMPILE → Compilación con {errors} error(es).");
+
+            PublishProjectState(ProjectActivityState.WithErrors);
+        }
+
         _bottomPanel.Log($"COMPILE → {errors} error(es), {warnings} advertencia(s).");
 
         return compilation;
@@ -299,31 +335,63 @@ public sealed partial class ProjectWorkspaceViewModel : ViewModelBase
 
         _runCancellation = cancellation;
         IsRunning = true;
+        PublishProjectState(ProjectActivityState.Running);
+
+        var finalState = ProjectActivityState.Compiled;
+    var executingProject = ProjectDirectory;
 
         try
         {
             await Task.Run(() => compilation.Run(input, output, cancellation.Token));
             pane.WriteStatus("── Ejecución terminada");
         }
+        
         catch (TmRuntimeException exception)
         {
-            pane.WriteStatus(exception.ToDiagnostic(compilation.Project.EntryFile.FileName).ToStandardFormat());
+            var diagnostic = exception.ToDiagnostic(
+                compilation.Project.EntryFile.FileName);
+
+            pane.WriteStatus(diagnostic.ToStandardFormat());
+
+            var sourceFile = compilation.Project.Files
+                .FirstOrDefault(file =>
+                    string.Equals(
+                        file.FileName,
+                        diagnostic.FileName,
+                        StringComparison.OrdinalIgnoreCase));
+
+            _bottomPanel.LogCategorizedDiagnostic(
+                diagnostic,
+                sourceFile?.FullPath);
+
+            finalState = ProjectActivityState.WithErrors;
         }
+
         catch (OperationCanceledException)
         {
             pane.WriteStatus("── Ejecución detenida");
         }
         catch (Exception exception)
         {
-            // Un fallo interno del intérprete no debe tumbar el IDE.
+            // Un fallo interno del intérprete no debe tumbar el IDE
             LogInterpreterFailure(exception, compilation.Project.EntryFile.FileName);
+            finalState = ProjectActivityState.WithErrors;
             pane.WriteStatus($"── Error interno del intérprete: {exception.Message}");
         }
         finally
         {
             pane.StopWaitingForInput();
+
             _runCancellation = null;
             IsRunning = false;
+
+            if (string.Equals(
+                executingProject,
+                ProjectDirectory,
+                StringComparison.OrdinalIgnoreCase))
+            {
+                PublishProjectState(finalState);
+            }
         }
     }
 

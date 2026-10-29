@@ -77,10 +77,11 @@
             <!-- Cuerpo de Output: diagnósticos navegables -->
             <DataTemplate DataType="{x:Type vm:OutputPaneViewModel}">
                 <Border
-                    Background="{DynamicResource SurfaceBackgroundBrush}">
+                    Background="{DynamicResource SurfaceBackgroundBrush}">                  
                     <controls:LogView
                         Lines="{Binding Lines}"
-                        LineDoubleClicked="OnOutputLineDoubleClicked" />
+                        LineDoubleClicked="OnOutputLineDoubleClicked"
+                        HighlightDiagnostics="True" />
                 </Border>
             </DataTemplate>
 

@@ -21,6 +21,30 @@ namespace TmIde.Controls;
 
 public partial class LogView : UserControl
 {
+
+    
+    /// Activa los colores de diagnósticos solamente cuando el control representa Output.
+    public static readonly DependencyProperty HighlightDiagnosticsProperty =
+        DependencyProperty.Register(
+            nameof(HighlightDiagnostics),
+            typeof(bool),
+            typeof(LogView),
+            new PropertyMetadata(
+                false,
+                OnHighlightDiagnosticsChanged));
+
+    /// Recurso dinámico que detecta cambios de tema.
+    /// Al cambiar el tema, obliga a repintar las líneas.
+    public static readonly DependencyProperty ThemeMarkerBrushProperty =
+        DependencyProperty.Register(
+            nameof(ThemeMarkerBrush),
+            typeof(Brush),
+            typeof(LogView),
+            new PropertyMetadata(
+                null,
+                OnThemeMarkerBrushChanged));
+
+
     public static readonly DependencyProperty LinesProperty = DependencyProperty.Register(
         nameof(Lines),
         typeof(IEnumerable<string>),
@@ -46,6 +70,20 @@ public partial class LogView : UserControl
     {
         InitializeComponent();
 
+        
+        // Instalar el colorizador de Output.
+        // En la pestaña Run permanecerá desactivado.
+        var colorizer = new OutputLogColorizer(
+            () => HighlightDiagnostics,
+            () => Editor.Document,
+            key => TryFindResource(key) as Brush);
+
+        Editor.TextArea.TextView.LineTransformers.Add(colorizer);
+
+        // Escuchar los cambios del tema claro/oscuro
+        SetResourceReference(ThemeMarkerBrushProperty, "PrimaryForegroundBrush");
+
+
         // Ocultar el cursor visual del log de solo lectura
         Editor.TextArea.Caret.CaretBrush = Brushes.Transparent;
 
@@ -54,6 +92,22 @@ public partial class LogView : UserControl
         // Detectar doble clic sobre el texto de AvalonEdit
         Editor.PreviewMouseLeftButtonDown += OnLogPreviewMouseLeftButtonDown;
     }
+
+    
+    /// Determina si se aplican colores a Output.
+    public bool HighlightDiagnostics
+    {
+        get => (bool)GetValue(HighlightDiagnosticsProperty);
+        set => SetValue(HighlightDiagnosticsProperty, value);
+    }
+
+    /// Pincel utilizado para detectar cambios de tema.
+    public Brush? ThemeMarkerBrush
+    {
+        get => (Brush?)GetValue(ThemeMarkerBrushProperty);
+        set => SetValue(ThemeMarkerBrushProperty, value);
+    }
+
 
     public IEnumerable<string>? Lines
     {
@@ -67,6 +121,28 @@ public partial class LogView : UserControl
         get => (Brush?)GetValue(SelectionAccentBrushProperty);
         set => SetValue(SelectionAccentBrushProperty, value);
     }
+
+    
+    /// Actualiza el dibujo cuando se activa o desactiva la coloración del panel
+    private static void OnHighlightDiagnosticsChanged(
+        DependencyObject d,
+        DependencyPropertyChangedEventArgs e)
+    {
+        var view = (LogView)d;
+
+        view.Editor.TextArea.TextView.Redraw();
+    }
+
+    /// Repinta el log al cambiar entre tema claro y oscuro. Los pinceles se vuelven a obtener desde los recursos.
+    private static void OnThemeMarkerBrushChanged(
+        DependencyObject d,
+        DependencyPropertyChangedEventArgs e)
+    {
+        var view = (LogView)d;
+
+        view.Editor.TextArea.TextView.Redraw();
+    }
+
 
     private static void OnLinesChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {

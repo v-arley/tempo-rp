@@ -46,4 +46,17 @@ public sealed partial class BottomPanelViewModel : ViewModelBase
         Output.AppendDiagnostic(diagnostic, filePath);
         SelectedPane = Output;
     }
+    
+    /// Muestra un diagnostico con encabezado de categoria y conserva su enlace de navegacion
+    public void LogCategorizedDiagnostic(
+        Diagnostic diagnostic,
+        string? filePath)
+    {
+        Output.AppendCategorizedDiagnostic(
+            diagnostic,
+            filePath);
+
+        SelectedPane = Output;
+    }
+
 }

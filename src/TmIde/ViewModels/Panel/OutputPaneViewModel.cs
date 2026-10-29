@@ -16,6 +16,8 @@ public sealed class OutputPaneViewModel : BottomPaneViewModel
     private readonly Dictionary<int, DiagnosticNavigationTarget>
         _diagnosticLocations = new();
 
+    private DiagnosticCategory? _lastDiagnosticCategory;    
+
     /// Se dispara cuando el usuario activa un diagnóstico.
     public event Action<DiagnosticNavigationTarget>?
         DiagnosticActivated;
@@ -27,9 +29,7 @@ public sealed class OutputPaneViewModel : BottomPaneViewModel
 
     /// Escribe un diagnóstico y asocia sus líneas
     /// con el archivo que lo produjo.
-    public void AppendDiagnostic(
-        Diagnostic diagnostic,
-        string? filePath)
+    public void AppendDiagnostic(Diagnostic diagnostic, string? filePath)
     {
         ArgumentNullException.ThrowIfNull(diagnostic);
 
@@ -60,6 +60,36 @@ public sealed class OutputPaneViewModel : BottomPaneViewModel
         }
     }
 
+    
+    public void BeginDiagnosticBatch()
+    {
+        _lastDiagnosticCategory = null;
+    }
+
+    public void AppendCategorizedDiagnostic(
+        Diagnostic diagnostic,
+        string? filePath)
+    {
+        ArgumentNullException.ThrowIfNull(diagnostic);
+
+        var category =
+            DiagnosticCategoryClassifier.Classify(diagnostic);
+
+        // Escribir un encabezado cuando cambie la categoria.
+        if (_lastDiagnosticCategory != category)
+        {
+            AppendLine(string.Empty);
+
+            AppendLine(
+                DiagnosticCategoryClassifier.GetHeading(category));
+
+            _lastDiagnosticCategory = category;
+        }
+
+        AppendDiagnostic(diagnostic, filePath);
+    }
+
+
     /// <summary>
     /// Activa un diagnóstico a partir de su número
     /// de línea visible en Output.
@@ -78,12 +108,11 @@ public sealed class OutputPaneViewModel : BottomPaneViewModel
         return true;
     }
 
-    /// <summary>
-    /// Invalida las referencias del proyecto anterior.
-    /// Conserva el historial visible de Output.
-    /// </summary>
+    /// Invalida las referencias del proyecto anterior
+    /// Conserva el historial visible de Output
     public void ClearDiagnosticLinks()
     {
         _diagnosticLocations.Clear();
+        _lastDiagnosticCategory = null;
     }
 }
