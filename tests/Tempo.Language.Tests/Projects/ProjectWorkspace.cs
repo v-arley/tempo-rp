@@ -42,7 +42,7 @@ public sealed class ProjectWorkspace : IDisposable
         return Path.Combine(Directory, fileName);
     }
 
-    /// <summary>Compila el directorio completo como proyecto (§6.6).</summary>
+    /// <summary>Compila el directorio completo como un solo proyecto.</summary>
     public Compilation CompileDirectory()
     {
         return Compilation.FromPath(Directory);
@@ -67,15 +67,17 @@ public sealed class ProjectWorkspace : IDisposable
         return Compilation.FromPath(Directory, texts);
     }
 
-    /// <summary>Compila el directorio, lo ejecuta y devuelve lo que escribió el programa.</summary>
-    public string RunDirectory()
+    /// <summary>
+    /// Compila el directorio, lo ejecuta y devuelve lo que escribió el programa.
+    /// </summary>
+    public string RunDirectory(IRuntimePulse? pulse = null)
     {
         Compilation compilation = CompileDirectory();
 
         Assert.True(compilation.IsExecutable, Describe(compilation.Diagnostics));
 
         var output = new CapturedOutput();
-        compilation.Run(new NoInput(), output);
+        compilation.Run(new NoInput(), output, pulse ?? NullRuntimePulse.Instance);
         return output.Text;
     }
 

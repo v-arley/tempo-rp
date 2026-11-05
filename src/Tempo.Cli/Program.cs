@@ -131,7 +131,8 @@ try
 {
     compilation.Run(
         new ConsoleRuntimeInput(),
-        new ConsoleRuntimeOutput());
+        new ConsoleRuntimeOutput(),
+        NullRuntimePulse.Instance);
 }
 catch (TmRuntimeException ex)
 {

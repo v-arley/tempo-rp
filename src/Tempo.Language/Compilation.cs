@@ -43,6 +43,18 @@ public sealed class Compilation
         entry.Root.Session is not null;
 
     /// <summary>
+    /// Ritmo del panel de partículas, en BPM: el <c>tempo</c> del archivo de
+    /// entrada, o <see cref="TempoLimits.DefaultBpm"/> si no lo declara o está
+    /// fuera de rango.
+    /// </summary>
+    public int TempoBpm =>
+        Project.EntryFile is { IsProjectFile: true, IsParsed: true } entry &&
+        entry.Root.Tempo is { } tempo &&
+        TempoLimits.TryParse(tempo.Value, out int bpm)
+            ? bpm
+            : TempoLimits.DefaultBpm;
+
+    /// <summary>
     /// Compila el proyecto de <paramref name="path"/> (directorio o archivo).
     /// <paramref name="openDocuments"/> (ruta completa → texto) sustituye al
     /// contenido en disco: un editor pasa ahí los documentos abiertos.
@@ -90,7 +102,7 @@ public sealed class Compilation
     }
 
     /// <summary>
-    /// Ejecuta el proyecto. La importación es textual (§6.5): el programa que se
+    /// Ejecuta el proyecto. La importación es textual: el programa que se
     /// ejecuta es el archivo de entrada junto con las funciones de todos los
     /// archivos que importa.
     /// </summary>
@@ -100,6 +112,21 @@ public sealed class Compilation
     /// </param>
     public void Run(IRuntimeInput input, IRuntimeOutput output, CancellationToken cancellationToken = default)
     {
+        Run(input, output, NullRuntimePulse.Instance, cancellationToken);
+    }
+
+    /// <summary>
+    /// Ejecuta el proyecto enviando las ráfagas de <c>pulse</c> a
+    /// <paramref name="pulse"/>; cada ráfaga lleva una intensidad entre 0 y 100.
+    /// </summary>
+    public void Run(
+        IRuntimeInput input,
+        IRuntimeOutput output,
+        IRuntimePulse pulse,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(pulse);
+
         if (!IsExecutable)
         {
             throw new InvalidOperationException(
@@ -129,6 +156,7 @@ public sealed class Compilation
             output,
             sourceFiles,
             entry.FileName,
+            pulse,
             cancellationToken).Execute();
     }
 

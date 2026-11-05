@@ -11,6 +11,7 @@ public static class ProjectRules
     public static IReadOnlyList<IProjectRule> All { get; } = new IProjectRule[]
     {
         new ExactlyOneProjectFileRule(),
-        new ModulesDeclareNoSessionRule()
+        new ModulesDeclareNoSessionRule(),
+        new TempoOnlyInProjectFileRule()
     };
 }

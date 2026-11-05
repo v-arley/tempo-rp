@@ -38,6 +38,8 @@ public class LexerTests
     [InlineData("mix", TokenType.Mix)]
     [InlineData("case", TokenType.Case)]
     [InlineData("default", TokenType.Default)]
+    [InlineData("tempo", TokenType.Tempo)]
+    [InlineData("pulse", TokenType.Pulse)]
     [InlineData("loop", TokenType.Loop)]
     [InlineData("repeat", TokenType.Repeat)]
     [InlineData("if", TokenType.If)]
@@ -314,7 +316,7 @@ public class LexerTests
     [Fact]
     public void Tokenize_RelationalGreaterThanInsideBrackets_IsGreaterThanNotBlockDelimiter()
     {
-        // Ejemplo de la especificación §3.2.1: "if [a > b] >" — el '>' dentro de los
+        // Caso típico: "if [a > b] >" — el '>' dentro de los
         // corchetes es relacional; el '>' tras el corchete de cierre es, en la gramática,
         // el mismo tipo de token (GreaterThan) que el Parser interpretará como inicio de
         // bloque según la posición sintáctica, no algo que el Lexer deba distinguir.

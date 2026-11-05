@@ -12,7 +12,8 @@ public enum TokenType
     Compose, Session, Output, Input, Mix, Case, Default, Loop, Repeat,
     If, Else, Ret, Import, Const, Sequence, Score,
     True, False, Silence, Sample, Wave, Tone, Phrase, Signal, Void,
-    
+    Tempo, Pulse,   // ritmo y ráfagas del panel de partículas
+
     // ---- Literales ----
     IntegerLiteral,   // sample
     FloatLiteral,     // wave

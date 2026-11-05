@@ -8,7 +8,7 @@ namespace Tempo.Language.Diagnostics;
 
 public static class DiagnosticCodes
 {
-    // ---- Errores de compilación (§7.2) ----
+    // ---- Errores de compilación ----
     public const string UndeclaredIdentifier = "E001";
     public const string Redeclaration = "E002";
     public const string IncompatibleAssignment = "E003";
@@ -53,7 +53,12 @@ public static class DiagnosticCodes
     public const string InvalidStatement = "E038";
     public const string UnexpectedTopLevelElement = "E039";
 
-    // ---- Advertencias (§7.4) ----
+    // ---- Errores de la declaración tempo y la sentencia pulse ----
+    public const string TempoOutOfRange = "E040";
+    public const string TempoNotAllowed = "E041";
+    public const string NonNumericPulseIntensity = "E042";
+
+    // ---- Advertencias ----
     public const string UnusedVariable = "W001";
     public const string ShadowedIdentifier = "W002";
     public const string UnusedFunction = "W003";

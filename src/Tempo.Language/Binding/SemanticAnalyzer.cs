@@ -66,6 +66,8 @@ public sealed class SemanticAnalyzer : ISemanticAnalyzer
         collector.Seed(_importedFunctions);
         collector.Collect(_program);
 
+        AnalyzeTempos(diagnostics);
+
         foreach (FunctionDeclarationNode function in _program.Functions)
         {
             AnalyzeFunction(function, symbols, diagnostics, statements);
@@ -93,7 +95,8 @@ public sealed class SemanticAnalyzer : ISemanticAnalyzer
         FunctionSymbol symbol = symbols.ResolveFunction(function.Identifier);
         TmType returnType = symbol?.ReturnType ?? TmType.Unknown;
 
-        // Los parámetros viven en el mismo ámbito que el cuerpo (§5.1.3).
+        // Los parámetros se declaran en el mismo ámbito que el cuerpo: dentro de
+        // la función se usan como variables locales y no pueden redeclararse.
         symbols.EnterScope();
 
         foreach (ParameterNode parameter in function.Parameters)
@@ -168,6 +171,29 @@ public sealed class SemanticAnalyzer : ISemanticAnalyzer
         statements.CloseScope();
         statements.CurrentReturnType = null;
         statements.CurrentFunctionName = null;
+    }
+
+    /// <summary>
+    /// E040 sobre cada declaración <c>tempo</c> fuera de rango. Dónde puede
+    /// aparecer y cuántas veces (E041) lo decide una regla de proyecto.
+    /// </summary>
+    private void AnalyzeTempos(DiagnosticBag diagnostics)
+    {
+        foreach (TempoDeclarationNode tempo in _program.AllTempos)
+        {
+            if (TempoLimits.TryParse(tempo.Value, out _))
+            {
+                continue;
+            }
+
+            diagnostics.ReportError(
+                DiagnosticCodes.TempoOutOfRange,
+                tempo.Line,
+                $"El tempo {tempo.Value} está fuera del rango de " +
+                $"{TempoLimits.MinBpm} a {TempoLimits.MaxBpm} BPM.",
+                $"Use un valor entre {TempoLimits.MinBpm} y {TempoLimits.MaxBpm}; " +
+                $"sin declaración se usa {TempoLimits.DefaultBpm}.");
+        }
     }
 
     private static void DeclareParameter(

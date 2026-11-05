@@ -47,11 +47,19 @@ public sealed class Parser : IParser
     public ProgramNode Parse()
     {
         var imports = new List<ImportNode>();
+        var tempos = new List<TempoDeclarationNode>();
         var functions = new List<FunctionDeclarationNode>();
 
         while (Check(TokenType.Import))
         {
             imports.Add(ParseImportStatement());
+        }
+
+        // Se aceptan varias declaraciones tempo para que el análisis semántico
+        // reporte E041 sobre cada duplicada, en lugar de detenerse aquí.
+        while (Check(TokenType.Tempo))
+        {
+            tempos.Add(ParseTempoDeclaration());
         }
 
         while (!Check(TokenType.Session) &&
@@ -61,6 +69,16 @@ public sealed class Parser : IParser
             {
                 functions.Add(ParseFunctionDeclaration());
                 continue;
+            }
+
+            if (Check(TokenType.Tempo))
+            {
+                throw new ParserException(
+                    DiagnosticCodes.UnexpectedTopLevelElement,
+                    "La declaración 'tempo' debe ir después de las importaciones y antes de las funciones.",
+                    _fileName,
+                    Current.Line,
+                    Current.Column);
             }
 
             if (Check(TokenType.Compose))
@@ -106,8 +124,39 @@ public sealed class Parser : IParser
             functions,
             session)
         {
-            AdditionalSessions = additionalSessions
+            AdditionalSessions = additionalSessions,
+            Tempo = tempos.FirstOrDefault(),
+            AdditionalTempos = tempos.Skip(1).ToList()
         };
+    }
+
+    /// <summary>
+    /// tempo_decl = "tempo", integer_literal, ";" ;
+    ///
+    /// Ejemplo:
+    /// tempo 96;
+    /// </summary>
+    private TempoDeclarationNode ParseTempoDeclaration()
+    {
+        Token tempoToken = Expect(
+            TokenType.Tempo,
+            "Se esperaba la palabra reservada 'tempo'.",
+            DiagnosticCodes.UnexpectedTopLevelElement);
+
+        Token value = Expect(
+            TokenType.IntegerLiteral,
+            "Se esperaba un número entero de BPM después de 'tempo'.",
+            DiagnosticCodes.UnexpectedTopLevelElement);
+
+        Expect(
+            TokenType.Semicolon,
+            "Se esperaba ';' después de la declaración tempo.",
+            DiagnosticCodes.MissingSemicolon);
+
+        return new TempoDeclarationNode(
+            value.Lexeme,
+            tempoToken.Line,
+            tempoToken.Column);
     }
 
     /// <summary>
@@ -350,6 +399,11 @@ public sealed class Parser : IParser
         if (Check(TokenType.Mix))
         {
             return ParseMixStatement();
+        }
+
+        if (Check(TokenType.Pulse))
+        {
+            return ParsePulseStatement();
         }
 
         throw new ParserException(
@@ -643,6 +697,42 @@ public sealed class Parser : IParser
             identifier.Lexeme,
             inputToken.Line,
             inputToken.Column);
+    }
+
+    /// <summary>
+    /// pulse_stmt = "pulse", "[", expression, "]", ";" ;
+    ///
+    /// Ejemplo:
+    /// pulse [raiz + 4];
+    /// </summary>
+    private PulseStatementNode ParsePulseStatement()
+    {
+        Token pulseToken = Expect(
+            TokenType.Pulse,
+            "Se esperaba la palabra reservada 'pulse'.",
+            DiagnosticCodes.InvalidStatement);
+
+        Expect(
+            TokenType.LeftBracket,
+            "Se esperaba '[' después de 'pulse'.",
+            DiagnosticCodes.MissingConditionBrackets);
+
+        ExpressionNode intensity = ParseExpression();
+
+        Expect(
+            TokenType.RightBracket,
+            "Se esperaba ']' después de la intensidad de pulse.",
+            DiagnosticCodes.MissingConditionBrackets);
+
+        Expect(
+            TokenType.Semicolon,
+            "Se esperaba ';' al final de la sentencia pulse.",
+            DiagnosticCodes.MissingSemicolon);
+
+        return new PulseStatementNode(
+            intensity,
+            pulseToken.Line,
+            pulseToken.Column);
     }
 
     /// <summary>
