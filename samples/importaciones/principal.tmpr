@@ -1,5 +1,7 @@
 import "utilidades.tm";
 
 session >
+    sample m = 0;
     output >> doble(5);
+    input << m;
 <
