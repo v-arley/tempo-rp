@@ -142,7 +142,7 @@
                 <TextBlock Grid.Row="0" Text="{Binding Title}"
                             HorizontalAlignment="Center" VerticalAlignment="Center"
                             FontFamily="{DynamicResource HeaderFontFamily}"
-                            FontSize="11" FontWeight="Medium"
+                            FontSize="{DynamicResource FontSizeSmall}" FontWeight="Medium"
                             Foreground="#A4B1C7" />
             </Grid>
 
@@ -162,7 +162,7 @@
                     <Style x:Key="RootMenuItem" TargetType="MenuItem" BasedOn="{StaticResource MenuEntryStyle}">
                         <Setter Property="FontFamily" Value="{DynamicResource CodeFontFamily}" />
                         <Setter Property="FontWeight" Value="Medium" />
-                        <Setter Property="FontSize" Value="11" />
+                        <Setter Property="FontSize" Value="{DynamicResource FontSizeSmall}" />
                         <Setter Property="Foreground" Value="{DynamicResource TitleMenuForegroundBrush}" />
                         <Setter Property="Padding" Value="8,3" />
                         <!-- Hover: subrayado inferior que crece de izquierda a derecha,

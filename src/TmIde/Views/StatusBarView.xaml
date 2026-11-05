@@ -33,8 +33,8 @@
             <!-- Izquierda: posición del cursor y codificación del documento activo -->
             <TextBlock Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center"
                         Margin="11,0,0,0"
-                        FontFamily="{DynamicResource CodeFontFamily}" FontWeight="Medium" FontSize="11"
-                        Foreground="{DynamicResource TitleMenuForegroundBrush}">
+                        FontFamily="{DynamicResource CodeFontFamily}" FontWeight="Medium" FontSize="{DynamicResource FontSizeSmall}"
+                        Foreground="{DynamicResource AccentBrush}">
                 <Run Text="{Binding CaretPosition, Mode=OneWay}" />
                 <Run Text="   " />
                 <Run Text="{Binding Encoding, Mode=OneWay}" />
@@ -64,64 +64,8 @@
                     VerticalAlignment="Center"
                     FontFamily="{DynamicResource CodeFontFamily}"
                     FontWeight="SemiBold"
-                    FontSize="11">
-
-                    <TextBlock.Style>
-                        <Style TargetType="TextBlock">
-
-                            <Setter
-                                Property="Foreground"
-                                Value="{DynamicResource TitleMenuForegroundBrush}" />
-
-                            <Style.Triggers>
-
-                                <!-- Compilando -->
-                                <DataTrigger
-                                    Binding="{Binding ProjectState}"
-                                    Value="{x:Static vm:ProjectActivityState.Compiling}">
-
-                                    <Setter
-                                        Property="Foreground"
-                                        Value="{DynamicResource SyntaxTypeBrush}" />
-
-                                </DataTrigger>
-
-                                <!-- Compilación correcta -->
-                                <DataTrigger
-                                    Binding="{Binding ProjectState}"
-                                    Value="{x:Static vm:ProjectActivityState.Compiled}">
-
-                                    <Setter
-                                        Property="Foreground"
-                                        Value="{DynamicResource SyntaxNumberBrush}" />
-
-                                </DataTrigger>
-
-                                <!-- Proyecto con errores -->
-                                <DataTrigger
-                                    Binding="{Binding ProjectState}"
-                                    Value="{x:Static vm:ProjectActivityState.WithErrors}">
-
-                                    <Setter
-                                        Property="Foreground"
-                                        Value="{DynamicResource DiagnosticErrorBrush}" />
-
-                                </DataTrigger>
-
-                                <!-- Ejecutando programa -->
-                                <DataTrigger
-                                    Binding="{Binding ProjectState}"
-                                    Value="{x:Static vm:ProjectActivityState.Running}">
-
-                                    <Setter
-                                        Property="Foreground"
-                                        Value="{DynamicResource SyntaxTypeBrush}" />
-
-                                </DataTrigger>
-
-                            </Style.Triggers>
-                        </Style>
-                    </TextBlock.Style>
+                    FontSize="{DynamicResource FontSizeSmall}"
+                    Foreground="#D5D5D5">
 
                 </TextBlock>
 
@@ -133,11 +77,11 @@
                 con la misma forma pero con el lateral derecho recto, pegada al borde. -->
             <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center"
                         HorizontalAlignment="Right">
-                <Button Style="{StaticResource StatusActionButton}" Content="COMPILE"
+                <Button Style="{StaticResource StatusPrimaryActionButton}" Content="COMPILE"
                         Command="{Binding Commands.Compile}" />
-                <Button Style="{StaticResource StatusActionButton}" Content="RUN"
+                <Button Style="{StaticResource StatusPrimaryActionButton}" Content="RUN"
                         Command="{Binding Commands.Run}" />
-                <Button Style="{StaticResource StatusActionButton}" Content="STOP"
+                <Button Style="{StaticResource StatusStopActionButton}" Content="STOP"
                         Command="{Binding Commands.Stop}" />
                 <!-- 22x16 (25% del ancho de un botón). Geometría a tamaño real, sin
                     Stretch, para conservar la inclinación de 3px de los botones. -->

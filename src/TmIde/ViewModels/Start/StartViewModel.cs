@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Linq;
 
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -50,8 +51,11 @@ public sealed partial class StartViewModel : ViewModelBase, ICloseable
         _scaffolder = scaffolder;
         _pickFolder = pickFolder;
 
-        RecentProjects = new ObservableCollection<RecentProjectViewModel>(recentProjects);
+        RecentProjects = new ObservableCollection<RecentProjectViewModel>(recentProjects.Take(MaxVisibleRecents));
     }
+
+    /// <summary>Recientes que muestra la ventana; su alto fijo está calculado para este número.</summary>
+    public const int MaxVisibleRecents = 3;
 
     /// <summary>Se dispara cuando el diálogo debe cerrarse; el servicio de flujo lo escucha.</summary>
     public event EventHandler? RequestClose;

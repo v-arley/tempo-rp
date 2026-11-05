@@ -67,7 +67,9 @@ public sealed class Lexer : ILexer
                 { "void", TokenType.Void },
                 { "and", TokenType.And },
                 { "or", TokenType.Or },
-                { "not", TokenType.Not }
+                { "not", TokenType.Not },
+                { "tempo", TokenType.Tempo },
+                { "pulse", TokenType.Pulse }
             };
     }
 
@@ -182,7 +184,7 @@ public sealed class Lexer : ILexer
     /// Avanza el cursor sobre todo el espacio en blanco y los comentarios (de
     /// línea <c>#</c> y de bloque <c>## ##</c>) hasta el siguiente carácter
     /// significativo o el fin de la fuente. Ni el espacio en blanco ni los
-    /// comentarios producen tokens (especificación TM §2.2 y §2.3).
+    /// comentarios producen tokens.
     /// </summary>
     private void SkipWhitespaceAndComments()
     {
@@ -217,7 +219,7 @@ public sealed class Lexer : ILexer
 
     /// <summary>
     /// Consume desde el <c>#</c> actual hasta el final de la línea física, sin
-    /// incluir el salto de línea (especificación TM §2.2).
+    /// incluir el salto de línea.
     /// </summary>
     private void SkipLineComment()
     {
@@ -232,8 +234,8 @@ public sealed class Lexer : ILexer
 
     /// <summary>
     /// Consume un comentario de bloque, desde el <c>##</c> de apertura hasta el
-    /// primer <c>##</c> de cierre. Los comentarios de bloque no anidan
-    /// (especificación TM §2.2).
+    /// primer <c>##</c> de cierre. Los comentarios de bloque no anidan:
+    /// un <c>##</c> interior cierra el comentario.
     /// </summary>
     /// <exception cref="LexerException">
     /// Si la fuente termina sin que aparezca el <c>##</c> de cierre.
@@ -562,7 +564,7 @@ public sealed class Lexer : ILexer
 
             // '>' y '<' a solas se emiten siempre como tokens relacionales
             // (GreaterThan / LessThan). Su posible papel como delimitadores de
-            // bloque depende de la posición en la gramática (§3.2.1) y queda
+            // bloque depende de la posición en la gramática (lo decide el Parser) y queda
             // fuera del análisis léxico.
             case '>':
                 Advance();

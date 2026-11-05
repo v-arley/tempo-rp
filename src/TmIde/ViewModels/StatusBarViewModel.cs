@@ -68,7 +68,7 @@ public sealed partial class StatusBarViewModel : ViewModelBase
             "◉ COMPILANDO...",
 
         ProjectActivityState.Compiled =>
-            "● COMPILADO",
+            "COMPILADO",
 
         ProjectActivityState.WithErrors =>
             "● CON ERRORES",

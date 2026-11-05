@@ -1,3 +1,6 @@
+using Tempo.Language;
+
+using TmIde.Controls.Particles;
 using TmIde.ViewModels.Editor;
 
 namespace TmIde.ViewModels;
@@ -11,3 +14,13 @@ public sealed record OpenFileRequestedMessage(string FilePath);
 
 /// <summary>Cambió la pestaña activa del editor; <c>null</c> si no queda ninguna.</summary>
 public sealed record ActiveDocumentChangedMessage(EditorDocumentViewModel? Document);
+
+/// <summary>
+/// Terminó un análisis del proyecto (al editar o con COMPILE). Puede llegar
+/// desde un hilo de fondo.
+/// </summary>
+public sealed record ProjectAnalyzedMessage(DiagnosticMood Mood, int TempoBpm)
+{
+    public static ProjectAnalyzedMessage From(Compilation compilation) =>
+        new(DiagnosticMood.From(compilation.Diagnostics), compilation.TempoBpm);
+}

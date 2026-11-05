@@ -6,7 +6,7 @@ namespace Tempo.Language.Binding;
 
 /// <summary>
 /// Recorre las sentencias de un cuerpo aplicando las reglas de la semántica
-/// estática (§5). El AST no expone un visitante, así que el despacho se hace
+/// estática (ámbitos, tipos y retornos). El AST no expone un visitante, así que el despacho se hace
 /// con coincidencia de patrones sobre el tipo concreto de cada nodo.
 /// </summary>
 
@@ -33,8 +33,8 @@ public sealed class StatementAnalyzer
 
     /// <summary>
     /// Analiza las sentencias sin abrir un ámbito nuevo. Lo usan el cuerpo de
-    /// una función (que comparte ámbito con sus parámetros, §5.1.3) y el cuerpo
-    /// de un <c>loop</c> (que lo comparte con su inicializador, §5.1.4).
+    /// una función (que comparte ámbito con sus parámetros) y el cuerpo
+    /// de un <c>loop</c> (que lo comparte con su inicializador).
     /// </summary>
     public void AnalyzeStatements(BlockNode block)
     {
@@ -143,6 +143,10 @@ public sealed class StatementAnalyzer
 
             case MixStatementNode mix:
                 AnalyzeMix(mix);
+                break;
+
+            case PulseStatementNode pulse:
+                AnalyzePulse(pulse);
                 break;
 
             default:
@@ -286,6 +290,25 @@ public sealed class StatementAnalyzer
         }
     }
 
+    private void AnalyzePulse(PulseStatementNode pulse)
+    {
+        TmType type = _resolver.Resolve(pulse.Intensity);
+
+        if (type.IsUnknown)
+        {
+            return;
+        }
+
+        if (type.Kind != TypeKind.Sample && type.Kind != TypeKind.Wave)
+        {
+            _diagnostics.ReportError(
+                DiagnosticCodes.NonNumericPulseIntensity,
+                pulse.Line,
+                $"La intensidad de 'pulse' debe ser 'sample' o 'wave' y la expresión es de tipo '{type}'.",
+                "Use un número entre 0 y 100 como intensidad de la ráfaga.");
+        }
+    }
+
     private void AnalyzeReturn(ReturnStatementNode returnStatement)
     {
         TmType expected = CurrentReturnType ?? TmType.Void;
@@ -350,7 +373,7 @@ public sealed class StatementAnalyzer
     private void AnalyzeLoop(LoopStatementNode loop)
     {
         // Inicializador, condición, actualización y cuerpo comparten un único
-        // ámbito (§5.1.4).
+        // ámbito: la variable del inicializador deja de existir al salir del loop.
         _symbols.EnterScope();
 
         if (loop.Initializer is not null)

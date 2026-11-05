@@ -60,7 +60,7 @@ public sealed partial class MenuBarViewModel : ViewModelBase
 
     private MenuEntryViewModel BuildToolsMenu()
     {
-        var menu = new MenuEntryViewModel("Ejecucion");
+        var menu = new MenuEntryViewModel("EJECUCIÓN");
         menu.Add(new MenuEntryViewModel("Compilar", _commands.Compile));
         menu.Add(new MenuEntryViewModel("Ejecutar", _commands.Run));
         menu.Add(new MenuEntryViewModel("Detener", _commands.Stop));

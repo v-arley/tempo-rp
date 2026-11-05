@@ -28,16 +28,16 @@ public sealed class ProjectActivityStatusTests
     [Theory]
     [InlineData(
         ProjectActivityState.Ready,
-        "● LISTO")]
+        "LISTO")]
     [InlineData(
         ProjectActivityState.Compiling,
         "◉ COMPILANDO...")]
     [InlineData(
         ProjectActivityState.Compiled,
-        "● COMPILADO")]
+        "COMPILADO")]
     [InlineData(
         ProjectActivityState.WithErrors,
-        "● CON ERRORES")]
+        "CON ERRORES")]
     [InlineData(
         ProjectActivityState.Running,
         "▶ EJECUTANDO...")]

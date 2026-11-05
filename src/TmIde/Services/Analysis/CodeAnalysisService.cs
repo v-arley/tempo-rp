@@ -3,8 +3,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
+using CommunityToolkit.Mvvm.Messaging;
+
 using Tempo.Language;
 using Tempo.Language.Diagnostics;
+
+using TmIde.ViewModels;
 
 namespace TmIde.Services.Analysis;
 
@@ -15,15 +19,25 @@ namespace TmIde.Services.Analysis;
 /// documentos abiertos sustituyen al disco, de modo que se compila lo que el
 /// usuario ve aunque no lo haya guardado, y los diagnósticos incluyen los del
 /// proyecto (importaciones, funciones de otros archivos, W003 entre archivos).
+/// Cada análisis anuncia además el estado del proyecto entero
+/// (<see cref="ProjectAnalyzedMessage"/>) para el panel de partículas.
 /// </summary>
 
 public sealed class CodeAnalysisService : ICodeAnalysisService
 {
+    private readonly IMessenger _messenger;
+
+    public CodeAnalysisService(IMessenger messenger)
+    {
+        _messenger = messenger;
+    }
+
     public IReadOnlyList<EditorDiagnostic> Analyze(string filePath, IReadOnlyDictionary<string, string> openDocuments)
     {
         try
         {
             var compilation = Compilation.FromPath(ProjectPathOf(filePath), openDocuments);
+            _messenger.Send(ProjectAnalyzedMessage.From(compilation));
 
             return compilation.DiagnosticsOf(filePath).Select(ToEditorDiagnostic).ToList();
         }
@@ -36,7 +50,7 @@ public sealed class CodeAnalysisService : ICodeAnalysisService
     }
 
     /// <summary>
-    /// Un proyecto TM es el directorio que contiene al archivo (§6.6). Si ese
+    /// Un proyecto TM es el directorio que contiene al archivo. Si ese
     /// directorio no existe en disco (documento sin guardar), se compila el
     /// documento solo, con lo que importe.
     /// </summary>

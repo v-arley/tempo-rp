@@ -11,8 +11,14 @@ public sealed class StatementExecutor
     private readonly IExpressionEvaluator _expressions;
     private readonly IRuntimeInput _input;
     private readonly IRuntimeOutput _output;
+    private readonly IRuntimePulse _pulse;
     private readonly CancellationToken _cancellationToken;
 
+    private const double MaxPulseIntensity = 100;
+
+    /// <param name="pulse">
+    /// Destino de las ráfagas de <c>pulse</c>; sin él, <see cref="NullRuntimePulse"/>.
+    /// </param>
     /// <param name="cancellationToken">
     /// Detiene la ejecución con <see cref="OperationCanceledException"/> antes
     /// de la siguiente sentencia; un host (el IDE) lo usa para el botón de detener.
@@ -21,6 +27,7 @@ public sealed class StatementExecutor
         IExpressionEvaluator expressions,
         IRuntimeInput input,
         IRuntimeOutput output,
+        IRuntimePulse? pulse = null,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(expressions);
@@ -30,6 +37,7 @@ public sealed class StatementExecutor
         _expressions = expressions;
         _input = input;
         _output = output;
+        _pulse = pulse ?? NullRuntimePulse.Instance;
         _cancellationToken = cancellationToken;
     }
 
@@ -164,7 +172,13 @@ public sealed class StatementExecutor
                 ExecuteIndexedAssignment(
                     indexedAssignment,
                     environment);
-                break;    
+                break;
+
+            case PulseStatementNode pulse:
+                ExecutePulse(
+                    pulse,
+                    environment);
+                break;
 
             default:
                 throw new NotSupportedException(
@@ -248,6 +262,35 @@ public sealed class StatementExecutor
 
         _output.Write(
             RuntimeValueFormatter.ToText(value));
+    }
+
+    /// <summary>
+    /// Evalúa la intensidad, la limita a [0, 100] y, si es mayor que 0, lanza
+    /// la ráfaga en el destino configurado. Los errores de la expresión se reportan como en
+    /// cualquier otra sentencia.
+    /// </summary>
+    private void ExecutePulse(
+        PulseStatementNode pulse,
+        RuntimeEnvironment environment)
+    {
+        RuntimeValue value =
+            _expressions.Evaluate(
+                pulse.Intensity,
+                environment);
+
+        double intensity = value.Value switch
+        {
+            int sample => sample,
+            float wave when !float.IsNaN(wave) => wave,
+            _ => 0
+        };
+
+        intensity = Math.Clamp(intensity, 0, MaxPulseIntensity);
+
+        if (intensity > 0)
+        {
+            _pulse.Emit(intensity);
+        }
     }
 
     private void ExecuteInput(

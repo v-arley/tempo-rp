@@ -6,12 +6,14 @@ using Microsoft.Extensions.Logging.Abstractions;
 
 using TmIde.Services;
 using TmIde.Services.Analysis;
+using TmIde.Services.Execution;
 using TmIde.Services.Navigation;
 using TmIde.Services.Settings;
 using TmIde.ViewModels;
 using TmIde.ViewModels.Editor;
 using TmIde.ViewModels.Explorer;
 using TmIde.ViewModels.Panel;
+using TmIde.ViewModels.Particles;
 using TmIde.ViewModels.Shell;
 
 namespace TmIde.Design;
@@ -34,6 +36,8 @@ public static class DesignData
 
     public static StatusBarViewModel StatusBar => MainWindow.StatusBar;
 
+    public static ParticlePanelViewModel ParticlePanel => MainWindow.ParticlePanel;
+
     // El mismo grafo que arma el contenedor en App, con servicios vacíos y sin
     // análisis real.
     private static MainWindowViewModel CreateMainWindow()
@@ -42,6 +46,7 @@ public static class DesignData
         var bottomPanel = new BottomPanelViewModel();
         var editorHost = new EditorHostViewModel(new NoopCodeAnalysisService(), messenger);
         var explorer = new FileExplorerViewModel(messenger, new ProjectFileService(), new NoopNamePromptService(), new OutputLog(bottomPanel));
+        var runtimePulse = new IdeRuntimePulse();
         var workspace = new ProjectWorkspaceViewModel(
             new NoopStartDialogService(),
             new NoopConfirmDialogService(),
@@ -49,6 +54,7 @@ public static class DesignData
             explorer,
             bottomPanel,
             new NoopRecentProjectsService(),
+            runtimePulse,
             messenger,
             NullLogger<ProjectWorkspaceViewModel>.Instance);
 
@@ -59,6 +65,7 @@ public static class DesignData
             editorHost,
             bottomPanel,
             new StatusBarViewModel(workspace.Commands, messenger),
+            new ParticlePanelViewModel(runtimePulse, messenger),
             messenger);
     }
 
@@ -78,7 +85,7 @@ public static class DesignData
 
     private sealed class NoopThemeService : IThemeService
     {
-        public AppTheme Current { get; private set; } = AppTheme.Light;
+        public AppTheme Current { get; private set; } = AppTheme.Dark;
 
         public void ApplySaved()
         {

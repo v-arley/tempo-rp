@@ -11,6 +11,7 @@ using NSubstitute;
 
 using TmIde.Services;
 using TmIde.Services.Analysis;
+using TmIde.Services.Execution;
 using TmIde.Services.Settings;
 using TmIde.ViewModels;
 using TmIde.ViewModels.Editor;
@@ -54,6 +55,7 @@ public sealed class ProjectWorkspaceViewModelTests : IDisposable
             _explorer,
             _bottomPanel,
             _recentProjects,
+            new IdeRuntimePulse(),
             _messenger,
             NullLogger<ProjectWorkspaceViewModel>.Instance);
     }
@@ -183,6 +185,19 @@ public sealed class ProjectWorkspaceViewModelTests : IDisposable
         await _workspace.CompileCommand.ExecuteAsync(null);
 
         Assert.Contains("COMPILE → 0 error(es), 0 advertencia(s).", OutputLines());
+    }
+
+    [Fact]
+    public async Task Compile_EachTime_StartsFromAnEmptyOutput()
+    {
+        _project.WriteFile("principal.tmpr", ValidProgram);
+        _workspace.OpenProject(_project.Path);
+
+        await _workspace.CompileCommand.ExecuteAsync(null);
+        var firstOutput = OutputLines();
+        await _workspace.CompileCommand.ExecuteAsync(null);
+
+        Assert.Equal(firstOutput, OutputLines());
     }
 
     [Fact]

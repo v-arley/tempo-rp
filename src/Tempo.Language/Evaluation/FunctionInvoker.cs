@@ -15,6 +15,7 @@ public sealed class FunctionInvoker : IFunctionInvoker
         FunctionRegistry registry,
         IRuntimeInput input,
         IRuntimeOutput output,
+        IRuntimePulse? pulse = null,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(registry);
@@ -33,6 +34,7 @@ public sealed class FunctionInvoker : IFunctionInvoker
                 _expressions,
                 input,
                 output,
+                pulse,
                 cancellationToken);
     }
 

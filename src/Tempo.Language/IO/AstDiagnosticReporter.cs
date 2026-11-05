@@ -32,6 +32,11 @@ public static class AstDiagnosticReporter
             report.AppendLine($"{IndentUnit}Import '{import.FilePath}' (L{import.Line})");
         }
 
+        foreach (TempoDeclarationNode tempo in program.AllTempos)
+        {
+            report.AppendLine($"{IndentUnit}Tempo {tempo.Value} (L{tempo.Line})");
+        }
+
         foreach (FunctionDeclarationNode function in program.Functions)
         {
             AppendFunction(report, function, 1);
@@ -151,6 +156,11 @@ public static class AstDiagnosticReporter
 
             case MixStatementNode mix:
                 AppendMix(report, mix, depth);
+                break;
+
+            case PulseStatementNode pulse:
+                AppendLine(report, depth, $"Pulse (L{pulse.Line})");
+                AppendExpression(report, pulse.Intensity, depth + 1);
                 break;
 
             default:

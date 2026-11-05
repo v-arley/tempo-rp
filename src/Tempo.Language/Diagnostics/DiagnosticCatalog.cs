@@ -2,7 +2,7 @@ namespace Tempo.Language.Diagnostics;
 
 /// <summary>
 /// Títulos oficiales de cada código de diagnóstico, transcritos de las
-/// tablas §7.2 y §7.4 de la especificación TM v1.1. Fuente única: el
+/// tablas de errores y advertencias de la especificación TM v1.1. Fuente única: el
 /// analizador nunca redacta un título por su cuenta.
 /// </summary>
 
@@ -11,7 +11,7 @@ public static class DiagnosticCatalog
     private static readonly Dictionary<string, string> Titles =
         new(StringComparer.Ordinal)
         {
-            // §7.2 — Errores de compilación
+            // Errores de compilación: léxicos, sintácticos y semánticos
             ["E001"] = "Identificador no declarado",
             ["E002"] = "Redeclaracion de identificador en el mismo ambito",
             ["E003"] = "Tipo incompatible en asignacion",
@@ -56,7 +56,12 @@ public static class DiagnosticCatalog
             [DiagnosticCodes.InvalidStatement] = "Sentencia no valida",
             [DiagnosticCodes.UnexpectedTopLevelElement] = "Elemento inesperado en el nivel superior",
 
-            // 7.3 — Errores en tiempo de ejecución
+            // Declaración 'tempo' y sentencia 'pulse' del panel de partículas
+            [DiagnosticCodes.TempoOutOfRange] = "Tempo fuera de rango (20 a 300 BPM)",
+            [DiagnosticCodes.TempoNotAllowed] = "Declaracion 'tempo' no permitida (fuera del .tmpr o duplicada)",
+            [DiagnosticCodes.NonNumericPulseIntensity] = "Intensidad de 'pulse' no numerica",
+
+            // Errores en tiempo de ejecución: los lanza el intérprete
             ["R001"] = "Division por cero",
             ["R002"] = "Indice fuera de limites",
             ["R003"] = "Desbordamiento aritmetico",
@@ -65,7 +70,7 @@ public static class DiagnosticCatalog
             ["R006"] = "Lectura desde entrada estandar sin datos disponibles (EOF)",
             ["R007"] = "Linea vacia o invalida para input de tone",
 
-            // §7.4 — Advertencias
+            // Advertencias: se informan sin detener la compilación
             ["W001"] = "Variable declarada pero no utilizada",
             ["W002"] = "Sombreado de identificador (shadowing)",
             ["W003"] = "Funcion declarada pero nunca invocada",

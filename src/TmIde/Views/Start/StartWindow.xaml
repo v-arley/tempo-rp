@@ -8,12 +8,13 @@
         xmlns:vm="clr-namespace:TmIde.ViewModels.Start"        mc:Ignorable="d"
         d:DataContext="{d:DesignInstance Type=vm:StartViewModel}"
         Title="Inicio"
-        Width="760" SizeToContent="Height"
+        Width="760" Height="360"
         WindowStartupLocation="CenterOwner"
         WindowStyle="None"
         ResizeMode="NoResize"
         ShowInTaskbar="False"
         Background="{DynamicResource WindowBackgroundBrush}"
+        FontFamily="{DynamicResource UiFontFamily}"
         TextOptions.TextFormattingMode="Ideal"
         UseLayoutRounding="True">
 
@@ -197,14 +198,14 @@
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
                     <StackPanel Grid.Column="0">
-                        <TextBlock Text="{Binding Name}" FontSize="12.5" FontWeight="Medium"
+                        <TextBlock Text="{Binding Name}" FontSize="{DynamicResource FontSizeBody}" FontWeight="Medium"
                                     Foreground="#E4E9F0" />
-                        <TextBlock Text="{Binding Path}" FontSize="10.5" Margin="0,2,0,0"
+                        <TextBlock Text="{Binding Path}" FontSize="{DynamicResource FontSizeCaption}" Margin="0,2,0,0"
                                     FontFamily="{DynamicResource CodeFontFamily}"
                                     Foreground="#8C99AD"
                                     TextTrimming="CharacterEllipsis" />
                     </StackPanel>
-                    <TextBlock Grid.Column="1" Text="{Binding LastOpened}" FontSize="10.5"
+                    <TextBlock Grid.Column="1" Text="{Binding LastOpened}" FontSize="{DynamicResource FontSizeCaption}"
                                 VerticalAlignment="Top" Margin="12,1,0,0"
                                 Foreground="#8C99AD" />
                     <Path Grid.Column="2" Margin="16,0,0,0" VerticalAlignment="Center"
@@ -266,13 +267,13 @@
                     <Path Grid.Column="0" Width="16" Height="16" Stretch="Uniform" Margin="0,0,14,0"
                             VerticalAlignment="Center" Fill="#8C99AD" Data="{StaticResource IconFolder}" />
                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                        <TextBlock Text="{Binding Name}" FontSize="12.5" FontWeight="Medium"
+                        <TextBlock Text="{Binding Name}" FontSize="{DynamicResource FontSizeBody}" FontWeight="Medium"
                                     Foreground="{DynamicResource PrimaryForegroundBrush}" />
-                        <TextBlock Text="{Binding Path}" FontSize="10.5" Margin="0,2,0,0"
+                        <TextBlock Text="{Binding Path}" FontSize="{DynamicResource FontSizeCaption}" Margin="0,2,0,0"
                                     FontFamily="{DynamicResource CodeFontFamily}"
                                     Foreground="#8C99AD" TextTrimming="CharacterEllipsis" />
                     </StackPanel>
-                    <TextBlock Grid.Column="2" Text="{Binding LastOpened}" FontSize="10.5"
+                    <TextBlock Grid.Column="2" Text="{Binding LastOpened}" FontSize="{DynamicResource FontSizeCaption}"
                                 VerticalAlignment="Center" Margin="12,0,0,0" Foreground="#8C99AD" />
                     <Path Grid.Column="3" HorizontalAlignment="Right" VerticalAlignment="Center"
                             StrokeThickness="1.5" Stroke="#BF3B2C" Data="M0,5 L12,5 M8,1 L12,5 L8,9"
@@ -331,9 +332,9 @@
                         <StackPanel.RenderTransform>
                             <TranslateTransform X="0" />
                         </StackPanel.RenderTransform>
-                        <TextBlock x:Name="Title" Text="{Binding Name}" FontSize="13" FontWeight="Medium"
+                        <TextBlock x:Name="Title" Text="{Binding Name}" FontSize="{DynamicResource FontSizeEmphasis}" FontWeight="Medium"
                                     Foreground="{DynamicResource StartTextBrush}" />
-                        <TextBlock x:Name="PathText" Text="{Binding Path}" FontSize="10.5" Margin="0,2,0,0"
+                        <TextBlock x:Name="PathText" Text="{Binding Path}" FontSize="{DynamicResource FontSizeCaption}" Margin="0,2,0,0"
                                     FontFamily="{DynamicResource CodeFontFamily}"
                                     Foreground="{DynamicResource StartTextMutedBrush}" TextTrimming="CharacterEllipsis" />
                     </StackPanel>
@@ -344,17 +345,17 @@
                             Margin="0,0,16,0">
                         <StackPanel x:Name="OpenHint" Orientation="Horizontal" Visibility="Collapsed"
                                 Margin="0,0,14,0" VerticalAlignment="Center">
-                            <TextBlock Text="ABRIR" FontSize="10" FontWeight="Medium" Foreground="{DynamicResource StartAccentTextBrush}"
+                            <TextBlock Text="ABRIR" FontSize="{DynamicResource FontSizeCaption}" FontWeight="Medium" Foreground="{DynamicResource StartAccentTextBrush}"
                                         FontFamily="{DynamicResource CodeFontFamily}" Margin="0,0,8,0"
                                         VerticalAlignment="Center" />
                             <Grid>
                                 <Rectangle Fill="{DynamicResource StartVeilSelectedBrush}" Stroke="{DynamicResource StartTextDimBrush}" StrokeThickness="1"
                                         RadiusX="3" RadiusY="3" />
-                                <TextBlock Text="ENTER ↵" Margin="8,3" FontSize="10" FontWeight="Medium"
+                                <TextBlock Text="ENTER ↵" Margin="8,3" FontSize="{DynamicResource FontSizeCaption}" FontWeight="Medium"
                                             FontFamily="{DynamicResource CodeFontFamily}" Foreground="{DynamicResource StartTextStrongBrush}" />
                             </Grid>
                         </StackPanel>
-                        <TextBlock Text="{Binding LastOpened}" VerticalAlignment="Center" FontSize="10.5"
+                        <TextBlock Text="{Binding LastOpened}" VerticalAlignment="Center" FontSize="{DynamicResource FontSizeCaption}"
                                     FontFamily="{DynamicResource CodeFontFamily}" Foreground="{DynamicResource StartTextDimBrush}" />
                     </StackPanel>
                 </Grid>
@@ -395,7 +396,7 @@
         <Style x:Key="DetailLabel" TargetType="TextBlock">
             <Setter Property="FontFamily" Value="{DynamicResource CodeFontFamily}" />
             <Setter Property="FontWeight" Value="Medium" />
-            <Setter Property="FontSize" Value="11" />
+            <Setter Property="FontSize" Value="{DynamicResource FontSizeSmall}" />
             <Setter Property="Foreground" Value="#8C99AD" />
             <Setter Property="Margin" Value="0,0,16,4" />
         </Style>
@@ -409,7 +410,7 @@
             RECIENTES", "NUEVO PROYECTO") y etiquetas de campo del formulario -->
         <Style x:Key="SectionCaption" TargetType="TextBlock">
             <Setter Property="FontFamily" Value="{DynamicResource CodeFontFamily}" />
-            <Setter Property="FontSize" Value="11" />
+            <Setter Property="FontSize" Value="{DynamicResource FontSizeSmall}" />
             <Setter Property="FontWeight" Value="Medium" />
             <Setter Property="Foreground" Value="{DynamicResource StartCaptionBrush}" />
         </Style>
@@ -425,7 +426,7 @@
             <Setter Property="Foreground" Value="#E4E9F0" />
             <Setter Property="CaretBrush" Value="#E4E9F0" />
             <Setter Property="SelectionBrush" Value="#BF3B2C" />
-            <Setter Property="FontSize" Value="12.5" />
+            <Setter Property="FontSize" Value="{DynamicResource FontSizeBody}" />
             <Setter Property="Height" Value="32" />
             <Setter Property="Template">
                 <Setter.Value>
@@ -477,9 +478,9 @@
             </Style.Triggers>
         </Style>
 
-        <!-- Paneles del central: se ocultan con Collapsed: solo el panel visible
-            cuenta en la medida, así la ventana se ajusta al alto de la vista activa
-            (la de inicio queda compacta y crece al abrir el formulario). -->
+        <!-- Paneles del central: se ocultan con Collapsed. La ventana tiene alto
+            fijo (360): cabe el header, las acciones y el máximo de tres recientes
+            (StartViewModel.MaxVisibleRecents), y también el formulario de nuevo proyecto. -->
         <Style x:Key="StartPanel" TargetType="Grid">
             <Style.Triggers>
                 <DataTrigger Binding="{Binding IsNewProjectMode}" Value="True">
@@ -524,7 +525,7 @@
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
                 <TextBlock Grid.Column="0" Text="{Binding HeaderTitle}" VerticalAlignment="Center" Margin="20,0,0,0"
-                            FontFamily="{DynamicResource HeaderFontFamily}" FontSize="11" FontWeight="Medium"
+                            FontFamily="{DynamicResource HeaderFontFamily}" FontSize="{DynamicResource FontSizeSmall}" FontWeight="Medium"
                             Foreground="#8C99AD" />
                 <!-- Acceso discreto a la guía: texto tenue que se aclara en hover -->
                 <Button Grid.Column="1" Command="{Binding ShowHelpCommand}" ToolTip="Guía de inicio (F1)"
@@ -532,7 +533,7 @@
                     <Button.Template>
                         <ControlTemplate TargetType="Button">
                             <TextBlock x:Name="Label" Text="? AYUDA" VerticalAlignment="Center" Padding="6,0"
-                                        FontFamily="{DynamicResource HeaderFontFamily}" FontSize="10"
+                                        FontFamily="{DynamicResource HeaderFontFamily}" FontSize="{DynamicResource FontSizeCaption}"
                                         FontWeight="Medium" Foreground="#6F7B87" />
                             <ControlTemplate.Triggers>
                                 <Trigger Property="IsMouseOver" Value="True">
@@ -586,9 +587,9 @@
                                 StrokeThickness="1.5" Data="M8,0 L0,26" />
                         <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
                             <TextBlock Text="ABRIR PROYECTO"
-                                        FontFamily="{DynamicResource HeaderFontFamily}" FontSize="18"
+                                        FontFamily="{DynamicResource HeaderFontFamily}" FontSize="{DynamicResource FontSizeDisplay}"
                                         FontWeight="Medium" Foreground="#E4E9F0" />
-                            <TextBlock Text="seleccionar un proyecto existente" FontSize="11" Margin="0,1,0,0"
+                            <TextBlock Text="seleccionar un proyecto existente" FontSize="{DynamicResource FontSizeSmall}" Margin="0,1,0,0"
                                         Foreground="#E4E9F0" Opacity="0.75" />
                         </StackPanel>
                         <Path Margin="16,0,0,0" VerticalAlignment="Center" Stroke="#E4E9F0"
@@ -606,9 +607,9 @@
                                 StrokeThickness="1.5" Data="M12,5 L0,5 M4,1 L0,5 L4,9" />
                         <StackPanel VerticalAlignment="Center">
                             <TextBlock Text="NUEVO PROYECTO" HorizontalAlignment="Right"
-                                        FontFamily="{DynamicResource HeaderFontFamily}" FontSize="18"
+                                        FontFamily="{DynamicResource HeaderFontFamily}" FontSize="{DynamicResource FontSizeDisplay}"
                                         FontWeight="Medium" Foreground="#E4E9F0" />
-                            <TextBlock Text="crear un proyecto desde cero" FontSize="11" Margin="0,1,0,0"
+                            <TextBlock Text="crear un proyecto desde cero" FontSize="{DynamicResource FontSizeSmall}" Margin="0,1,0,0"
                                         HorizontalAlignment="Right" Foreground="#E4E9F0" Opacity="0.75" />
                         </StackPanel>
                         <!-- Diagonal decorativa entre texto e icono -->
@@ -641,7 +642,7 @@
                 <Rectangle Grid.Row="2" Width="1" MinHeight="12" HorizontalAlignment="Left" Margin="23.5,0,0,0"
                         Fill="{DynamicResource StartCaptionBrush}" Opacity="0.35" />
 
-                <TextBlock Grid.Row="1" Text="No hay proyectos recientes." HorizontalAlignment="Center" FontSize="12"
+                <TextBlock Grid.Row="1" Text="No hay proyectos recientes." HorizontalAlignment="Center" FontSize="{DynamicResource FontSizeBody}"
                             Foreground="{DynamicResource StartTextDimBrush}"
                             Visibility="{Binding IsRecentEmpty, Converter={StaticResource BoolToVisibility}}" />
             </Grid>
@@ -679,9 +680,9 @@
                                     StrokeThickness="1.5" Data="M8,0 L0,26" />
                             <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
                                 <TextBlock Text="VOLVER"
-                                            FontFamily="{DynamicResource HeaderFontFamily}" FontSize="18"
+                                            FontFamily="{DynamicResource HeaderFontFamily}" FontSize="{DynamicResource FontSizeDisplay}"
                                             FontWeight="Medium" Foreground="#E4E9F0" />
-                                <TextBlock Text="regresar al inicio" FontSize="11" Margin="0,1,0,0"
+                                <TextBlock Text="regresar al inicio" FontSize="{DynamicResource FontSizeSmall}" Margin="0,1,0,0"
                                             Foreground="#E4E9F0" Opacity="0.75" />
                             </StackPanel>
                         </StackPanel>
@@ -694,9 +695,9 @@
                                     StrokeThickness="1.5" Data="M12,5 L0,5 M4,1 L0,5 L4,9" />
                             <StackPanel VerticalAlignment="Center">
                                 <TextBlock Text="CREAR PROYECTO" HorizontalAlignment="Right"
-                                            FontFamily="{DynamicResource HeaderFontFamily}" FontSize="18"
+                                            FontFamily="{DynamicResource HeaderFontFamily}" FontSize="{DynamicResource FontSizeDisplay}"
                                             FontWeight="Medium" Foreground="#E4E9F0" />
-                                <TextBlock Text="generar el proyecto en disco" FontSize="11" Margin="0,1,0,0"
+                                <TextBlock Text="generar el proyecto en disco" FontSize="{DynamicResource FontSizeSmall}" Margin="0,1,0,0"
                                             HorizontalAlignment="Right" Foreground="#E4E9F0" Opacity="0.75" />
                             </StackPanel>
                             <Path Margin="12,0,12,0" VerticalAlignment="Center" Stroke="#E4E9F0" Opacity="0.55"
@@ -741,7 +742,7 @@
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <TextBox Grid.Column="0" Style="{StaticResource StartTextBox}"
-                                FontFamily="{DynamicResource CodeFontFamily}" FontSize="11.5"
+                                FontFamily="{DynamicResource CodeFontFamily}" FontSize="{DynamicResource FontSizeSmall}"
                                 Text="{Binding Location, UpdateSourceTrigger=PropertyChanged}" />
                         <Button Grid.Column="1" Margin="6,0,0,0" Style="{StaticResource StartFieldButton}"
                                 Command="{Binding BrowseCommand}" ToolTip="Elegir carpeta">
@@ -749,7 +750,7 @@
                                 <Path Width="13" Height="13" Stretch="Uniform" Fill="#B6C1D3"
                                         Data="{StaticResource IconFolder}" />
                                 <TextBlock Text="EXAMINAR" Margin="8,0,0,0" VerticalAlignment="Center"
-                                            FontFamily="{DynamicResource CodeFontFamily}" FontSize="11"
+                                            FontFamily="{DynamicResource CodeFontFamily}" FontSize="{DynamicResource FontSizeSmall}"
                                             FontWeight="Medium" Foreground="#E4E9F0" />
                             </StackPanel>
                         </Button>
@@ -764,22 +765,22 @@
                         </Grid.ColumnDefinitions>
                         <Rectangle Fill="#BF3B2C" />
                         <StackPanel Grid.Column="1" Margin="14,1,0,1">
-                            <TextBlock FontFamily="{DynamicResource CodeFontFamily}" FontSize="11"
+                            <TextBlock FontFamily="{DynamicResource CodeFontFamily}" FontSize="{DynamicResource FontSizeSmall}"
                                         TextTrimming="CharacterEllipsis" Foreground="{DynamicResource StartCaptionBrush}">
                                 <Run Text="CARPETA   " Foreground="{DynamicResource StartTextMutedBrush}" /><Run Text="{Binding ProjectPath, Mode=OneWay}" FontWeight="Medium" />
                             </TextBlock>
-                            <TextBlock FontFamily="{DynamicResource CodeFontFamily}" FontSize="11" Margin="0,3,0,0"
+                            <TextBlock FontFamily="{DynamicResource CodeFontFamily}" FontSize="{DynamicResource FontSizeSmall}" Margin="0,3,0,0"
                                         TextTrimming="CharacterEllipsis" Foreground="{DynamicResource StartCaptionBrush}">
                                 <Run Text="PRINCIPAL " Foreground="{DynamicResource StartTextMutedBrush}" /><Run Text="{Binding MainFilePath, Mode=OneWay}" FontWeight="Medium" />
                             </TextBlock>
-                            <TextBlock Margin="0,6,0,0" FontSize="10.5" Foreground="{DynamicResource StartCaptionBrush}"
+                            <TextBlock Margin="0,6,0,0" FontSize="{DynamicResource FontSizeCaption}" Foreground="{DynamicResource StartCaptionBrush}"
                                         Opacity="0.7" Text="Se crea con una sesión «Hola, Mundo» lista para ejecutar" />
                         </StackPanel>
                     </Grid>
 
                     <!-- Motivo por el que no se puede crear (alto reservado para que
                         el formulario no salte al aparecer) -->
-                    <TextBlock Margin="0,6,0,0" MinHeight="16" FontSize="11.5" FontWeight="Medium"
+                    <TextBlock Margin="0,6,0,0" MinHeight="16" FontSize="{DynamicResource FontSizeSmall}" FontWeight="Medium"
                                 Foreground="{DynamicResource StartErrorBrush}" TextWrapping="Wrap"
                                 Text="{Binding ValidationMessage}" />
                 </StackPanel>

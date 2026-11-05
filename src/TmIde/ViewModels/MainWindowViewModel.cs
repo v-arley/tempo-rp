@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.Messaging;
 using TmIde.ViewModels.Editor;
 using TmIde.ViewModels.Explorer;
 using TmIde.ViewModels.Panel;
+using TmIde.ViewModels.Particles;
 using TmIde.ViewModels.Shell;
 
 namespace TmIde.ViewModels;
@@ -26,6 +27,7 @@ public sealed partial class MainWindowViewModel : ViewModelBase
         EditorHostViewModel editorHost,
         BottomPanelViewModel bottomPanel,
         StatusBarViewModel statusBar,
+        ParticlePanelViewModel particlePanel,
         IMessenger messenger)
     {
         Workspace = workspace;
@@ -34,6 +36,7 @@ public sealed partial class MainWindowViewModel : ViewModelBase
         EditorHost = editorHost;
         BottomPanel = bottomPanel;
         StatusBar = statusBar;
+        ParticlePanel = particlePanel;
 
         messenger.Register<MainWindowViewModel, ActiveDocumentChangedMessage>(
             this, static (window, message) => window.UpdateTitle(message.Document));
@@ -54,6 +57,8 @@ public sealed partial class MainWindowViewModel : ViewModelBase
     public BottomPanelViewModel BottomPanel { get; }
 
     public StatusBarViewModel StatusBar { get; }
+
+    public ParticlePanelViewModel ParticlePanel { get; }
 
     private void UpdateTitle(EditorDocumentViewModel? document)
     {

@@ -48,7 +48,7 @@
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="BorderBrush" Value="{DynamicResource InputBorderBrush}" />
             <Setter Property="Padding" Value="26,4,8,4" />
-            <Setter Property="FontSize" Value="11" />
+            <Setter Property="FontSize" Value="{DynamicResource FontSizeSmall}" />
             <Setter Property="SelectionBrush" Value="{DynamicResource AccentBrush}" />
             <Setter Property="Template">
                 <Setter.Value>
@@ -88,7 +88,7 @@
                     <Grid>
                         <TextBlock Text="{Binding HeaderTitle}"
                                     VerticalAlignment="Center"
-                                    FontSize="11" FontWeight="SemiBold"
+                                    FontSize="{DynamicResource FontSizeSmall}" FontWeight="SemiBold"
                                     Foreground="{DynamicResource PrimaryForegroundBrush}" />
                         <!-- Acciones del explorador -->
                         <StackPanel Orientation="Horizontal"
@@ -134,7 +134,7 @@
                                 Fill="#8A8F9B" IsHitTestVisible="False" />
                         <TextBlock Text="SEARCH FILE" Margin="26,0,0,0"
                                     VerticalAlignment="Center" IsHitTestVisible="False"
-                                    Foreground="#8A8F9B" FontSize="11">
+                                    Foreground="#8A8F9B" FontSize="{DynamicResource FontSizeSmall}">
                             <TextBlock.Style>
                                 <Style TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
                                     <Setter Property="Visibility" Value="Collapsed" />
@@ -244,7 +244,7 @@
                                                                     Grid.Column="0"
                                                                     Text="{TemplateBinding Header}"
                                                                     Foreground="{TemplateBinding Foreground}"
-                                                                    FontSize="12"
+                                                                    FontSize="{DynamicResource FontSizeBody}"
                                                                     VerticalAlignment="Center" />
 
                                                                 <!-- Atajo de teclado -->
@@ -252,7 +252,7 @@
                                                                     Grid.Column="1"
                                                                     Text="{TemplateBinding InputGestureText}"
                                                                     Foreground="{DynamicResource SecondaryForegroundBrush}"
-                                                                    FontSize="11"
+                                                                    FontSize="{DynamicResource FontSizeSmall}"
                                                                     Margin="20,0,0,0"
                                                                     VerticalAlignment="Center" />
 
@@ -394,7 +394,7 @@
                                     Text="{Binding Name}"
                                     Margin="6,0,0,0"
                                     VerticalAlignment="Center"
-                                    FontSize="12">
+                                    FontSize="{DynamicResource FontSizeBody}">
 
                                     <TextBlock.Style>
                                         <Style
@@ -431,7 +431,7 @@
                                     Text="PRINCIPAL"
                                     Margin="9,0,0,0"
                                     VerticalAlignment="Center"
-                                    FontSize="9"
+                                    FontSize="{DynamicResource FontSizeCaption}"
                                     FontWeight="SemiBold"
                                     Foreground="#7EC8E3"
                                     Visibility="{Binding IsMainProjectFile,

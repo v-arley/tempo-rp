@@ -14,5 +14,5 @@ public sealed class IdeOptions
     public int MaxRecentProjects { get; set; } = 10;
 
     /// <summary>Tema hasta que el usuario elija otro.</summary>
-    public AppTheme DefaultTheme { get; set; } = AppTheme.Light;
+    public AppTheme DefaultTheme { get; set; } = AppTheme.Dark;
 }

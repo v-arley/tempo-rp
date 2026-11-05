@@ -17,6 +17,7 @@ public sealed class Interpreter : IInterpreter
         IRuntimeOutput output,
         IReadOnlyDictionary<string, string>? sourceFiles = null,
         string? entryFileName = null,
+        IRuntimePulse? pulse = null,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(program);
@@ -36,6 +37,7 @@ public sealed class Interpreter : IInterpreter
                 registry,
                 input,
                 output,
+                pulse,
                 cancellationToken);
 
         _statements = functions.Statements;

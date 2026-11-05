@@ -16,29 +16,45 @@
 
     <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
 
-    <FontFamily x:Key="CodeFontFamily">./Assets/#JetBrains Mono Medium, ./Assets/#JetBrains Mono, ./Assets/#IBM Plex Mono Medium, ./Assets/#IBM Plex Mono, Consolas, Cascadia Mono, Courier New</FontFamily>
+    <!-- Tipografía única: IBM Plex Mono (src/Assets). La ruta "../Assets/" es relativa
+        a este archivo (Resources/); con "./Assets/" WPF no encontraba las fuentes y
+        caía a Consolas. Consolas y Courier New solo son respaldo. -->
+    <FontFamily x:Key="CodeFontFamily">../Assets/#IBM Plex Mono, Consolas, Courier New</FontFamily>
 
-    <!-- Tipografía del header: IBM Plex Mono -->
-    <FontFamily x:Key="HeaderFontFamily">./Assets/#IBM Plex Mono Medium, ./Assets/#IBM Plex Mono, ./Assets/#IBM Plex Mono Text, Consolas, Courier New</FontFamily>
+    <!-- Interfaz general: la misma familia, aplicada en los estilos base -->
+    <FontFamily x:Key="UiFontFamily">../Assets/#IBM Plex Mono, Consolas, Courier New</FontFamily>
+
+    <!-- Cabeceras: la misma familia -->
+    <FontFamily x:Key="HeaderFontFamily">../Assets/#IBM Plex Mono, Consolas, Courier New</FontFamily>
 
     <sys:Double x:Key="CodeFontSize">13</sys:Double>
+
+    <!-- Escala tipográfica común: todo FontSize de la UI sale de estos roles. -->
+    <sys:Double x:Key="FontSizeCaption">10</sys:Double>
+    <sys:Double x:Key="FontSizeSmall">11</sys:Double>
+    <sys:Double x:Key="FontSizeBody">12</sys:Double>
+    <sys:Double x:Key="FontSizeEmphasis">13</sys:Double>
+    <sys:Double x:Key="FontSizeTitle">15</sys:Double>
+    <sys:Double x:Key="FontSizeDisplay">18</sys:Double>
 
     <!-- TextBlock -->
 
     <Style TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{DynamicResource UiFontFamily}" />
         <Setter Property="Foreground" Value="{DynamicResource PrimaryForegroundBrush}" />
         <Setter Property="TextOptions.TextFormattingMode" Value="Ideal" />
     </Style>
 
     <Style x:Key="SectionHeaderText" TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
         <Setter Property="Foreground" Value="{DynamicResource SecondaryForegroundBrush}" />
-        <Setter Property="FontSize" Value="11" />
+        <Setter Property="FontSize" Value="{DynamicResource FontSizeSmall}" />
         <Setter Property="FontWeight" Value="SemiBold" />
     </Style>
 
     <!-- Button -->
 
     <Style TargetType="Button">
+        <Setter Property="FontFamily" Value="{DynamicResource UiFontFamily}" />
         <Setter Property="Foreground" Value="{DynamicResource PrimaryForegroundBrush}" />
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="BorderThickness" Value="0" />
@@ -73,17 +89,20 @@
     <Style x:Key="StatusActionButton" TargetType="Button">
         <Setter Property="Foreground" Value="White" />
         <Setter Property="Background" Value="{DynamicResource ChromeShapeBrush}" />
+        <!-- Sin borde por defecto: el gris del sistema asomaría por el trazo de la plantilla. -->
+        <Setter Property="BorderBrush" Value="Transparent" />
         <Setter Property="Width" Value="90" />
         <Setter Property="Height" Value="16" />
         <Setter Property="Margin" Value="8,0,0,0" />
         <Setter Property="Cursor" Value="Hand" />
-        <Setter Property="FontSize" Value="9" />
+        <Setter Property="FontSize" Value="{DynamicResource FontSizeCaption}" />
         <Setter Property="FontWeight" Value="Medium" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
                     <Grid>
                         <Path Stretch="Fill" Fill="{TemplateBinding Background}"
+                                Stroke="{TemplateBinding BorderBrush}" StrokeThickness="1"
                                 Data="M0,0 L174,0 L180,32 L6,32 Z" />
                         <Path x:Name="Overlay" Stretch="Fill" Fill="Transparent"
                                 Data="M0,0 L174,0 L180,32 L6,32 Z" />
@@ -108,6 +127,21 @@
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
+    </Style>
+
+    <!-- COMPILE y RUN: fondo de acento (#BF3B2C) con texto negro. -->
+    <Style x:Key="StatusPrimaryActionButton" TargetType="Button"
+            BasedOn="{StaticResource StatusActionButton}">
+        <Setter Property="Background" Value="{DynamicResource AccentBrush}" />
+        <Setter Property="Foreground" Value="Black" />
+    </Style>
+
+    <!-- STOP (prueba): mismo fondo oscuro con borde de acento (#BF3B2C). -->
+    <Style x:Key="StatusStopActionButton" TargetType="Button"
+            BasedOn="{StaticResource StatusActionButton}">
+        <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
+        <Setter Property="Background" Value="{DynamicResource StopButtonBackgroundBrush}" />
     </Style>
 
     <!-- Botón de caption (min/max/close): aspecto 1:1, sin esquinas redondeadas -->
@@ -152,6 +186,7 @@
     <!-- TextBox -->
 
     <Style TargetType="TextBox">
+        <Setter Property="FontFamily" Value="{DynamicResource UiFontFamily}" />
         <Setter Property="Foreground" Value="{DynamicResource PrimaryForegroundBrush}" />
         <Setter Property="CaretBrush" Value="{DynamicResource PrimaryForegroundBrush}" />
         <Setter Property="Background" Value="{DynamicResource SurfaceBackgroundBrush}" />
@@ -227,10 +262,11 @@
     <!-- GridSplitter -->
 
     <!-- La línea ocupa todo el splitter, sin márgenes ni relleno: su grosor es
-        el Width/Height que fije cada GridSplitter. Siempre visible en oscuro
-        (#1B212A); en hover pasa al rojo de acento (#BF3B2C). -->
+        el Width/Height que fije cada GridSplitter. Su color sale de SplitterBrush
+        (rojo #BF3B2C en el tema oscuro, #1B212A en el claro); en hover pasa al
+        rojo de acento. -->
     <Style TargetType="GridSplitter">
-        <Setter Property="Background" Value="{DynamicResource DividerBrush}" />
+        <Setter Property="Background" Value="{DynamicResource SplitterBrush}" />
         <Setter Property="ShowsPreview" Value="True" />
         <Setter Property="Template">
             <Setter.Value>
@@ -244,6 +280,15 @@
                 <Setter Property="Background" Value="#BF3B2C" />
             </Trigger>
         </Style.Triggers>
+    </Style>
+
+    <!-- ToolTip y ContextMenu toman la fuente del sistema en vez de heredarla: se fija aquí. -->
+    <Style TargetType="ToolTip">
+        <Setter Property="FontFamily" Value="{DynamicResource UiFontFamily}" />
+    </Style>
+
+    <Style TargetType="ContextMenu">
+        <Setter Property="FontFamily" Value="{DynamicResource UiFontFamily}" />
     </Style>
 
     <!-- TreeView -->
@@ -288,6 +333,7 @@
     </Style>
 
     <Style TargetType="TreeViewItem">
+        <Setter Property="FontFamily" Value="{DynamicResource UiFontFamily}" />
         <Setter Property="Foreground" Value="{DynamicResource PrimaryForegroundBrush}" />
         <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
         <Setter Property="Visibility" Value="{Binding IsVisible, Converter={StaticResource BoolToVisibility}}" />
@@ -359,6 +405,7 @@
     </Style>
 
     <Style TargetType="TabItem">
+        <Setter Property="FontFamily" Value="{DynamicResource UiFontFamily}" />
         <Setter Property="Foreground" Value="{DynamicResource SecondaryForegroundBrush}" />
         <Setter Property="Padding" Value="12,5" />
         <Setter Property="Template">
@@ -386,11 +433,13 @@
     <!-- Menu / MenuItem -->
 
     <Style TargetType="Menu">
+        <Setter Property="FontFamily" Value="{DynamicResource UiFontFamily}" />
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="Foreground" Value="{DynamicResource SecondaryForegroundBrush}" />
     </Style>
 
     <Style TargetType="MenuItem">
+        <Setter Property="FontFamily" Value="{DynamicResource UiFontFamily}" />
         <Setter Property="Foreground" Value="{DynamicResource SecondaryForegroundBrush}" />
         <Setter Property="Padding" Value="8,4" />
         <Setter Property="Template">
@@ -443,7 +492,7 @@
         <Setter Property="Height" Value="24" />
         <Setter Property="Focusable" Value="False" />
         <Setter Property="Cursor" Value="Hand" />
-        <Setter Property="FontSize" Value="13" />
+        <Setter Property="FontSize" Value="{DynamicResource FontSizeEmphasis}" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
@@ -506,16 +555,16 @@
                                      Padding="6,0" VerticalContentAlignment="Center"
                                      Background="{DynamicResource InputBackgroundBrush}"
                                      Foreground="#E7EBEF" CaretBrush="#E7EBEF"
-                                     FontFamily="{DynamicResource CodeFontFamily}" FontSize="12"
+                                     FontFamily="{DynamicResource CodeFontFamily}" FontSize="{DynamicResource FontSizeBody}"
                                      Text="{Binding SearchPattern, RelativeSource={RelativeSource TemplatedParent}, UpdateSourceTrigger=PropertyChanged}" />
                             <ToggleButton Style="{StaticResource SearchToggleButton}" Margin="4,0,0,0" Content="Aa"
-                                          FontSize="11" ToolTip="{Binding Localization.MatchCaseText, RelativeSource={RelativeSource TemplatedParent}}"
+                                          FontSize="{DynamicResource FontSizeSmall}" ToolTip="{Binding Localization.MatchCaseText, RelativeSource={RelativeSource TemplatedParent}}"
                                           IsChecked="{Binding MatchCase, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}" />
                             <ToggleButton Style="{StaticResource SearchToggleButton}" Content="W"
-                                          FontSize="11" ToolTip="{Binding Localization.MatchWholeWordsText, RelativeSource={RelativeSource TemplatedParent}}"
+                                          FontSize="{DynamicResource FontSizeSmall}" ToolTip="{Binding Localization.MatchWholeWordsText, RelativeSource={RelativeSource TemplatedParent}}"
                                           IsChecked="{Binding WholeWords, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}" />
                             <ToggleButton Style="{StaticResource SearchToggleButton}" Content=".*"
-                                          FontSize="11" ToolTip="{Binding Localization.UseRegexText, RelativeSource={RelativeSource TemplatedParent}}"
+                                          FontSize="{DynamicResource FontSizeSmall}" ToolTip="{Binding Localization.UseRegexText, RelativeSource={RelativeSource TemplatedParent}}"
                                           IsChecked="{Binding UseRegex, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}" />
                             <Button Style="{StaticResource SearchIconButton}" Margin="4,0,0,0" Content="↑"
                                     Command="search:SearchCommands.FindPrevious"
