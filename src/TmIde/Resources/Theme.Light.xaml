@@ -28,6 +28,8 @@
     <SolidColorBrush x:Key="PanelHeaderBrush"           Color="#585C66" />
     <SolidColorBrush x:Key="InputBackgroundBrush"       Color="#464A52" />
     <SolidColorBrush x:Key="DividerBrush"               Color="#1B212A" />
+    <SolidColorBrush x:Key="SplitterBrush"               Color="#1B212A" />
+    <SolidColorBrush x:Key="StopButtonBackgroundBrush"  Color="#A4B1C7" />
     <SolidColorBrush x:Key="InputBorderBrush"           Color="#1B212A" />
     <SolidColorBrush x:Key="HoverBackgroundBrush"       Color="#C2CBD2" />
     <SolidColorBrush x:Key="ScrollbarThumbBrush"        Color="#7C8890" />

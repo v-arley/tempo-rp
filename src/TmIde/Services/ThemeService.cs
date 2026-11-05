@@ -22,7 +22,7 @@ public sealed class ThemeService : IThemeService
         _options = options;
     }
 
-    public AppTheme Current { get; private set; } = AppTheme.Light;
+    public AppTheme Current { get; private set; } = AppTheme.Dark;
 
     // Al arrancar no se escribe nada: solo se aplica lo que ya estaba guardado.
     public void ApplySaved() => ApplyResources(_settings.Load().Theme ?? _options.Value.DefaultTheme);

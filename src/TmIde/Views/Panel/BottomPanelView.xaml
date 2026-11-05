@@ -28,7 +28,7 @@
                                 <!-- Subrayado de la pestaña activa -->
                                 <Border x:Name="ActiveUnderline"
                                         Height="1" VerticalAlignment="Bottom"
-                                        Background="{DynamicResource PrimaryForegroundBrush}" Visibility="Collapsed" />
+                                        Background="{DynamicResource AccentBrush}" Visibility="Collapsed" />
                                 <!-- Subrayado del hover (se despliega de izquierda a derecha) -->
                                 <Border x:Name="Underline"
                                         Height="1" VerticalAlignment="Bottom"
@@ -127,7 +127,7 @@
                     </Grid.RowDefinitions>
                     <!-- Fila de pestañas -->
                     <Border Grid.Row="0" Background="{DynamicResource SurfaceBackgroundBrush}" Padding="10,5"
-                            BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,1,0,1">
+                            BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,1,0,0">
                         <TabPanel x:Name="HeaderPanel" Panel.ZIndex="1" IsItemsHost="True" />
                     </Border>
                     <ContentPresenter Grid.Row="1" ContentSource="SelectedContent" />
@@ -136,7 +136,7 @@
         </TabControl.Template>
         <TabControl.ItemTemplate>
             <DataTemplate>
-                <TextBlock Text="{Binding Header}" FontSize="11" Foreground="{DynamicResource PrimaryForegroundBrush}" />
+                <TextBlock Text="{Binding Header}" FontSize="{DynamicResource FontSizeSmall}" Foreground="{DynamicResource PrimaryForegroundBrush}" />
             </DataTemplate>
         </TabControl.ItemTemplate>
     </TabControl>
