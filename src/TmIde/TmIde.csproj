@@ -30,11 +30,14 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- Fuentes monoespaciadas compartidas en src/Assets/ (origen único).
-         Se embeben en TmIde como recurso; se referencian en XAML como
-         "./Assets/#<nombre interno de la familia>". -->
-    <Resource Include="..\Assets\JetBrainsMono-Medium.ttf" Link="Assets\JetBrainsMono-Medium.ttf" />
+    <!-- Tipografía IBM Plex Mono compartida en src/Assets/ (origen único), en sus
+         cuatro pesos. Se embebe en TmIde como recurso; se referencia en XAML como
+         "../Assets/#IBM Plex Mono" (la ruta es relativa al XAML que la declara,
+         Resources/Styles.xaml). Con FontWeight WPF elige Thin, Light, Medium o Bold. -->
+    <Resource Include="..\Assets\IBMPlexMono-Thin.ttf" Link="Assets\IBMPlexMono-Thin.ttf" />
+    <Resource Include="..\Assets\IBMPlexMono-Light.ttf" Link="Assets\IBMPlexMono-Light.ttf" />
     <Resource Include="..\Assets\IBMPlexMono-Medium.ttf" Link="Assets\IBMPlexMono-Medium.ttf" />
+    <Resource Include="..\Assets\IBMPlexMono-Bold.ttf" Link="Assets\IBMPlexMono-Bold.ttf" />
   </ItemGroup>
 
   <!-- Pipeline del compilador (Lexer, Parser, analizador semántico) para los

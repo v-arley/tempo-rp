@@ -7,6 +7,14 @@ namespace TmIde.Services;
 
 public sealed class NamePromptService : INamePromptService
 {
+    // Tamaños de la escala común (Styles.xaml); el valor local es solo el respaldo.
+    // Fuente de la interfaz (Styles.xaml); IBM Plex Mono no está si no hay Application.
+    private static FontFamily ScaleFont() =>
+        Application.Current?.TryFindResource("UiFontFamily") as FontFamily ?? new FontFamily("Consolas");
+
+    private static double ScaleSize(string key, double fallback) =>
+        Application.Current?.TryFindResource(key) is double size ? size : fallback;
+
     public string? RequestName(
         string title,
         string message,
@@ -62,7 +70,7 @@ public sealed class NamePromptService : INamePromptService
         var label = new TextBlock
         {
             Text = message,
-            FontSize = 15,
+            FontSize = ScaleSize("FontSizeTitle", 15),
             FontWeight = FontWeights.SemiBold,
             Margin = new Thickness(0, 0, 0, 14),
             TextWrapping = TextWrapping.Wrap
@@ -98,8 +106,8 @@ public sealed class NamePromptService : INamePromptService
             Style = new Style(typeof(TextBox)),
             Text = initialName,
             Height = 44,
-            FontSize = 15,
-            FontFamily = new FontFamily("Segoe UI"),
+            FontSize = ScaleSize("FontSizeTitle", 15),
+            FontFamily = ScaleFont(),
             Padding = new Thickness(12, 0, 12, 0),
             Margin = new Thickness(0),
             BorderThickness = new Thickness(0),
@@ -141,7 +149,7 @@ public sealed class NamePromptService : INamePromptService
             Content = "Cancelar",
             Width = 110,
             Height = 38,
-            FontSize = 13,
+            FontSize = ScaleSize("FontSizeEmphasis", 13),
             FontWeight = FontWeights.SemiBold,
             BorderThickness = new Thickness(1),
             Cursor = Cursors.Hand,
@@ -167,7 +175,7 @@ public sealed class NamePromptService : INamePromptService
             Content = "Aceptar",
             Width = 110,
             Height = 38,
-            FontSize = 13,
+            FontSize = ScaleSize("FontSizeEmphasis", 13),
             FontWeight = FontWeights.SemiBold,
             Foreground = Brushes.White,
             BorderThickness = new Thickness(1),

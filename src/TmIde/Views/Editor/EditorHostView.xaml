@@ -122,7 +122,7 @@
                             </Grid.ColumnDefinitions>
                             <!-- Foreground local enlazado a la pestaña: sin él, el estilo
                                 implícito global de TextBlock impondría el color oscuro -->
-                            <TextBlock Grid.Column="0" Text="{Binding FileName}" VerticalAlignment="Center" FontSize="12"
+                            <TextBlock Grid.Column="0" Text="{Binding FileName}" VerticalAlignment="Center" FontSize="{DynamicResource FontSizeBody}"
                                         Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=TabItem}}" />
                             <Button Grid.Column="2" Command="{Binding CloseCommand}"
                                     Padding="2"
@@ -150,9 +150,9 @@
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="{Binding Text}" FontSize="10.5"
+                        <TextBlock Text="{Binding Text}" FontSize="{DynamicResource FontSizeCaption}"
                                     Foreground="{DynamicResource SecondaryForegroundBrush}" />
-                        <TextBlock Text="  •  " FontSize="10.5"
+                        <TextBlock Text="  •  " FontSize="{DynamicResource FontSizeCaption}"
                                     Foreground="{DynamicResource TertiaryForegroundBrush}">
                             <TextBlock.Style>
                                 <Style TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">

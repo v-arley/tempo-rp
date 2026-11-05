@@ -12,7 +12,7 @@
         ShowInTaskbar="False"
         Background="{DynamicResource WindowBackgroundBrush}"
         Foreground="{DynamicResource PrimaryForegroundBrush}"
-        FontFamily="Segoe UI"
+        FontFamily="{DynamicResource UiFontFamily}"
         TextOptions.TextFormattingMode="Ideal">
 
     <Window.Resources>
@@ -141,13 +141,13 @@
 
                 <TextBlock
                     Text="TEMPO / REFERENCIA DEL LENGUAJE"
-                    FontSize="18"
+                    FontSize="{DynamicResource FontSizeDisplay}"
                     FontWeight="SemiBold"
                     Foreground="{DynamicResource PrimaryForegroundBrush}" />
 
                 <TextBlock
                     Text="Documentación y ejemplos de programación TM"
-                    FontSize="12"
+                    FontSize="{DynamicResource FontSizeBody}"
                     Margin="0,5,0,0"
                     Foreground="{DynamicResource SecondaryForegroundBrush}" />
 
@@ -173,7 +173,7 @@
 
                     <TextBlock DockPanel.Dock="Top"
                                Text="CONTENIDO"
-                               FontSize="11"
+                               FontSize="{DynamicResource FontSizeSmall}"
                                FontWeight="SemiBold"
                                Margin="12,0,0,12"
                                Foreground="{DynamicResource SecondaryForegroundBrush}" />
@@ -190,7 +190,7 @@
                             <DataTemplate>
                                 <TextBlock
                                     Text="{Binding Title}"
-                                    FontSize="13"
+                                    FontSize="{DynamicResource FontSizeEmphasis}"
                                     TextWrapping="Wrap"
                                     Foreground="{DynamicResource PrimaryForegroundBrush}" />
                             </DataTemplate>
@@ -213,27 +213,27 @@
 
                     <TextBlock
                         Text="{Binding SelectedSection.Title}"
-                        FontSize="24"
+                        FontSize="{DynamicResource FontSizeDisplay}"
                         FontWeight="Bold"
                         Foreground="{DynamicResource PrimaryForegroundBrush}" />
 
                     <TextBlock
                         Text="{Binding SelectedSection.Summary}"
-                        FontSize="14"
+                        FontSize="{DynamicResource FontSizeTitle}"
                         TextWrapping="Wrap"
                         Margin="0,12,0,20"
                         Foreground="{DynamicResource SecondaryForegroundBrush}" />
 
                     <TextBlock
                         Text="DESCRIPCIÓN"
-                        FontSize="11"
+                        FontSize="{DynamicResource FontSizeSmall}"
                         FontWeight="SemiBold"
                         Margin="0,0,0,10"
                         Foreground="{DynamicResource PrimaryForegroundBrush}" />
 
                     <TextBlock
                         Text="{Binding SelectedSection.Details}"
-                        FontSize="13"
+                        FontSize="{DynamicResource FontSizeEmphasis}"
                         LineHeight="21"
                         TextWrapping="Wrap"
                         Margin="0,0,0,22"
@@ -248,7 +248,7 @@
                         <TextBlock
                             Text="EJEMPLO EN TEMPO"
                             VerticalAlignment="Center"
-                            FontSize="11"
+                            FontSize="{DynamicResource FontSizeSmall}"
                             FontWeight="SemiBold"
                             Foreground="{DynamicResource PrimaryForegroundBrush}" />
 
@@ -288,8 +288,8 @@
 
                             <TextBlock
                                 Text="{Binding SelectedSection.Example}"
-                                FontFamily="Consolas"
-                                FontSize="13"
+                                FontFamily="{DynamicResource CodeFontFamily}"
+                                FontSize="{DynamicResource FontSizeEmphasis}"
                                 LineHeight="22"
                                 TextWrapping="NoWrap"
                                 Foreground="{DynamicResource PrimaryForegroundBrush}" />
@@ -310,12 +310,12 @@
                             <TextBlock
                                 Text="NOTA IMPORTANTE"
                                 FontWeight="SemiBold"
-                                FontSize="11"
+                                FontSize="{DynamicResource FontSizeSmall}"
                                 Foreground="{DynamicResource PrimaryForegroundBrush}" />
 
                             <TextBlock
                                 Text="{Binding SelectedSection.Note}"
-                                FontSize="12"
+                                FontSize="{DynamicResource FontSizeBody}"
                                 TextWrapping="Wrap"
                                 Margin="0,7,0,0"
                                 Foreground="{DynamicResource PrimaryForegroundBrush}" />
@@ -345,7 +345,7 @@
 
                 <TextBlock
                     Text="Referencia del lenguaje TM"
-                    FontSize="12"
+                    FontSize="{DynamicResource FontSizeBody}"
                     VerticalAlignment="Center"
                     Foreground="{DynamicResource SecondaryForegroundBrush}" />
 
