@@ -18,12 +18,14 @@ using ILogger = Microsoft.Extensions.Logging.ILogger;
 
 using TmIde.Services;
 using TmIde.Services.Analysis;
+using TmIde.Services.Execution;
 using TmIde.Services.Navigation;
 using TmIde.Services.Settings;
 using TmIde.ViewModels;
 using TmIde.ViewModels.Editor;
 using TmIde.ViewModels.Explorer;
 using TmIde.ViewModels.Panel;
+using TmIde.ViewModels.Particles;
 using TmIde.ViewModels.Shell;
 using TmIde.ViewModels.Start;
 using TmIde.Views;
@@ -166,6 +168,11 @@ public partial class App : Application
         services.AddSingleton(provider => provider.GetRequiredService<ProjectWorkspaceViewModel>().Commands);
         services.AddSingleton<MenuBarViewModel>();
         services.AddSingleton<StatusBarViewModel>();
+
+        // El intérprete deja las ráfagas de pulse en el buzón y el panel de
+        // partículas las recoge: ambos comparten la misma instancia.
+        services.AddSingleton<IdeRuntimePulse>();
+        services.AddSingleton<ParticlePanelViewModel>();
         services.AddSingleton<MainWindowViewModel>();
 
         services.AddTransient<MainWindow>();

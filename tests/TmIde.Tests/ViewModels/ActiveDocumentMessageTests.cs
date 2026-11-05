@@ -5,11 +5,13 @@ using NSubstitute;
 
 using TmIde.Services;
 using TmIde.Services.Analysis;
+using TmIde.Services.Execution;
 using TmIde.Services.Navigation;
 using TmIde.ViewModels;
 using TmIde.ViewModels.Editor;
 using TmIde.ViewModels.Explorer;
 using TmIde.ViewModels.Panel;
+using TmIde.ViewModels.Particles;
 using TmIde.ViewModels.Shell;
 
 using Xunit;
@@ -104,6 +106,7 @@ public sealed class ActiveDocumentMessageTests
             editorHost,
             bottomPanel,
             new StatusBarViewModel(commands, _messenger),
+            new ParticlePanelViewModel(new IdeRuntimePulse(), _messenger),
             _messenger);
     }
 

@@ -108,6 +108,13 @@ public sealed class OutputPaneViewModel : BottomPaneViewModel
         return true;
     }
 
+    /// <summary>Vacía Output y sus enlaces de navegación antes de una nueva compilación.</summary>
+    public void Clear()
+    {
+        Lines.Clear();
+        ClearDiagnosticLinks();
+    }
+
     /// Invalida las referencias del proyecto anterior
     /// Conserva el historial visible de Output
     public void ClearDiagnosticLinks()

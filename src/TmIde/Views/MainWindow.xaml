@@ -10,6 +10,7 @@
         xmlns:explorer="clr-namespace:TmIde.Views.Explorer"
         xmlns:editor="clr-namespace:TmIde.Views.Editor"
         xmlns:panel="clr-namespace:TmIde.Views.Panel"
+        xmlns:particles="clr-namespace:TmIde.Controls.Particles"
         xmlns:views="clr-namespace:TmIde.Views"
         xmlns:design="clr-namespace:TmIde.Design"
         mc:Ignorable="d"
@@ -21,6 +22,7 @@
         WindowStyle="None"
         ResizeMode="CanResize"
         Background="{DynamicResource WindowBackgroundBrush}"
+        FontFamily="{DynamicResource UiFontFamily}"
         TextOptions.TextFormattingMode="Ideal"
         UseLayoutRounding="True">
 
@@ -84,7 +86,7 @@
             <GridSplitter Grid.Column="1" Width="2" HorizontalAlignment="Center"
                             VerticalAlignment="Stretch" />
 
-            <!-- Sección derecha: editor arriba, panel inferior (Output / Run) abajo -->
+            <!-- Sección derecha: editor arriba; abajo, Output / Run y el panel de partículas -->
             <Grid Grid.Column="2">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="*" MinHeight="120" />
@@ -101,10 +103,25 @@
                                 VerticalAlignment="Center"
                                 ResizeDirection="Rows" ResizeBehavior="PreviousAndNext" />
 
-                <Border Grid.Row="2"
-                        Background="{DynamicResource SurfaceBackgroundBrush}">
-                    <panel:BottomPanelView DataContext="{Binding BottomPanel}" />
-                </Border>
+                <Grid Grid.Row="2">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" MinWidth="200" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="260" MinWidth="160" />
+                    </Grid.ColumnDefinitions>
+
+                    <Border Grid.Column="0"
+                            Background="{DynamicResource SurfaceBackgroundBrush}">
+                        <panel:BottomPanelView DataContext="{Binding BottomPanel}" />
+                    </Border>
+
+                    <GridSplitter Grid.Column="1" Width="2" HorizontalAlignment="Center"
+                                    VerticalAlignment="Stretch" />
+
+                    <!-- Panel de partículas: refleja los diagnósticos del proyecto, late al
+                         ritmo de tempo y dibuja las ráfagas de pulse -->
+                    <particles:ParticlePanel Grid.Column="2" DataContext="{Binding ParticlePanel}" />
+                </Grid>
             </Grid>
         </Grid>
 

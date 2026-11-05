@@ -8,7 +8,7 @@ namespace TmIde.Controls.Syntax;
 /// trata el código incompleto (cadena sin cerrar, comentario de bloque abierto)
 /// extendiendo el fragmento hasta el fin de línea o de documento. No sustituye
 /// al Lexer del compilador, que se detiene en el primer error.
-/// Reglas según la especificación TM §2: <c>#</c> comentario de línea,
+/// Reglas léxicas de TM: <c>#</c> comentario de línea,
 /// <c>##…##</c> comentario de bloque, <c>"…"</c> cadena, <c>'…'</c> carácter.
 /// </summary>
 
@@ -35,6 +35,8 @@ public static class TmSyntaxScanner
         ["and"] = TmSyntaxKind.Keyword,
         ["or"] = TmSyntaxKind.Keyword,
         ["not"] = TmSyntaxKind.Keyword,
+        ["tempo"] = TmSyntaxKind.Keyword,
+        ["pulse"] = TmSyntaxKind.Keyword,
         ["sample"] = TmSyntaxKind.Type,
         ["wave"] = TmSyntaxKind.Type,
         ["tone"] = TmSyntaxKind.Type,

@@ -39,6 +39,7 @@ public sealed partial class ProjectWorkspaceViewModel : ViewModelBase
     private readonly FileExplorerViewModel _explorer;
     private readonly BottomPanelViewModel _bottomPanel;
     private readonly IRecentProjectsService _recentProjects;
+    private readonly IdeRuntimePulse _runtimePulse;
     private readonly ILogger<ProjectWorkspaceViewModel> _logger;
     private readonly IMessenger _messenger;
 
@@ -60,6 +61,7 @@ public sealed partial class ProjectWorkspaceViewModel : ViewModelBase
         FileExplorerViewModel explorer,
         BottomPanelViewModel bottomPanel,
         IRecentProjectsService recentProjects,
+        IdeRuntimePulse runtimePulse,
         IMessenger messenger,
         ILogger<ProjectWorkspaceViewModel> logger)
     {
@@ -69,6 +71,7 @@ public sealed partial class ProjectWorkspaceViewModel : ViewModelBase
         _explorer = explorer;
         _bottomPanel = bottomPanel;
         _recentProjects = recentProjects;
+        _runtimePulse = runtimePulse;
         _logger = logger;
         _messenger = messenger;
         _bottomPanel.Output.DiagnosticActivated += OnDiagnosticActivated;
@@ -204,7 +207,7 @@ public sealed partial class ProjectWorkspaceViewModel : ViewModelBase
     /// <summary>
     /// Compila el proyecto abierto, con el texto de los documentos abiertos en
     /// lugar del disco, y escribe en Output los diagnósticos de todos sus
-    /// archivos con el formato de la §7.1, igual que la CLI.
+    /// archivos con el mismo formato de mensaje que la CLI.
     /// </summary>
     [RelayCommand]
     private Task CompileAsync() => CompileProjectAsync();
@@ -212,6 +215,9 @@ public sealed partial class ProjectWorkspaceViewModel : ViewModelBase
     /// <returns>La compilación, o <c>null</c> si no hay proyecto o no se pudo compilar.</returns>
     private async Task<Compilation?> CompileProjectAsync()
     {
+        // Cada compilación (también la previa a Run) parte de un Output vacío.
+        _bottomPanel.Output.Clear();
+
         if (ProjectDirectory is not { } projectDirectory)
         {
             PublishProjectState(ProjectActivityState.NoProject);
@@ -249,7 +255,6 @@ public sealed partial class ProjectWorkspaceViewModel : ViewModelBase
         }
 
         // Iniciar los encabezados de esta compilacion
-        // Se conserva el historial anterior de Output
         _bottomPanel.Output.BeginDiagnosticBatch();
         
         foreach (var diagnostic in compilation.Diagnostics)
@@ -287,6 +292,7 @@ public sealed partial class ProjectWorkspaceViewModel : ViewModelBase
         }
 
         _bottomPanel.Log($"COMPILE → {errors} error(es), {warnings} advertencia(s).");
+        _messenger.Send(ProjectAnalyzedMessage.From(compilation));
 
         return compilation;
     }
@@ -322,7 +328,8 @@ public sealed partial class ProjectWorkspaceViewModel : ViewModelBase
     private void Stop() => _runCancellation?.Cancel();
 
     // El intérprete corre en otro hilo; su salida y su entrada pasan por el panel
-    // Run, y los errores R### se muestran ahí con el formato de la §7.1.
+    // Run, y los errores R### se muestran ahí con el mismo formato que la CLI. Sus
+    // ráfagas de pulse van al panel de partículas.
     private async Task ExecuteInRunPaneAsync(Compilation compilation)
     {
         var pane = _bottomPanel.Run;
@@ -342,7 +349,7 @@ public sealed partial class ProjectWorkspaceViewModel : ViewModelBase
 
         try
         {
-            await Task.Run(() => compilation.Run(input, output, cancellation.Token));
+            await Task.Run(() => compilation.Run(input, output, _runtimePulse, cancellation.Token));
             pane.WriteStatus("── Ejecución terminada");
         }
         
