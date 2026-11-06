@@ -12,6 +12,18 @@
     <UserControl.Resources>
         <conv:ResourceKeyToGeometryConverter x:Key="KeyToGeometry" />
 
+        <SolidColorBrush x:Key="ExplorerItemForegroundBrush" Color="#E6EEF8" />
+        <SolidColorBrush x:Key="ExplorerItemSelectedForegroundBrush" Color="#FFFFFF" />
+        <SolidColorBrush x:Key="ExplorerItemSelectedBackgroundBrush" Color="#2B84D6" />
+        <SolidColorBrush x:Key="ExplorerMainFileForegroundBrush" Color="#8ED8FF" />
+        <SolidColorBrush x:Key="ExplorerMainFileSelectedForegroundBrush" Color="#F4FCFF" />
+
+        <Style x:Key="ExplorerTreeViewItemStyle" TargetType="TreeViewItem">
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+        </Style>
+
         <!-- Botón de icono de la cabecera (nuevo archivo / nueva carpeta) -->
         <Style x:Key="ExplorerHeaderIconButton" TargetType="Button">
             <Setter Property="Background" Value="Transparent" />
@@ -162,6 +174,9 @@
 
                 <TreeView.ItemContainerStyle>
                     <Style TargetType="{x:Type TreeViewItem}">
+
+                        <Setter Property="FocusVisualStyle"
+                                Value="{x:Null}" />
 
                         <Setter Property="IsExpanded"
                                 Value="{Binding IsExpanded, Mode=TwoWay}" />
@@ -353,91 +368,189 @@
                             <Grid.InputBindings>
                                 <MouseBinding Gesture="LeftDoubleClick" Command="{Binding OpenCommand}" />
                             </Grid.InputBindings>
-                            <StackPanel Orientation="Horizontal">
 
-                                <!-- Icono del archivo o carpeta -->
-                                <Path
-                                    Width="13"
-                                    Height="13"
-                                    VerticalAlignment="Center"
-                                    Data="{Binding IconKey,
-                                        Converter={StaticResource KeyToGeometry}}">
+                            <Border
+                                Padding="4,2"
+                                Margin="0,1,0,1"
+                                CornerRadius="3"
+                                SnapsToDevicePixels="True">
 
-                                    <Path.Style>
-                                        <Style
-                                            TargetType="Path"
-                                            BasedOn="{StaticResource IconPath}">
+                                <Border.Style>
+                                    <Style TargetType="Border">
 
-                                            <Setter
-                                                Property="Fill"
-                                                Value="{DynamicResource PrimaryForegroundBrush}" />
+                                        <Setter
+                                            Property="Background"
+                                            Value="Transparent" />
 
-                                            <Style.Triggers>
-                                                <DataTrigger
-                                                    Binding="{Binding IsMainProjectFile}"
-                                                    Value="True">
+                                        <Style.Triggers>
 
-                                                    <Setter
-                                                        Property="Fill"
-                                                        Value="#7EC8E3" />
+                                            <!-- Selección visible aunque el TreeView pierda foco -->
+                                            <DataTrigger
+                                                Binding="{Binding RelativeSource={RelativeSource AncestorType=TreeViewItem},
+                                                                Path=IsSelected}"
+                                                Value="True">
 
-                                                </DataTrigger>
-                                            </Style.Triggers>
+                                                <Setter
+                                                    Property="Background"
+                                                    Value="{StaticResource ExplorerItemSelectedBackgroundBrush}" />
 
-                                        </Style>
-                                    </Path.Style>
+                                            </DataTrigger>
 
-                                </Path>
+                                        </Style.Triggers>
 
-                                <!-- Nombre del archivo -->
-                                <TextBlock
-                                    Text="{Binding Name}"
-                                    Margin="6,0,0,0"
-                                    VerticalAlignment="Center"
-                                    FontSize="{DynamicResource FontSizeBody}">
+                                    </Style>
+                                </Border.Style>
 
-                                    <TextBlock.Style>
-                                        <Style
-                                            TargetType="TextBlock"
-                                            BasedOn="{StaticResource {x:Type TextBlock}}">
+                                <StackPanel Orientation="Horizontal">
 
-                                            <Setter
-                                                Property="Foreground"
-                                                Value="{DynamicResource PrimaryForegroundBrush}" />
+                                    <!-- Icono del archivo o carpeta -->
+                                    <Path
+                                        Width="13"
+                                        Height="13"
+                                        VerticalAlignment="Center"
+                                        Data="{Binding IconKey,
+                                            Converter={StaticResource KeyToGeometry}}">
 
-                                            <Style.Triggers>
-                                                <DataTrigger
-                                                    Binding="{Binding IsMainProjectFile}"
-                                                    Value="True">
+                                        <Path.Style>
+                                            <Style
+                                                TargetType="Path"
+                                                BasedOn="{StaticResource IconPath}">
 
-                                                    <Setter
-                                                        Property="FontWeight"
-                                                        Value="SemiBold" />
+                                                <Setter
+                                                    Property="Fill"
+                                                    Value="{StaticResource ExplorerItemForegroundBrush}" />
 
-                                                    <Setter
-                                                        Property="Foreground"
-                                                        Value="#7EC8E3" />
+                                                <Style.Triggers>
 
-                                                </DataTrigger>
-                                            </Style.Triggers>
+                                                    <!-- principal.tmpr -->
+                                                    <DataTrigger
+                                                        Binding="{Binding IsMainProjectFile}"
+                                                        Value="True">
 
-                                        </Style>
-                                    </TextBlock.Style>
+                                                        <Setter
+                                                            Property="Fill"
+                                                             Value="{StaticResource ExplorerMainFileForegroundBrush}" />
 
-                                </TextBlock>
+                                                    </DataTrigger>
 
-                                <!-- Etiqueta exclusiva de los archivos .tmpr -->
-                                <TextBlock
-                                    Text="PRINCIPAL"
-                                    Margin="9,0,0,0"
-                                    VerticalAlignment="Center"
-                                    FontSize="{DynamicResource FontSizeCaption}"
-                                    FontWeight="SemiBold"
-                                    Foreground="#7EC8E3"
-                                    Visibility="{Binding IsMainProjectFile,
-                                                Converter={StaticResource BoolToVisibility}}" />
+                                                    <!-- item seleccionado -->
+                                                    <DataTrigger
+                                                        Binding="{Binding RelativeSource={RelativeSource AncestorType=TreeViewItem},
+                                                                        Path=IsSelected}"
+                                                        Value="True">
 
-                            </StackPanel>
+                                                        <Setter
+                                                            Property="Fill"
+                                                            Value="{StaticResource ExplorerItemSelectedForegroundBrush}" />
+
+                                                    </DataTrigger>
+
+                                                </Style.Triggers>
+
+                                            </Style>
+                                        </Path.Style>
+
+                                    </Path>
+
+                                    <!-- Nombre del archivo -->
+                                    <TextBlock
+                                        Text="{Binding Name}"
+                                        Margin="6,0,0,0"
+                                        VerticalAlignment="Center"
+                                        FontSize="12">
+
+                                        <TextBlock.Style>
+                                            <Style
+                                                TargetType="TextBlock"
+                                                BasedOn="{StaticResource {x:Type TextBlock}}">
+
+                                                <Setter
+                                                    Property="Foreground"
+                                                    Value="{StaticResource ExplorerItemForegroundBrush}" />
+
+                                                <Style.Triggers>
+
+                                                    <!-- principal.tmpr -->
+                                                    <DataTrigger
+                                                        Binding="{Binding IsMainProjectFile}"
+                                                        Value="True">
+
+                                                        <Setter
+                                                            Property="FontWeight"
+                                                            Value="SemiBold" />
+
+                                                        <Setter
+                                                            Property="Foreground"
+                                                            Value="{StaticResource ExplorerMainFileForegroundBrush}" />
+
+                                                    </DataTrigger>
+
+                                                    <!-- item seleccionado -->
+                                                    <DataTrigger
+                                                        Binding="{Binding RelativeSource={RelativeSource AncestorType=TreeViewItem},
+                                                                        Path=IsSelected}"
+                                                        Value="True">
+
+                                                        <Setter
+                                                            Property="Foreground"
+                                                            Value="{StaticResource ExplorerItemSelectedForegroundBrush}" />
+
+                                                        <Setter
+                                                            Property="FontWeight"
+                                                            Value="SemiBold" />
+
+                                                    </DataTrigger>
+
+                                                </Style.Triggers>
+
+                                            </Style>
+                                        </TextBlock.Style>
+
+                                    </TextBlock>
+
+                                    <!-- Etiqueta del archivo principal -->
+                                    <TextBlock
+                                        Text="PRINCIPAL"
+                                        Margin="9,0,0,0"
+                                        VerticalAlignment="Center"
+                                        FontSize="9"
+                                        FontWeight="SemiBold"
+                                        Visibility="{Binding IsMainProjectFile,
+                                                    Converter={StaticResource BoolToVisibility}}">
+
+                                        <TextBlock.Style>
+                                            <Style
+                                                TargetType="TextBlock"
+                                                BasedOn="{StaticResource {x:Type TextBlock}}">
+
+                                                <Setter
+                                                    Property="Foreground"
+                                                    Value="{StaticResource ExplorerMainFileForegroundBrush}" />
+
+                                                <Style.Triggers>
+
+                                                    <!-- principal seleccionado -->
+                                                    <DataTrigger
+                                                        Binding="{Binding RelativeSource={RelativeSource AncestorType=TreeViewItem},
+                                                                        Path=IsSelected}"
+                                                        Value="True">
+
+                                                        <Setter
+                                                            Property="Foreground"
+                                                            Value="{StaticResource ExplorerMainFileSelectedForegroundBrush}" />
+
+                                                    </DataTrigger>
+
+                                                </Style.Triggers>
+
+                                            </Style>
+                                        </TextBlock.Style>
+
+                                    </TextBlock>
+
+                                </StackPanel>
+
+                            </Border>
                         </Grid>
                     </HierarchicalDataTemplate>
                 </TreeView.ItemTemplate>
