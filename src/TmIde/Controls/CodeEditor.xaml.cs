@@ -76,6 +76,13 @@ public partial class CodeEditor : UserControl
     private readonly DiagnosticsRenderer _diagnosticsRenderer;
     private readonly ToolTip _diagnosticToolTip = new() { Placement = PlacementMode.Mouse, StaysOpen = true };
 
+    // Tooltip informativo de palabras reservadas.
+    private readonly ToolTip _keywordToolTip = new()
+    {
+        Placement = PlacementMode.Mouse,
+        StaysOpen = true
+    };
+
     // Cursor y desplazamiento de cada documento mientras no es el visible. La
     // tabla es débil: al cerrar una pestaña y soltarse su documento, el estado se va con él.
     private readonly ConditionalWeakTable<TextDocument, ViewState> _viewStates = new();
@@ -106,6 +113,19 @@ public partial class CodeEditor : UserControl
         _diagnosticToolTip.SetResourceReference(BackgroundProperty, "SurfaceBackgroundBrush");
         _diagnosticToolTip.SetResourceReference(ForegroundProperty, "PrimaryForegroundBrush");
         _diagnosticToolTip.SetResourceReference(Control.BorderBrushProperty, "DividerBrush");
+
+        // Aplicar el diseño de ayuda a las palabras reservadas.
+        _keywordToolTip.ContentTemplate = (DataTemplate)Resources["KeywordToolTipTemplate"];
+        _keywordToolTip.SetResourceReference(Control.BackgroundProperty, "SurfaceBackgroundBrush");
+        _keywordToolTip.SetResourceReference(Control.ForegroundProperty, "PrimaryForegroundBrush");
+        _keywordToolTip.SetResourceReference(Control.BorderBrushProperty, "DividerBrush");
+
+        // Detectar Ctrl cuando el mouse ya está sobre una palabra.
+        Editor.PreviewKeyDown += OnEditorPreviewKeyDown;
+
+        // Ocultar la ayuda al soltar Ctrl.
+        Editor.PreviewKeyUp += OnEditorPreviewKeyUp;
+
         Editor.TextChanged += OnEditorTextChanged;
         _searchPanel = SearchPanel.Install(Editor);
 
@@ -214,32 +234,157 @@ public partial class CodeEditor : UserControl
         }
     }
 
+    
+    /// Si el mouse ya está sobre una palabra y el usuario presiona Ctrl, intenta mostrar la información.
+    private void OnEditorPreviewKeyDown(
+        object sender,
+        KeyEventArgs e)
+    {
+        if (!KeywordHoverOptions.RequireControlKey)
+        {
+            return;
+        }
+
+        if (e.Key is not (Key.LeftCtrl or Key.RightCtrl))
+        {
+            return;
+        }
+
+        // Se ejecuta después de procesar la tecla, para que Keyboard.Modifiers esté actualizado.
+        Dispatcher.BeginInvoke(
+            DispatcherPriority.Input,
+            new Action(() =>
+            {
+                var textView = Editor.TextArea.TextView;
+
+                if (textView.IsMouseOver)
+                {
+                    ShowHoverInformation(
+                        Mouse.GetPosition(textView));
+                }
+            }));
+    }
+
+    /// Al soltar Ctrl se oculta la ayuda educativa.
+    /// El tooltip de errores permanece independiente.
+    private void OnEditorPreviewKeyUp(
+        object sender,
+        KeyEventArgs e)
+    {
+        if (!KeywordHoverOptions.RequireControlKey)
+        {
+            return;
+        }
+
+        if (e.Key is Key.LeftCtrl or Key.RightCtrl)
+        {
+            _keywordToolTip.IsOpen = false;
+        }
+    }
+
+
     // El aspecto del tooltip está en DiagnosticToolTipTemplate (XAML); aquí solo
     // se eligen los diagnósticos que hay bajo el puntero.
+    
+    /// Se ejecuta cuando el mouse permanece sobre el código.
+    /// Los diagnósticos tienen prioridad sobre la ayuda.
     private void OnTextViewMouseHover(object? sender, MouseEventArgs e)
     {
         var textView = Editor.TextArea.TextView;
-        var position = textView.GetPositionFloor(e.GetPosition(textView) + textView.ScrollOffset);
+
+        ShowHoverInformation(
+            e.GetPosition(textView));
+    }
+
+    
+    /// Muestra información contextual del código.
+    /// Prioridad:
+    /// 1. Palabras reservadas de Tempo.
+    /// 2. Errores y advertencias del compilador.
+    /// La opción RequireControlKey permite elegir
+    /// entre Ctrl + Hover y hover automático.
+    private void ShowHoverInformation(Point mousePosition)
+    {
+        // Cerrar cualquier tooltip anterior
+        _diagnosticToolTip.IsOpen = false;
+        _keywordToolTip.IsOpen = false;
+
+        var textView = Editor.TextArea.TextView;
+
+        if (!textView.IsMouseOver)
+        {
+            return;
+        }
+
+        // Obtener la posición del mouse sobre el código
+        var position = textView.GetPositionFloor(
+            mousePosition + textView.ScrollOffset);
+
         if (position is null)
         {
             return;
         }
 
-        var offset = Editor.Document.GetOffset(position.Value.Location);
-        var diagnosticsUnderPointer = _diagnosticsRenderer.SegmentsAt(offset)
-            .Select(segment => segment.Diagnostic)
-            .ToList();
+        var document = Editor.Document;
 
-        if (diagnosticsUnderPointer.Count == 0)
+        var offset = document.GetOffset(
+            position.Value.Location);
+
+        // PRIORIDAD 1: PALABRAS RESERVADAS
+        // ==================================================
+
+        // Consultar si hay una palabra reservada
+        var keyword = _syntaxColorizer.GetReservedWordAt(
+            document,
+            offset);
+
+        if (keyword is not null)
         {
-            return;
+            // Consultar su equivalencia y descripción
+            var info = TempoKeywordReference.Find(keyword);
+
+            if (info is not null)
+            {
+                // Verificar si la configuración exige Ctrl
+                var canShowKeyword =
+                    !KeywordHoverOptions.RequireControlKey ||
+                    (Keyboard.Modifiers & ModifierKeys.Control) != 0;
+
+                if (canShowKeyword)
+                {
+                    _keywordToolTip.Content = info;
+                    _keywordToolTip.IsOpen = true;
+
+                    // La palabra reservada tiene prioridad,
+                    // aunque tenga un diagnóstico asociado.
+                    return;
+                }
+            }
         }
 
-        _diagnosticToolTip.Content = diagnosticsUnderPointer;
-        _diagnosticToolTip.IsOpen = true;
+        // PRIORIDAD 2: ERRORES Y ADVERTENCIAS
+        // ==================================================
+
+        // Buscar diagnósticos en la posición del mouse
+        var diagnosticsUnderPointer =
+            _diagnosticsRenderer.SegmentsAt(offset)
+                .Select(segment => segment.Diagnostic)
+                .ToList();
+
+        if (diagnosticsUnderPointer.Count > 0)
+        {
+            _diagnosticToolTip.Content = diagnosticsUnderPointer;
+            _diagnosticToolTip.IsOpen = true;
+        }
     }
 
-    private void OnTextViewMouseHoverStopped(object? sender, MouseEventArgs e) => _diagnosticToolTip.IsOpen = false;
+
+    /// Oculta ambas ventanas cuando termina el hover.
+    private void OnTextViewMouseHoverStopped(object? sender, MouseEventArgs e)
+    {
+        _diagnosticToolTip.IsOpen = false;
+        _keywordToolTip.IsOpen = false;
+    }
 
     /// <summary>
     /// Atiende solicitudes externas para mover el cursor.
@@ -300,6 +445,7 @@ public partial class CodeEditor : UserControl
         }
 
         _diagnosticToolTip.IsOpen = false;
+        _keywordToolTip.IsOpen = false;
         Editor.Document = next ?? new TextDocument();
         Editor.IsReadOnly = next is null;
         _syntaxColorizer.Rescan(Editor.Document);
@@ -352,6 +498,7 @@ public partial class CodeEditor : UserControl
     private void OnEditorTextChanged(object? sender, EventArgs e)
     {
         _syntaxColorizer.Rescan(Editor.Document);
+        _keywordToolTip.IsOpen = false;
         _foldingTimer.Stop();
         _foldingTimer.Start();
     }

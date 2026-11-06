@@ -23,6 +23,49 @@ public sealed class TmSyntaxColorizer : DocumentColorizingTransformer
         _spans = TmSyntaxScanner.Scan(document.Text);
     }
 
+    
+    /// Obtiene la palabra reservada situada en un desplazamiento del documento
+    /// Reutiliza los tokens del coloreado de sintaxis
+    /// Ignora comentarios, cadenas y nombres similares
+    public string? GetReservedWordAt(
+        TextDocument document,
+        int offset)
+    {
+        if (offset < 0 || offset >= document.TextLength)
+        {
+            return null;
+        }
+
+        foreach (var span in _spans)
+        {
+            // Los fragmentos ya están ordenados.
+            if (span.Start > offset)
+            {
+                break;
+            }
+
+            if (!span.Contains(offset))
+            {
+                continue;
+            }
+
+            if (span.Kind is
+                TmSyntaxKind.Keyword
+                or TmSyntaxKind.Type
+                or TmSyntaxKind.BuiltInValue)
+            {
+                return document.GetText(
+                    span.Start,
+                    span.Length);
+            }
+
+            return null;
+        }
+
+        return null;
+    }
+
+
     protected override void ColorizeLine(DocumentLine line)
     {
         if (_spans.Count == 0)

@@ -37,6 +37,43 @@
             <ItemsControl ItemsSource="{Binding}" MaxWidth="420"
                     ItemTemplate="{StaticResource DiagnosticToolTipItemTemplate}" />
         </DataTemplate>
+
+        
+        <!-- Ayuda contextual de palabras reservadas de Tempo -->
+        <DataTemplate x:Key="KeywordToolTipTemplate">
+            <StackPanel MaxWidth="420">
+
+                <!-- Palabra y equivalente -->
+                <TextBlock
+                    FontSize="13"
+                    FontWeight="SemiBold"
+                    Foreground="{DynamicResource SyntaxTypeBrush}"
+                    TextWrapping="Wrap">
+
+                    <Run Text="{Binding Keyword}" />
+                    <Run Text=" — Equivalente: " />
+                    <Run Text="{Binding Equivalent}" />
+
+                </TextBlock>
+
+                <!-- Explicación -->
+                <TextBlock
+                    Text="{Binding Description}"
+                    Foreground="{DynamicResource PrimaryForegroundBrush}"
+                    FontSize="12"
+                    TextWrapping="Wrap"
+                    Margin="0,7,0,0" />
+
+                <!-- Identificación del elemento -->
+                <TextBlock
+                    Text="Palabra reservada de Tempo"
+                    Foreground="{DynamicResource SecondaryForegroundBrush}"
+                    FontSize="10"
+                    Margin="0,9,0,0" />
+
+            </StackPanel>
+        </DataTemplate>
+
     </UserControl.Resources>
 
     <!--

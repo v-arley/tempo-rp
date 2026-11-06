@@ -23,6 +23,8 @@ public static class TmSyntaxScanner
         ["output"] = TmSyntaxKind.Keyword,
         ["input"] = TmSyntaxKind.Keyword,
         ["mix"] = TmSyntaxKind.Keyword,
+        ["case"] = TmSyntaxKind.Keyword,
+        ["default"] = TmSyntaxKind.Keyword,
         ["loop"] = TmSyntaxKind.Keyword,
         ["repeat"] = TmSyntaxKind.Keyword,
         ["if"] = TmSyntaxKind.Keyword,
