@@ -1,5 +1,6 @@
 using System.Windows;
 using TmIde.ViewModels.Help;
+using TmIde.Views.Behaviors;
 
 namespace TmIde.Views.Help;
 
@@ -16,6 +17,9 @@ public partial class LanguageReferenceWindow : Window
     public LanguageReferenceWindow(bool canInsert)
     {
         InitializeComponent();
+
+        // Mantener el mismo comportamiento de maximización que TMIDE
+        MaximizeToWorkArea.Attach(this);
 
         DataContext = new LanguageReferenceViewModel();
 

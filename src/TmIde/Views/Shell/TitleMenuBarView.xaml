@@ -139,7 +139,7 @@
                     <Path Grid.Column="2" Fill="{DynamicResource DividerBrush}"
                             Data="M0,0 L14,0 L0,22 Z" />
                 </Grid>
-                <TextBlock Grid.Row="0" Text="{Binding Title}"
+                <TextBlock Grid.Row="0" Text="{Binding Title, RelativeSource={RelativeSource AncestorType=Window}}"
                             HorizontalAlignment="Center" VerticalAlignment="Center"
                             FontFamily="{DynamicResource HeaderFontFamily}"
                             FontSize="{DynamicResource FontSizeSmall}" FontWeight="Medium"
@@ -149,6 +149,22 @@
             <!-- Izquierda: menús raíz separados por "|" (MENU / TOOLS / VER / OTROS) -->
             <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center"
                         HorizontalAlignment="Left" Margin="3,0,0,0">
+
+                        <StackPanel.Style>
+                            <Style TargetType="StackPanel">
+                                <Style.Triggers>
+                                    <DataTrigger
+                                        Binding="{Binding ShowMenus,
+                                                RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                        Value="False">
+
+                                        <Setter Property="Visibility" Value="Collapsed" />
+
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </StackPanel.Style>
+
                 <StackPanel.Resources>
                     <Style x:Key="MenuSep" TargetType="Rectangle">
                         <Setter Property="Width" Value="1" />
@@ -247,6 +263,42 @@
                     <MenuItem DataContext="{Binding MenuBar.Roots[3]}" Style="{StaticResource RootMenuItem}" />
                 </Menu>
             </StackPanel>
+
+            
+            <!-- Identificación de las ventanas auxiliares -->
+            <TextBlock
+                Grid.Column="0"
+                Text="AYUDA"
+                Margin="12,0,0,0"
+                VerticalAlignment="Center"
+                FontFamily="{DynamicResource CodeFontFamily}"
+                FontSize="{DynamicResource FontSizeSmall}"
+                FontWeight="Medium"
+                Foreground="{DynamicResource TitleMenuForegroundBrush}">
+
+                <TextBlock.Style>
+                    <Style TargetType="TextBlock">
+
+                        <Setter Property="Visibility"
+                                Value="Collapsed" />
+
+                        <Style.Triggers>
+                            <DataTrigger
+                                Binding="{Binding ShowMenus,
+                                        RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                Value="False">
+
+                                <Setter Property="Visibility"
+                                        Value="Visible" />
+
+                            </DataTrigger>
+                        </Style.Triggers>
+
+                    </Style>
+                </TextBlock.Style>
+
+            </TextBlock>
+
 
             <!-- Derecha: operaciones de ventana. Botones de 24 en una barra de 28:
                 2px arriba y abajo. -->

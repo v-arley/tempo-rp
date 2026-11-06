@@ -7,6 +7,21 @@ namespace TmIde.Views.Shell;
 
 public partial class TitleMenuBarView : UserControl
 {
+    /// Indica si la barra muestra los menús principales.
+    /// True para TMIDE y false para ventanas auxiliares.
+    public static readonly DependencyProperty ShowMenusProperty =
+        DependencyProperty.Register(
+            nameof(ShowMenus),
+            typeof(bool),
+            typeof(TitleMenuBarView),
+            new PropertyMetadata(true));
+
+    public bool ShowMenus
+    {
+        get => (bool)GetValue(ShowMenusProperty);
+        set => SetValue(ShowMenusProperty, value);
+    }
+    
     private Window? _hostWindow;
 
     public TitleMenuBarView()
