@@ -6,6 +6,7 @@ using TmIde.ViewModels.Explorer;
 using TmIde.ViewModels.Panel;
 using TmIde.ViewModels.Particles;
 using TmIde.ViewModels.Shell;
+using TmIde.Services.Audio;
 
 namespace TmIde.ViewModels;
 
@@ -28,7 +29,8 @@ public sealed partial class MainWindowViewModel : ViewModelBase
         BottomPanelViewModel bottomPanel,
         StatusBarViewModel statusBar,
         ParticlePanelViewModel particlePanel,
-        IMessenger messenger)
+        IMessenger messenger,
+        TypingPianoService? piano = null)
     {
         Workspace = workspace;
         MenuBar = menuBar;
@@ -37,6 +39,7 @@ public sealed partial class MainWindowViewModel : ViewModelBase
         BottomPanel = bottomPanel;
         StatusBar = statusBar;
         ParticlePanel = particlePanel;
+        Piano = piano;
 
         messenger.Register<MainWindowViewModel, ActiveDocumentChangedMessage>(
             this, static (window, message) => window.UpdateTitle(message.Document));
@@ -59,6 +62,9 @@ public sealed partial class MainWindowViewModel : ViewModelBase
     public StatusBarViewModel StatusBar { get; }
 
     public ParticlePanelViewModel ParticlePanel { get; }
+
+    /// Servicio compartido de sonido al escribir.
+    public TypingPianoService? Piano { get; }
 
     private void UpdateTitle(EditorDocumentViewModel? document)
     {

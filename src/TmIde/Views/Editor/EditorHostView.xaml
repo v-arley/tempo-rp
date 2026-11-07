@@ -173,6 +173,8 @@
         <!-- Área de edición del documento activo -->
         <controls:CodeEditor
                 Grid.Row="2"
+                Piano="{Binding DataContext.Piano,
+                            RelativeSource={RelativeSource AncestorType=Window}}"
                 Document="{Binding SelectedDocument.Document}"
                 CaretLine="{Binding SelectedDocument.CaretLine,
                             Mode=TwoWay,

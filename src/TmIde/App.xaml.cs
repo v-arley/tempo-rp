@@ -31,6 +31,8 @@ using TmIde.ViewModels.Start;
 using TmIde.Views;
 using TmIde.Views.Start;
 
+using TmIde.Services.Audio;
+
 namespace TmIde;
 
 /// <summary>
@@ -150,6 +152,7 @@ public partial class App : Application
             provider.GetRequiredService<ILogger<JsonUserSettingsStore>>()));
         services.AddSingleton<IRecentProjectsService, RecentProjectsService>();
         services.AddSingleton<IThemeService, ThemeService>();
+        services.AddSingleton<TypingPianoService>();
         services.AddSingleton<ILanguageReferenceService, LanguageReferenceService>();
         services.AddSingleton<IConfirmDialogService, ConfirmDialogService>();
         services.AddSingleton<IProjectScaffolder, ProjectScaffolder>();

@@ -16,6 +16,7 @@ using TmIde.Controls.Diagnostics;
 using TmIde.Controls.Syntax;
 using TmIde.Services.Analysis;
 using TmIde.ViewModels.Editor;
+using TmIde.Services.Audio;
 
 namespace TmIde.Controls;
 
@@ -59,6 +60,12 @@ public partial class CodeEditor : UserControl
         typeof(IReadOnlyList<EditorDiagnostic>),
         typeof(CodeEditor),
         new FrameworkPropertyMetadata(null, OnDiagnosticsChanged));
+
+    public static readonly DependencyProperty PianoProperty = DependencyProperty.Register(
+        nameof(Piano),
+        typeof(TypingPianoService),
+        typeof(CodeEditor),
+        new PropertyMetadata(null));
 
     public static readonly DependencyProperty SelectionAccentBrushProperty = RegisterThemeBrush(nameof(SelectionAccentBrush));
 
@@ -135,6 +142,8 @@ public partial class CodeEditor : UserControl
         Editor.Options.ConvertTabsToSpaces = true;
         Editor.TextArea.IndentationStrategy = _indentationStrategy;
         Editor.TextArea.TextEntered += OnTextEntered;
+        // Enter y Backspace no siempre generan TextEntered, por lo que se detectan por separado.
+        Editor.TextArea.PreviewKeyDown += OnPianoSpecialKeyDown;
         _foldingTimer.Tick += OnFoldingTimerTick;
         InstallFolding();
         Editor.TextArea.Caret.PositionChanged += OnCaretPositionChanged;
@@ -210,6 +219,13 @@ public partial class CodeEditor : UserControl
     {
         get => (Brush?)GetValue(FoldingMarkerBackgroundBrushProperty);
         set => SetValue(FoldingMarkerBackgroundBrushProperty, value);
+    }
+
+    /// Servicio de notas musicales para este editor.
+    public TypingPianoService? Piano
+    {
+        get => (TypingPianoService?)GetValue(PianoProperty);
+        set => SetValue(PianoProperty, value);
     }
 
     private static DependencyProperty RegisterThemeBrush(string name) => DependencyProperty.Register(
@@ -480,9 +496,64 @@ public partial class CodeEditor : UserControl
         }
     }
 
+
+    
+    /// <summary>
+    /// Comprueba que estamos escribiendo código y
+    /// no ejecutando un atajo de teclado.
+    /// </summary>
+    private bool CanPlayPiano()
+    {
+        if (Piano?.Enabled != true ||
+            Document is null ||
+            Editor.IsReadOnly)
+        {
+            return false;
+        }
+
+        // Evitar sonidos con Ctrl, Alt o Windows.
+        // Shift se permite para las mayúsculas.
+        const ModifierKeys blocked =
+            ModifierKeys.Control |
+            ModifierKeys.Alt |
+            ModifierKeys.Windows;
+
+        return (Keyboard.Modifiers & blocked) == ModifierKeys.None;
+    }
+
+    /// <summary>
+    /// Sonidos especiales para Enter y Backspace.
+    /// No modifica el comportamiento de esas teclas.
+    /// </summary>
+    private void OnPianoSpecialKeyDown(
+        object sender,
+        KeyEventArgs e)
+    {
+        if (!CanPlayPiano() || e.IsRepeat)
+        {
+            return;
+        }
+
+        if (e.Key == Key.Return || e.Key == Key.Enter)
+        {
+            Piano?.PlayEnter();
+        }
+        else if (e.Key == Key.Back)
+        {
+            Piano?.PlayBackspace();
+        }
+    }
+
+
     // Al escribir '<' como primer carácter de la línea se realinea con el '>' que abrió el bloque.
     private void OnTextEntered(object? sender, TextCompositionEventArgs e)
     {
+        // Reproducir la nota de la tecla escrita.
+        if (CanPlayPiano() && e.Text.Length == 1)
+        {
+            Piano?.PlayCharacter(e.Text[0]);
+        }
+
         if (e.Text != "<")
         {
             return;

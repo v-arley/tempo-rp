@@ -13,6 +13,11 @@ public sealed record UserSettings
     /// <summary>Tema elegido; <c>null</c> hasta que el usuario cambie el de <see cref="IdeOptions.DefaultTheme"/>.</summary>
     public AppTheme? Theme { get; init; }
 
+
+    /// Indica si el piano del teclado está activado.
+    /// Desactivado por defecto.
+    public bool PianoEnabled { get; init; } 
+
     /// <summary>Proyectos abiertos, el más reciente primero.</summary>
     public IReadOnlyList<RecentProjectEntry> RecentProjects { get; init; } = [];
 }
