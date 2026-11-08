@@ -18,6 +18,13 @@ public sealed record UserSettings
     /// Desactivado por defecto.
     public bool PianoEnabled { get; init; } 
 
+    /// True: tocar con el teclado sin escribir código.
+    /// False: escuchar notas mientras se programa.
+    public bool PianoPerformanceMode { get; init; }
+
+    /// Octava musical del modo interpretación.
+    public int PianoOctave { get; init; } = 4;
+
     /// <summary>Proyectos abiertos, el más reciente primero.</summary>
     public IReadOnlyList<RecentProjectEntry> RecentProjects { get; init; } = [];
 }

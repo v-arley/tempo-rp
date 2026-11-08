@@ -142,6 +142,12 @@ public partial class CodeEditor : UserControl
         Editor.Options.ConvertTabsToSpaces = true;
         Editor.TextArea.IndentationStrategy = _indentationStrategy;
         Editor.TextArea.TextEntered += OnTextEntered;
+        // Modo interpretación: usar las teclas como piano antes de que AvalonEdit procese el texto.
+        Editor.TextArea.PreviewKeyDown += OnPianoPerformanceKeyDown;
+        // Detectar cuando se suelta una tecla musical.
+        Editor.TextArea.PreviewKeyUp += OnPianoPerformanceKeyUp;
+        // Liberar las notas cuando el editor pierde el foco.
+        Editor.TextArea.LostKeyboardFocus += OnPianoEditorLostKeyboardFocus;
         // Enter y Backspace no siempre generan TextEntered, por lo que se detectan por separado.
         Editor.TextArea.PreviewKeyDown += OnPianoSpecialKeyDown;
         _foldingTimer.Tick += OnFoldingTimerTick;
@@ -449,6 +455,9 @@ public partial class CodeEditor : UserControl
 
     private void SwitchDocument(TextDocument? previous, TextDocument? next)
     {
+        // Al cambiar de archivo, liberar las teclas musicales
+        Piano?.ReleaseAllPerformanceNotes();
+
         // El estado se lee antes del cambio: en ese momento el editor aún muestra el anterior.
         if (previous is not null)
         {
@@ -505,6 +514,7 @@ public partial class CodeEditor : UserControl
     private bool CanPlayPiano()
     {
         if (Piano?.Enabled != true ||
+            Piano.IsPerformanceMode ||
             Document is null ||
             Editor.IsReadOnly)
         {
@@ -521,10 +531,126 @@ public partial class CodeEditor : UserControl
         return (Keyboard.Modifiers & blocked) == ModifierKeys.None;
     }
 
-    /// <summary>
+    
+    /// En modo interpretación las teclas musicales producen notas sin modificar el documento.
+    private void OnPianoPerformanceKeyDown(
+        object sender,
+        KeyEventArgs e)
+    {
+        if (Piano is not
+            { Enabled: true, IsPerformanceMode: true } piano)
+        {
+            return;
+        }
+
+        // Mantener disponibles los atajos del IDE.
+        // Shift se permite.
+        const ModifierKeys blockedModifiers =
+            ModifierKeys.Control |
+            ModifierKeys.Alt |
+            ModifierKeys.Windows;
+
+        if ((Keyboard.Modifiers & blockedModifiers) !=
+            ModifierKeys.None)
+        {
+            return;
+        }
+
+        // Escape vuelve a escritura normal.
+        if (e.Key == Key.Escape)
+        {
+            e.Handled = true;
+            piano.IsPerformanceMode = false;
+            return;
+        }
+
+        // Bajar una octava.
+        if (e.Key is Key.Z or Key.PageDown)
+        {
+            e.Handled = true;
+
+            if (!e.IsRepeat)
+            {
+                piano.ChangeOctave(-1);
+            }
+
+            return;
+        }
+
+        // Subir una octava.
+        if (e.Key is Key.X or Key.PageUp)
+        {
+            e.Handled = true;
+
+            if (!e.IsRepeat)
+            {
+                piano.ChangeOctave(1);
+            }
+
+            return;
+        }
+
+        // Detectar si la tecla representa una nota musical.
+        if (PianoPerformanceKeyMap.TryGetMidi(
+            e.Key,
+            piano.Octave,
+            out var midiNote))
+        {
+            // No escribir el carácter en el editor.
+            e.Handled = true;
+
+            if (!e.IsRepeat)
+            {
+                // La nota seguirá sonando hasta recibir el evento KeyUp.
+                piano.StartPerformanceNote(
+                    e.Key,
+                    midiNote);
+            }
+
+            return;
+        }
+
+        // Permitir navegación por el código y teclas
+        // de función (por ejemplo F1 para AYUDA).
+        if (e.Key is
+            Key.Left or Key.Right or
+            Key.Up or Key.Down or
+            Key.Home or Key.End or
+            Key.LeftShift or Key.RightShift or
+            Key.CapsLock)
+        {
+            return;
+        }
+
+        if (e.Key >= Key.F1 && e.Key <= Key.F12)
+        {
+            return;
+        }
+
+        // Evitar que las demás teclas introduzcan texto,
+        // borren caracteres o inserten saltos de línea.
+        e.Handled = true;
+    }
+
+    
+    /// Cuando se libera una tecla, la nota asociada comienza a desvanecerse.
+    private void OnPianoPerformanceKeyUp(
+        object sender,
+        KeyEventArgs e)
+    {
+        Piano?.StopPerformanceNote(e.Key);
+    }
+
+    /// Evita que una nota quede sonando si el usuario cambia de ventana o sale del editor.
+    private void OnPianoEditorLostKeyboardFocus(
+        object sender,
+        KeyboardFocusChangedEventArgs e)
+    {
+        Piano?.ReleaseAllPerformanceNotes();
+    }
+
     /// Sonidos especiales para Enter y Backspace.
     /// No modifica el comportamiento de esas teclas.
-    /// </summary>
     private void OnPianoSpecialKeyDown(
         object sender,
         KeyEventArgs e)

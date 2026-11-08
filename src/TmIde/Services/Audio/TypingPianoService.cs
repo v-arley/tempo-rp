@@ -1,15 +1,14 @@
 
 using System;
-
 using CommunityToolkit.Mvvm.ComponentModel;
-
 using TmIde.Services.Settings;
+using System.Windows.Input;
 
 namespace TmIde.Services.Audio;
 
 /// <summary>
-/// Información de una nota reproducida.
-/// Más adelante podrá consumirla el visualizador.
+/// Información de una nota que acaba de sonar.
+/// También servirá para animar el orbe.
 /// </summary>
 public sealed class PianoNotePlayedEventArgs : EventArgs
 {
@@ -20,11 +19,12 @@ public sealed class PianoNotePlayedEventArgs : EventArgs
     }
 
     public int MidiNote { get; }
+
     public double Frequency { get; }
 }
 
 /// <summary>
-/// Controla el modo piano del editor.
+/// Controla el piano de Tempo y sus dos modalidades.
 /// </summary>
 public sealed class TypingPianoService : ObservableObject, IDisposable
 {
@@ -32,6 +32,8 @@ public sealed class TypingPianoService : ObservableObject, IDisposable
     private readonly PianoSynth _synth = new();
 
     private bool _enabled;
+    private bool _isPerformanceMode;
+    private int _octave;
 
     private static readonly int[] EnterChord =
     [
@@ -43,12 +45,16 @@ public sealed class TypingPianoService : ObservableObject, IDisposable
     public TypingPianoService(IUserSettingsStore settings)
     {
         _settings = settings;
-        _enabled = settings.Load().PianoEnabled;
+
+        var saved = settings.Load();
+
+        _enabled = saved.PianoEnabled;
+        _isPerformanceMode = saved.PianoPerformanceMode;
+        _octave = Math.Clamp(saved.PianoOctave, 2, 6);
     }
 
     /// <summary>
-    /// Permite activar o desactivar el sonido.
-    /// La propiedad se enlaza con el toggle de la barra.
+    /// Activa o desactiva el sonido.
     /// </summary>
     public bool Enabled
     {
@@ -61,7 +67,6 @@ public sealed class TypingPianoService : ObservableObject, IDisposable
                 return;
             }
 
-            // Guardar preferencia.
             _settings.Save(
                 _settings.Load() with
                 {
@@ -76,17 +81,82 @@ public sealed class TypingPianoService : ObservableObject, IDisposable
     }
 
     /// <summary>
-    /// Evento preparado para las futuras
-    /// reacciones musicales del orbe.
+    /// False: notas al escribir.
+    /// True: teclado convertido en instrumento.
     /// </summary>
-    public event EventHandler<PianoNotePlayedEventArgs>? NotePlayed;
+    public bool IsPerformanceMode
+    {
+        get => _isPerformanceMode;
+
+        set
+        {
+            if (!SetProperty(ref _isPerformanceMode, value))
+            {
+                return;
+            }
+
+            // Detener sonidos previos al cambiar de modo.
+            _synth.Stop();
+
+            OnPropertyChanged(nameof(ToggleLabel));
+
+            _settings.Save(
+                _settings.Load() with
+                {
+                    PianoPerformanceMode = value
+                });
+        }
+    }
 
     /// <summary>
-    /// Reproduce la nota de un carácter escrito.
+    /// Octava del modo de interpretación (2 a 6).
+    /// </summary>
+    public int Octave
+    {
+        get => _octave;
+
+        set
+        {
+            var next = Math.Clamp(value, 2, 6);
+
+            if (!SetProperty(ref _octave, next))
+            {
+                return;
+            }
+
+            ReleaseAllPerformanceNotes();
+
+            OnPropertyChanged(nameof(OctaveLabel));
+
+            _settings.Save(
+                _settings.Load() with
+                {
+                    PianoOctave = next
+                });
+        }
+    }
+
+    /// <summary>
+    /// Texto que aparece en el toggle superior.
+    /// </summary>
+    public string ToggleLabel =>
+        IsPerformanceMode ? "♫ TOCAR" : "♫ PIANO";
+
+    public string OctaveLabel => $"Octava actual: {Octave}";
+
+    public event EventHandler<PianoNotePlayedEventArgs>? NotePlayed;
+
+    public void ChangeOctave(int difference)
+    {
+        Octave += difference;
+    }
+
+    /// <summary>
+    /// Notas de la modalidad de escritura.
     /// </summary>
     public void PlayCharacter(char character)
     {
-        if (!Enabled ||
+        if (!Enabled || IsPerformanceMode ||
             !PianoNoteMap.TryGetMidi(character, out var note))
         {
             return;
@@ -95,12 +165,9 @@ public sealed class TypingPianoService : ObservableObject, IDisposable
         PlayNote(note);
     }
 
-    /// <summary>
-    /// Enter reproduce un acorde de Do mayor.
-    /// </summary>
     public void PlayEnter()
     {
-        if (!Enabled)
+        if (!Enabled || IsPerformanceMode)
         {
             return;
         }
@@ -111,15 +178,71 @@ public sealed class TypingPianoService : ObservableObject, IDisposable
         }
     }
 
-    /// <summary>
-    /// Backspace reproduce una nota grave.
-    /// </summary>
     public void PlayBackspace()
     {
-        if (Enabled)
+        if (Enabled && !IsPerformanceMode)
         {
             PlayNote(48);
         }
+    }
+
+    
+    /// Comienza a reproducir una nota musical al presionar una tecla del modo interpretación.
+    public void StartPerformanceNote(
+        Key key,
+        int midiNote)
+    {
+        if (!Enabled || !IsPerformanceMode)
+        {
+            return;
+        }
+
+        var keyId = (int)key;
+
+        // La nota no debe reiniciarse si el sistema
+        // repite la tecla mientras sigue presionada.
+        if (_synth.IsSustainedNoteActive(keyId))
+        {
+            return;
+        }
+
+        if (!_synth.TryStartSustainedNote(
+            keyId, midiNote))
+        {
+            Enabled = false;
+            return;
+        }
+
+        // El evento sigue disponible para el futuro
+        // visualizador musical del orbe.
+        NotePlayed?.Invoke(
+            this,
+            new PianoNotePlayedEventArgs(midiNote));
+    }
+
+    /// Libera únicamente la nota de esta tecla.
+    public void StopPerformanceNote(Key key)
+    {
+        _synth.ReleaseSustainedNote((int)key);
+    }
+
+    /// Libera todas las notas del modo interpretación.
+    /// Útil cuando el editor pierde el foco.
+    public void ReleaseAllPerformanceNotes()
+    {
+        _synth.ReleaseAllSustainedNotes();
+    }
+
+
+    /// Reproduce una nota del teclado musical.
+    public void PlayPerformanceNote(int midiNote)
+    {
+        if (!Enabled || !IsPerformanceMode)
+        {
+            return;
+        }
+
+        PlayNote(midiNote);
     }
 
     private void PlayNote(int midiNote)
@@ -131,8 +254,7 @@ public sealed class TypingPianoService : ObservableObject, IDisposable
 
         if (!_synth.TryPlay(midiNote))
         {
-            // Si no existe dispositivo de audio disponible,
-            // desactivar el modo sin cerrar Tempo.
+            // Si el audio falla, el IDE sigue funcionando.
             Enabled = false;
             return;
         }

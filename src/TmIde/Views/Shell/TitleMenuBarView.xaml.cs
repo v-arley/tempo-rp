@@ -2,6 +2,7 @@ using System;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using TmIde.ViewModels;
 
 namespace TmIde.Views.Shell;
 
@@ -72,6 +73,32 @@ public partial class TitleMenuBarView : UserControl
     }
 
     private void OnClose(object sender, RoutedEventArgs e) => _hostWindow?.Close();
+
+    
+    /// Aumenta la octava musical desde el menú del piano.
+    private void OnPianoOctaveUp(
+        object sender,
+        RoutedEventArgs e)
+    {
+        if (DataContext is MainWindowViewModel
+            { Piano: { } piano })
+        {
+            piano.ChangeOctave(1);
+        }
+    }
+
+    /// Reduce la octava musical desde el menú del piano.
+    private void OnPianoOctaveDown(
+        object sender,
+        RoutedEventArgs e)
+    {
+        if (DataContext is MainWindowViewModel
+            { Piano: { } piano })
+        {
+            piano.ChangeOctave(-1);
+        }
+    }
+
 
     private void UpdateMaximizeGlyph()
     {

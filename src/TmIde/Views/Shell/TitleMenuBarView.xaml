@@ -275,13 +275,51 @@
                 <!-- Toggle musical: No se muestra en ventanas auxiliares porque el StackPanel de menús se oculta con ShowMenus=False. -->
                 <ToggleButton
                     IsChecked="{Binding Piano.Enabled, Mode=TwoWay}"
-                    ToolTip="Activar o desactivar el piano al escribir"
+                    ToolTip="Clic: activar/desactivar sonido. Clic derecho: elegir modo y octava."
                     Height="23"
                     Margin="4,0,0,0"
                     Padding="4,2"
                     VerticalAlignment="Center"
                     Focusable="False"
                     Cursor="Hand">
+
+                    
+                    <!-- Opciones musicales con clic derecho -->
+                    <ToggleButton.ContextMenu>
+                        <ContextMenu
+                            DataContext="{Binding PlacementTarget.DataContext,
+                                                RelativeSource={RelativeSource Self}}">
+
+                            <MenuItem
+                                Header="Modo interpretación (sin escribir código)"
+                                IsCheckable="True"
+                                IsChecked="{Binding Piano.IsPerformanceMode,
+                                                    Mode=TwoWay,
+                                                    UpdateSourceTrigger=PropertyChanged}" />
+
+                            <Separator />
+
+                            <MenuItem
+                                Header="{Binding Piano.OctaveLabel}"
+                                IsEnabled="False" />
+
+                            <MenuItem
+                                Header="Subir octava (X)"
+                                Click="OnPianoOctaveUp" />
+
+                            <MenuItem
+                                Header="Bajar octava (Z)"
+                                Click="OnPianoOctaveDown" />
+
+                            <Separator />
+
+                            <MenuItem
+                                Header="En modo interpretación: Esc vuelve a escritura"
+                                IsEnabled="False" />
+
+                        </ContextMenu>
+                    </ToggleButton.ContextMenu>
+
 
                     <ToggleButton.Template>
                         <ControlTemplate TargetType="ToggleButton">
@@ -299,7 +337,7 @@
                                     VerticalAlignment="Center">
 
                                     <TextBlock
-                                        Text="♫ PIANO"
+                                        Text="{Binding Piano.ToggleLabel}"
                                         FontFamily="{DynamicResource CodeFontFamily}"
                                         FontSize="{DynamicResource FontSizeSmall}"
                                         FontWeight="Medium"
