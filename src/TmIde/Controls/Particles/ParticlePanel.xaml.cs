@@ -68,6 +68,31 @@ public partial class ParticlePanel : UserControl
             _simulation.Pulse(intensity);
         }
 
+        
+        // Procesar los eventos musicales del teclado.
+        // No modifica Mood ni las ráfagas de pulse.
+        foreach (var musicalEvent in panel.TakeMusicalEvents())
+        {
+            switch (musicalEvent.Kind)
+            {
+                case MusicalVisualEventKind.Started:
+                    _simulation.MusicalNoteOn(
+                        musicalEvent.MidiNote,
+                        musicalEvent.Sustained);
+                    break;
+
+                case MusicalVisualEventKind.Released:
+                    _simulation.MusicalNoteOff(
+                        musicalEvent.MidiNote);
+                    break;
+
+                case MusicalVisualEventKind.Cleared:
+                    _simulation.StopMusicalNotes();
+                    break;
+            }
+        }
+
+
         _simulation.Advance(seconds);
         _canvas.Background = StageBackground();
         DotRenderer.Render(_simulation.Points(), _canvas, _simulation.Palette);

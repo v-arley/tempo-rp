@@ -27,6 +27,9 @@ public sealed class ParticleSimulation
     public const int MaxSparks = 900;
     public const int MaxWaitingBursts = 64;
 
+    // Límite independiente para las ondas musicales.
+    public const int MaxMusicalWaves = 16;
+
     // La nube se ve un poco desde arriba y gira despacio sobre sí misma.
     private const float Tilt = 0.35f;
     private const float SpinPerSecond = 0.2f;
@@ -37,6 +40,9 @@ public sealed class ParticleSimulation
     private readonly MoodMixer _mixer = new();
     private readonly Random _random;
     private List<Spark> _sparks = [];
+
+    // Animaciones musicales independientes de los diagnósticos.
+    private readonly List<MusicalWave> _musicalWaves = [];
 
     public ParticleSimulation(int pointCount = DefaultPointCount, Random? random = null)
     {
@@ -61,6 +67,58 @@ public sealed class ParticleSimulation
 
     public int SparkCount => _sparks.Count;
 
+    public int ActiveMusicalWaves => _musicalWaves.Count;
+
+    
+    /// Crea una onda musical inmediatamente, sin esperar al siguiente pulso del BeatClock.
+    public void MusicalNoteOn(
+        int midiNote,
+        bool sustained)
+    {
+        if (midiNote is < 0 or > 127)
+        {
+            return;
+        }
+
+        // No duplicar una nota que ya está sostenida.
+        if (sustained &&
+            _musicalWaves.Any(wave =>
+                wave.MidiNote == midiNote &&
+                wave.IsHeld))
+        {
+            return;
+        }
+
+        // Evitar acumulaciones si el usuario escribe o toca muchas notas rápidamente.
+        if (_musicalWaves.Count >= MaxMusicalWaves)
+        {
+            _musicalWaves.RemoveAt(0);
+        }
+
+        _musicalWaves.Add(
+            new MusicalWave(midiNote, sustained));
+    }
+
+    /// Comienza a desvanecer una nota sostenida.
+    public void MusicalNoteOff(int midiNote)
+    {
+        foreach (var wave in _musicalWaves)
+        {
+            if (wave.MidiNote == midiNote &&
+                wave.IsHeld)
+            {
+                wave.Release();
+            }
+        }
+    }
+
+    /// Elimina las ondas musicales, pero conserva los estados de error, advertencia y pulse.
+    public void StopMusicalNotes()
+    {
+        _musicalWaves.Clear();
+    }
+
+
     /// <summary>Encola una ráfaga de intensidad (0, 100]; sonará en la siguiente corchea.</summary>
     public void Pulse(double intensity)
     {
@@ -75,6 +133,14 @@ public sealed class ParticleSimulation
         var eighthNotes = _clock.Advance(seconds, TempoBpm);
         _mixer.Advance((float)seconds);
 
+        // Avanzar las ondas musicales y retirar las terminadas.
+        foreach (var wave in _musicalWaves)
+        {
+            wave.Advance((float)seconds);
+        }
+
+        _musicalWaves.RemoveAll(wave => !wave.IsAlive);
+
         _sparks = _sparks
             .Select(spark => spark.After((float)seconds))
             .Where(spark => spark.IsAlive)
@@ -86,16 +152,61 @@ public sealed class ParticleSimulation
         }
     }
 
-    /// <summary>Posiciones de todas las partículas en este instante, listas para dibujar.</summary>
+   
+    /// Posiciones de las partículas.
+    /// La forma final combina:
+    /// 1. El estado del código (MoodMixer).
+    /// 2. Las ondas musicales temporales.
+    /// 3. Las chispas originales de pulse.
     public IEnumerable<Vector3> Points()
     {
         var seconds = _clock.Seconds;
-        var view = Matrix4x4.CreateRotationY(seconds * SpinPerSecond) * Matrix4x4.CreateRotationX(Tilt);
+
+        var view =
+            Matrix4x4.CreateRotationY(
+                seconds * SpinPerSecond) *
+            Matrix4x4.CreateRotationX(Tilt);
 
         return _surface
-            .Select(direction => Vector3.Transform(direction * _mixer.RadiusAt(direction, seconds, _random), view))
-            .Concat(_sparks.Select(spark => spark.Position));
+            .Select(direction =>
+            {
+                // FORMA ORIGINAL:
+                // errores, advertencias o estado correcto.
+                var originalRadius = _mixer.RadiusAt(
+                    direction,
+                    seconds,
+                    _random);
+
+                // CAPA MUSICAL:
+                // ondas adicionales generadas por las notas.
+                var musicalDisplacement = 0f;
+
+                foreach (var wave in _musicalWaves)
+                {
+                    musicalDisplacement +=
+                        wave.HeightAt(direction);
+                }
+
+                // Evitar deformaciones excesivas al tocar
+                // acordes o escribir muy rápidamente.
+                musicalDisplacement = Math.Clamp(
+                    musicalDisplacement,
+                    -0.22f,
+                    0.22f);
+
+                // Combinar, no sustituir.
+                var finalRadius =
+                    originalRadius + musicalDisplacement;
+
+                return Vector3.Transform(
+                    direction * finalRadius,
+                    view);
+            })
+            // Las chispas de pulse siguen dibujándose.
+            .Concat(_sparks.Select(
+                spark => spark.Position));
     }
+
 
     // Número de chispas proporcional a la intensidad (0 a 100); siempre al menos una.
     // Salen del centro por direcciones de la propia esfera y la atraviesan.

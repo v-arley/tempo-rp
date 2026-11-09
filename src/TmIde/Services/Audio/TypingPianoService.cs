@@ -1,8 +1,8 @@
-
 using System;
 using CommunityToolkit.Mvvm.ComponentModel;
 using TmIde.Services.Settings;
 using System.Windows.Input;
+using System.Collections.Generic;
 
 namespace TmIde.Services.Audio;
 
@@ -30,6 +30,9 @@ public sealed class TypingPianoService : ObservableObject, IDisposable
 {
     private readonly IUserSettingsStore _settings;
     private readonly PianoSynth _synth = new();
+
+    // Permite saber qué nota liberar aunque cambie la octava.
+    private readonly Dictionary<Key, int> _activePerformanceNotes = new();
 
     private bool _enabled;
     private bool _isPerformanceMode;
@@ -75,15 +78,20 @@ public sealed class TypingPianoService : ObservableObject, IDisposable
 
             if (!value)
             {
+                _activePerformanceNotes.Clear();
+
                 _synth.Stop();
+
+                // Apagar también la animación musical.
+                NotesStopped?.Invoke(
+                    this,
+                    EventArgs.Empty);
             }
         }
     }
 
-    /// <summary>
     /// False: notas al escribir.
     /// True: teclado convertido en instrumento.
-    /// </summary>
     public bool IsPerformanceMode
     {
         get => _isPerformanceMode;
@@ -97,6 +105,9 @@ public sealed class TypingPianoService : ObservableObject, IDisposable
 
             // Detener sonidos previos al cambiar de modo.
             _synth.Stop();
+
+            _activePerformanceNotes.Clear();
+            NotesStopped?.Invoke(this, EventArgs.Empty);
 
             OnPropertyChanged(nameof(ToggleLabel));
 
@@ -146,6 +157,12 @@ public sealed class TypingPianoService : ObservableObject, IDisposable
 
     public event EventHandler<PianoNotePlayedEventArgs>? NotePlayed;
 
+    /// Una nota sostenida acaba de liberarse.
+    public event EventHandler<PianoNotePlayedEventArgs>? NoteReleased;
+
+    /// Todas las notas deben dejar de afectar al orbe.
+    public event EventHandler? NotesStopped;
+
     public void ChangeOctave(int difference)
     {
         Octave += difference;
@@ -187,7 +204,8 @@ public sealed class TypingPianoService : ObservableObject, IDisposable
     }
 
     
-    /// Comienza a reproducir una nota musical al presionar una tecla del modo interpretación.
+    
+    /// Inicia una nota sostenida y avisa al orbe.
     public void StartPerformanceNote(
         Key key,
         int midiNote)
@@ -199,38 +217,56 @@ public sealed class TypingPianoService : ObservableObject, IDisposable
 
         var keyId = (int)key;
 
-        // La nota no debe reiniciarse si el sistema
-        // repite la tecla mientras sigue presionada.
-        if (_synth.IsSustainedNoteActive(keyId))
+        // Evitar notas duplicadas por la repetición del teclado.
+        if (_activePerformanceNotes.ContainsKey(key) ||
+            _synth.IsSustainedNoteActive(keyId))
         {
             return;
         }
 
         if (!_synth.TryStartSustainedNote(
-            keyId, midiNote))
+            keyId,
+            midiNote))
         {
             Enabled = false;
             return;
         }
 
-        // El evento sigue disponible para el futuro
-        // visualizador musical del orbe.
+        // Recordar qué nota corresponde a esta tecla.
+        _activePerformanceNotes[key] = midiNote;
+
+        // Avisar del inicio de la nota musical.
         NotePlayed?.Invoke(
             this,
             new PianoNotePlayedEventArgs(midiNote));
     }
 
-    /// Libera únicamente la nota de esta tecla.
+
+    /// Libera la nota y comunica al orbe su finalización.
     public void StopPerformanceNote(Key key)
     {
         _synth.ReleaseSustainedNote((int)key);
+
+        if (_activePerformanceNotes.Remove(
+            key,
+            out var midiNote))
+        {
+            NoteReleased?.Invoke(
+                this,
+                new PianoNotePlayedEventArgs(midiNote));
+        }
     }
 
-    /// Libera todas las notas del modo interpretación.
-    /// Útil cuando el editor pierde el foco.
+    /// Libera todas las notas sostenidas y las animaciones musicales correspondientes.
     public void ReleaseAllPerformanceNotes()
     {
         _synth.ReleaseAllSustainedNotes();
+
+        _activePerformanceNotes.Clear();
+
+        NotesStopped?.Invoke(
+            this,
+            EventArgs.Empty);
     }
 
 
