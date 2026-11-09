@@ -1,6 +1,7 @@
 using Tempo.Language.Binding;
 using Tempo.Language.Diagnostics;
 using Tempo.Language.Evaluation;
+using Tempo.Language.Outline;
 using Tempo.Language.Projects;
 using Tempo.Language.Syntax;
 
@@ -99,6 +100,18 @@ public sealed class Compilation
         SyntaxTree file = Project.FileAt(path);
 
         return file is null ? Enumerable.Empty<Diagnostic>() : DiagnosticsOf(file);
+    }
+
+    /// <summary>
+    /// Funciones y nombres locales del archivo con esa ruta, para el
+    /// autocompletado de un editor. <c>null</c> si el archivo no forma parte del
+    /// proyecto o no se pudo construir su AST (error léxico o sintáctico).
+    /// </summary>
+    public FileOutline OutlineOf(string path)
+    {
+        SyntaxTree file = Project.FileAt(path);
+
+        return file is { IsParsed: true } ? FileOutline.Of(file, _imports.VisibleFrom(file)) : null;
     }
 
     /// <summary>
