@@ -14,7 +14,7 @@ public partial class FileExplorerView : UserControl
         InitializeComponent();
     }
 
-    private void Tree_SelectedItemChanged(
+    private void OnTreeSelectedItemChanged(
         object sender,
         RoutedPropertyChangedEventArgs<object> e)
     {
@@ -25,7 +25,7 @@ public partial class FileExplorerView : UserControl
         }
     }
 
-    private void Tree_PreviewMouseRightButtonDown(
+    private void OnTreePreviewMouseRightButtonDown(
         object sender,
         MouseButtonEventArgs e)
     {
@@ -47,7 +47,7 @@ public partial class FileExplorerView : UserControl
         }
     }
 
-    private void Tree_PreviewKeyDown(
+    private void OnTreePreviewKeyDown(
         object sender,
         KeyEventArgs e)
     {

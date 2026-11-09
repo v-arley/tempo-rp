@@ -12,11 +12,13 @@
     <UserControl.Resources>
         <conv:ResourceKeyToGeometryConverter x:Key="KeyToGeometry" />
 
-        <SolidColorBrush x:Key="ExplorerItemForegroundBrush" Color="#E6EEF8" />
+        <!-- Selección: azul con texto blanco en ambos temas. El texto en reposo
+            (ExplorerItemForegroundBrush, ExplorerMainFileForegroundBrush) sale del tema. -->
         <SolidColorBrush x:Key="ExplorerItemSelectedForegroundBrush" Color="#FFFFFF" />
         <SolidColorBrush x:Key="ExplorerItemSelectedBackgroundBrush" Color="#2B84D6" />
-        <SolidColorBrush x:Key="ExplorerMainFileForegroundBrush" Color="#8ED8FF" />
         <SolidColorBrush x:Key="ExplorerMainFileSelectedForegroundBrush" Color="#F4FCFF" />
+        <!-- Acento de la cabecera: título y acciones (nuevo archivo / nueva carpeta) -->
+        <SolidColorBrush x:Key="ExplorerHeaderAccentBrush" Color="#BF3B2C" />
 
         <Style x:Key="ExplorerTreeViewItemStyle" TargetType="TreeViewItem">
             <Setter Property="FocusVisualStyle" Value="{x:Null}" />
@@ -50,58 +52,26 @@
                 </Setter.Value>
             </Setter>
         </Style>
-
-        <!-- Caja de búsqueda: fondo oscuro en ambos temas, por lo que su texto y
-            su cursor usan un gris claro fijo. Realce de foco discreto. -->
-        <Style x:Key="ExplorerSearchBox" TargetType="TextBox">
-            <Setter Property="Foreground" Value="#C7CBD2" />
-            <Setter Property="CaretBrush" Value="#C7CBD2" />
-            <Setter Property="Background" Value="{DynamicResource InputBackgroundBrush}" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="BorderBrush" Value="{DynamicResource InputBorderBrush}" />
-            <Setter Property="Padding" Value="26,4,8,4" />
-            <Setter Property="FontSize" Value="{DynamicResource FontSizeSmall}" />
-            <Setter Property="SelectionBrush" Value="{DynamicResource AccentBrush}" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="TextBox">
-                        <Border x:Name="Chrome"
-                                Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                Padding="{TemplateBinding Padding}">
-                            <ScrollViewer x:Name="PART_ContentHost" />
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsKeyboardFocusWithin" Value="True">
-                                <Setter TargetName="Chrome" Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
     </UserControl.Resources>
 
     <!-- Fondo del panel (área del árbol) -->
-    <Border Background="{DynamicResource PanelOverlayBrush}"
-            BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,0,1,0">
+    <Border Background="{DynamicResource ExplorerBackgroundBrush}"
+            BorderBrush="{DynamicResource ExplorerSplitterBrush}" BorderThickness="0,0,1,0">
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
 
-            <!-- Cabecera: título, acciones y búsqueda -->
-            <Border Grid.Row="0" Background="{DynamicResource PanelHeaderBrush}" Padding="10,6"
-                    BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,0,0,1">
+            <!-- Cabecera: título y acciones -->
+            <Border Grid.Row="0" Background="{DynamicResource PanelHeaderBrush}" Padding="10,6">
                 <StackPanel>
                     <!-- Título + acciones -->
                     <Grid>
                         <TextBlock Text="{Binding HeaderTitle}"
                                     VerticalAlignment="Center"
                                     FontSize="{DynamicResource FontSizeSmall}" FontWeight="SemiBold"
-                                    Foreground="{DynamicResource PrimaryForegroundBrush}" />
+                                    Foreground="{StaticResource ExplorerHeaderAccentBrush}" />
                         <!-- Acciones del explorador -->
                         <StackPanel Orientation="Horizontal"
                                     HorizontalAlignment="Right">
@@ -116,7 +86,7 @@
                                     Width="13"
                                     Height="13"
                                     Data="{StaticResource IconFile}"
-                                    Fill="{DynamicResource PrimaryForegroundBrush}" />
+                                    Fill="{StaticResource ExplorerHeaderAccentBrush}" />
                             </Button>
 
                             <Button
@@ -129,35 +99,10 @@
                                     Width="13"
                                     Height="13"
                                     Data="{StaticResource IconFolder}"
-                                    Fill="{DynamicResource PrimaryForegroundBrush}" />
+                                    Fill="{StaticResource ExplorerHeaderAccentBrush}" />
                             </Button>
 
                         </StackPanel>
-                    </Grid>
-
-                    <!-- Búsqueda -->
-                    <Grid Margin="0,6,0,0">
-                        <TextBox Style="{StaticResource ExplorerSearchBox}"
-                                    Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" />
-                        <!-- Lupa y placeholder sobre el campo oscuro: gris claro fijo -->
-                        <Path Style="{StaticResource IconPath}" Data="{StaticResource IconSearch}"
-                                Width="12" Height="12" Margin="8,0,0,0"
-                                HorizontalAlignment="Left" VerticalAlignment="Center"
-                                Fill="#8A8F9B" IsHitTestVisible="False" />
-                        <TextBlock Text="SEARCH FILE" Margin="26,0,0,0"
-                                    VerticalAlignment="Center" IsHitTestVisible="False"
-                                    Foreground="#8A8F9B" FontSize="{DynamicResource FontSizeSmall}">
-                            <TextBlock.Style>
-                                <Style TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
-                                    <Setter Property="Visibility" Value="Collapsed" />
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding SearchText}" Value="">
-                                            <Setter Property="Visibility" Value="Visible" />
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </TextBlock.Style>
-                        </TextBlock>
                     </Grid>
                 </StackPanel>
             </Border>
@@ -165,9 +110,9 @@
             <!-- Árbol de archivos del proyecto -->
             <TreeView   Grid.Row="1"
                         ItemsSource="{Binding Roots}"
-                        SelectedItemChanged="Tree_SelectedItemChanged"
-                        PreviewMouseRightButtonDown="Tree_PreviewMouseRightButtonDown"
-                        PreviewKeyDown="Tree_PreviewKeyDown"
+                        SelectedItemChanged="OnTreeSelectedItemChanged"
+                        PreviewMouseRightButtonDown="OnTreePreviewMouseRightButtonDown"
+                        PreviewKeyDown="OnTreePreviewKeyDown"
                         BorderThickness="0"
                         Background="Transparent"
                         Padding="8,10">
@@ -418,7 +363,7 @@
 
                                                 <Setter
                                                     Property="Fill"
-                                                    Value="{StaticResource ExplorerItemForegroundBrush}" />
+                                                    Value="{DynamicResource ExplorerItemForegroundBrush}" />
 
                                                 <Style.Triggers>
 
@@ -429,7 +374,7 @@
 
                                                         <Setter
                                                             Property="Fill"
-                                                             Value="{StaticResource ExplorerMainFileForegroundBrush}" />
+                                                             Value="{DynamicResource ExplorerMainFileForegroundBrush}" />
 
                                                     </DataTrigger>
 
@@ -466,7 +411,7 @@
 
                                                 <Setter
                                                     Property="Foreground"
-                                                    Value="{StaticResource ExplorerItemForegroundBrush}" />
+                                                    Value="{DynamicResource ExplorerItemForegroundBrush}" />
 
                                                 <Style.Triggers>
 
@@ -481,7 +426,7 @@
 
                                                         <Setter
                                                             Property="Foreground"
-                                                            Value="{StaticResource ExplorerMainFileForegroundBrush}" />
+                                                            Value="{DynamicResource ExplorerMainFileForegroundBrush}" />
 
                                                     </DataTrigger>
 
@@ -525,7 +470,7 @@
 
                                                 <Setter
                                                     Property="Foreground"
-                                                    Value="{StaticResource ExplorerMainFileForegroundBrush}" />
+                                                    Value="{DynamicResource ExplorerMainFileForegroundBrush}" />
 
                                                 <Style.Triggers>
 

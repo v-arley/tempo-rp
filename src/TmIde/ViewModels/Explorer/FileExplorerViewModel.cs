@@ -33,9 +33,6 @@ public sealed partial class FileExplorerViewModel : ViewModelBase
     private string? _rootDirectory;
 
     [ObservableProperty]
-    private string _searchText = string.Empty;
-
-    [ObservableProperty]
     private FileNodeViewModel? _selectedNode;
 
     public FileExplorerViewModel(
@@ -60,7 +57,7 @@ public sealed partial class FileExplorerViewModel : ViewModelBase
 
     public ObservableCollection<FileNodeViewModel> Roots { get; }
 
-    public string HeaderTitle => "EXPLORE";
+    public string HeaderTitle => "EXPLORADOR";
 
     public void Load(string rootDirectory)
     {
@@ -74,8 +71,6 @@ public sealed partial class FileExplorerViewModel : ViewModelBase
 
         Roots.Clear();
         Roots.Add(root);
-
-        root.ApplyFilter(SearchText);
     }
 
     public void Refresh(string? selectPath = null)
@@ -109,7 +104,7 @@ public sealed partial class FileExplorerViewModel : ViewModelBase
 
             if (newSelection is not null)
             {
-                ExpandToNode(newRoot, selectedPath);
+                TryExpandToNode(newRoot, selectedPath);
             }
         }
 
@@ -123,8 +118,6 @@ public sealed partial class FileExplorerViewModel : ViewModelBase
             SelectedNode = newSelection;
             newSelection.IsSelected = true;
         }
-
-        newRoot.ApplyFilter(SearchText);
     }
 
     [RelayCommand]
@@ -143,8 +136,7 @@ public sealed partial class FileExplorerViewModel : ViewModelBase
     {
         if (_rootDirectory is null)
         {
-            _output.WriteLine(
-                "EXPLORE → Abre un proyecto primero.");
+            Report("Abre un proyecto primero.");
             return;
         }
 
@@ -174,13 +166,11 @@ public sealed partial class FileExplorerViewModel : ViewModelBase
                     targetDirectory,
                     name);
 
-            SearchText = string.Empty;
             Refresh(createdPath);
 
-            _output.WriteLine(
-                isDirectory
-                    ? $"EXPLORE → Carpeta creada: {createdPath}"
-                    : $"EXPLORE → Archivo creado: {createdPath}");
+            Report(isDirectory
+                ? $"Carpeta creada: {createdPath}"
+                : $"Archivo creado: {createdPath}");
 
             if (!isDirectory)
             {
@@ -194,8 +184,7 @@ public sealed partial class FileExplorerViewModel : ViewModelBase
             or IOException
             or UnauthorizedAccessException)
         {
-            _output.WriteLine(
-                $"EXPLORE → No se pudo crear: {exception.Message}");
+            Report($"No se pudo crear: {exception.Message}");
         }
     }
 
@@ -316,7 +305,7 @@ public sealed partial class FileExplorerViewModel : ViewModelBase
         return null;
     }
 
-    private static bool ExpandToNode(
+    private static bool TryExpandToNode(
         FileNodeViewModel node,
         string path)
     {
@@ -330,7 +319,7 @@ public sealed partial class FileExplorerViewModel : ViewModelBase
 
         foreach (var child in node.Children)
         {
-            if (ExpandToNode(child, path))
+            if (TryExpandToNode(child, path))
             {
                 node.IsExpanded = true;
                 return true;
@@ -358,8 +347,7 @@ public sealed partial class FileExplorerViewModel : ViewModelBase
             _rootDirectory,
             StringComparison.OrdinalIgnoreCase))
         {
-            _output.WriteLine(
-                "EXPLORE → No se puede renombrar la raíz del proyecto.");
+            Report("No se puede renombrar la raíz del proyecto.");
             return;
         }
 
@@ -409,11 +397,9 @@ public sealed partial class FileExplorerViewModel : ViewModelBase
 
             _editorHost.ApplyPathRename(oldPath, newPath);
 
-            SearchText = string.Empty;
             Refresh(newPath);
 
-            _output.WriteLine(
-                $"EXPLORE → Renombrado correctamente: {newName}");
+            Report($"Renombrado correctamente: {newName}");
         }
         catch (Exception exception) when (
             exception is ArgumentException
@@ -421,8 +407,7 @@ public sealed partial class FileExplorerViewModel : ViewModelBase
             or IOException
             or UnauthorizedAccessException)
         {
-            _output.WriteLine(
-                $"EXPLORE → No se pudo renombrar: {exception.Message}");
+            Report($"No se pudo renombrar: {exception.Message}");
         }
     }
 
@@ -444,8 +429,7 @@ public sealed partial class FileExplorerViewModel : ViewModelBase
             _rootDirectory,
             StringComparison.OrdinalIgnoreCase))
         {
-            _output.WriteLine(
-                "EXPLORE → No se puede eliminar la raíz del proyecto.");
+            Report("No se puede eliminar la raíz del proyecto.");
             return;
         }
 
@@ -486,8 +470,7 @@ public sealed partial class FileExplorerViewModel : ViewModelBase
 
             Refresh(parentDirectory);
 
-            _output.WriteLine(
-                $"EXPLORE → Eliminado correctamente: {node.Name}");
+            Report($"Eliminado correctamente: {node.Name}");
         }
         catch (Exception exception) when (
             exception is ArgumentException
@@ -495,16 +478,10 @@ public sealed partial class FileExplorerViewModel : ViewModelBase
             or IOException
             or UnauthorizedAccessException)
         {
-            _output.WriteLine(
-                $"EXPLORE → No se pudo eliminar: {exception.Message}");
+            Report($"No se pudo eliminar: {exception.Message}");
         }
     }
 
-    partial void OnSearchTextChanged(string value)
-    {
-        foreach (var root in Roots)
-        {
-            root.ApplyFilter(value);
-        }
-    }
+    /// <summary>Escribe en el panel de salida un mensaje del explorador, precedido de su título.</summary>
+    private void Report(string message) => _output.WriteLine($"{HeaderTitle} → {message}");
 }
