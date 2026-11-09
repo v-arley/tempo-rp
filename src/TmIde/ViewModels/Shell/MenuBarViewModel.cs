@@ -1,8 +1,10 @@
+using System;
 using System.Collections.ObjectModel;
 
 using TmIde.Services;
 using TmIde.Services.Navigation;
 using TmIde.ViewModels;
+using TmIde.ViewModels.Editor;
 using TmIde.ViewModels.Explorer;
 using CommunityToolkit.Mvvm.Input;
 
@@ -10,9 +12,10 @@ namespace TmIde.ViewModels.Shell;
 
 /// <summary>
 /// Barra de menú del título. Las entradas del proyecto (Inicio, Guardar,
-/// Compilar, Ejecutar, Detener) usan <see cref="ProjectCommands"/>; Salir y el
-/// cambio de tema (menú VER) también funcionan; el resto son stubs que escriben
-/// una línea en el panel inferior.
+/// Compilar, Ejecutar, Detener) usan <see cref="ProjectCommands"/>; las de
+/// EDITAR piden la acción al editor visible (<see cref="EditorHostViewModel"/>);
+/// VER ofrece una entrada por cada <see cref="AppTheme"/>; Salir cierra el IDE;
+/// Acerca de escribe una línea en el panel inferior.
 /// </summary>
 
 public sealed partial class MenuBarViewModel : ViewModelBase
@@ -23,9 +26,10 @@ public sealed partial class MenuBarViewModel : ViewModelBase
     private readonly IOutputLog _output;
     private readonly FileExplorerViewModel _explorer;
     private readonly ILanguageReferenceService? _languageReference;
+    private readonly EditorHostViewModel? _editorHost;
 
     public MenuBarViewModel(IThemeService themeService, IFlowService flow, ProjectCommands commands, IOutputLog output, FileExplorerViewModel explorer, 
-        ILanguageReferenceService? languageReference = null)
+        ILanguageReferenceService? languageReference = null, EditorHostViewModel? editorHost = null)
     {
         _themeService = themeService;
         _flow = flow;
@@ -33,15 +37,17 @@ public sealed partial class MenuBarViewModel : ViewModelBase
         _output = output;
         _explorer = explorer;
         _languageReference = languageReference;
+        _editorHost = editorHost;
 
         ShowLanguageReferenceCommand = new RelayCommand(() => _languageReference?.Show());
 
         Roots = new ObservableCollection<MenuEntryViewModel>
         {
             BuildFileMenu(),
-            BuildToolsMenu(),
+            BuildEditMenu(),
+            BuildRunMenu(),
             BuildViewMenu(),
-            BuildOtherMenu(),
+            BuildHelpMenu(),
         };
     }
 
@@ -53,12 +59,31 @@ public sealed partial class MenuBarViewModel : ViewModelBase
         var menu = new MenuEntryViewModel("MENU");
         menu.Add(new MenuEntryViewModel("Inicio", _commands.ShowStart));
         menu.Add(new MenuEntryViewModel("Nuevo archivo", () => _explorer.CreateFileCommand.Execute(null)));
-        menu.Add(new MenuEntryViewModel("Guardar (Ctrl+S)", _commands.Save));
+        menu.Add(new MenuEntryViewModel("Guardar", _commands.Save, "Ctrl+S"));
         menu.Add(new MenuEntryViewModel("Salir", _flow.Shutdown));
         return menu;
     }
 
-    private MenuEntryViewModel BuildToolsMenu()
+    // Acciones de edición sobre el documento visible. Los atajos los atiende el
+    // propio editor; el menú los hace descubribles y pide la misma acción.
+    private MenuEntryViewModel BuildEditMenu()
+    {
+        var menu = new MenuEntryViewModel("EDITAR");
+        menu.Add(new MenuEntryViewModel("Buscar", () => RequestEditorAction(EditorAction.Find), "Ctrl+F"));
+        menu.Add(new MenuEntryViewModel("Reemplazar", () => RequestEditorAction(EditorAction.Replace), "Ctrl+H"));
+        menu.Add(new MenuEntryViewModel("Autocompletar", () => RequestEditorAction(EditorAction.Complete), "Ctrl+Espacio"));
+        return menu;
+    }
+
+    private void RequestEditorAction(EditorAction action)
+    {
+        if (_editorHost?.TryRequestAction(action) != true)
+        {
+            _output.WriteLine("EDITAR → Abre un archivo primero.");
+        }
+    }
+
+    private MenuEntryViewModel BuildRunMenu()
     {
         var menu = new MenuEntryViewModel("EJECUCIÓN");
         menu.Add(new MenuEntryViewModel("Compilar", _commands.Compile));
@@ -67,22 +92,29 @@ public sealed partial class MenuBarViewModel : ViewModelBase
         return menu;
     }
 
+    // Una entrada por tema, generada desde AppTheme: un tema nuevo aparece aquí solo.
     private MenuEntryViewModel BuildViewMenu()
     {
         var menu = new MenuEntryViewModel("VER");
-        menu.Add(new MenuEntryViewModel("Alternar tema claro / oscuro", () =>
+        foreach (var theme in Enum.GetValues<AppTheme>())
         {
-            _themeService.Toggle();
-            _output.WriteLine($"VER → Tema activo: {_themeService.Current}");
-        }));
+            menu.Add(new MenuEntryViewModel($"Tema {theme.DisplayName().ToLowerInvariant()}", () => ApplyTheme(theme)));
+        }
+
         return menu;
     }
 
-    private MenuEntryViewModel BuildOtherMenu()
+    private void ApplyTheme(AppTheme theme)
+    {
+        _themeService.Apply(theme);
+        _output.WriteLine($"VER → Tema activo: {theme.DisplayName()}");
+    }
+
+    private MenuEntryViewModel BuildHelpMenu()
     {
         var menu = new MenuEntryViewModel("AYUDA");
 
-        menu.Add(new MenuEntryViewModel("Referencia del lenguaje (F1)", ShowLanguageReferenceCommand));
+        menu.Add(new MenuEntryViewModel("Referencia del lenguaje", ShowLanguageReferenceCommand, "F1"));
 
         menu.Add(new MenuEntryViewModel("Acerca de TmIde", () => _output.WriteLine("TmIde — Entorno de desarrollo del lenguaje Tempo")));
 

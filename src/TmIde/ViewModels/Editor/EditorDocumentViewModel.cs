@@ -10,6 +10,8 @@ using CommunityToolkit.Mvvm.Input;
 
 using ICSharpCode.AvalonEdit.Document;
 
+using Tempo.Language.Outline;
+
 using TmIde.Services.Analysis;
 using TmIde.ViewModels;
 
@@ -46,6 +48,14 @@ public sealed partial class EditorDocumentViewModel : ViewModelBase
     /// <summary>Resultado del último análisis; el editor lo subraya.</summary>
     [ObservableProperty]
     private IReadOnlyList<EditorDiagnostic> _diagnostics = [];
+
+    /// <summary>
+    /// Funciones y nombres del último análisis que pudo construir el archivo;
+    /// lo usa el autocompletado. Mientras el texto tiene un error de sintaxis se
+    /// conserva el anterior: así se sigue sugiriendo mientras se escribe.
+    /// </summary>
+    [ObservableProperty]
+    private FileOutline _outline = FileOutline.Empty;
 
     /// <param name="filePath">Ruta completa del archivo.</param>
     /// <param name="relativePath">Ruta para el breadcrumb, separada por <c>/</c>.</param>
@@ -193,7 +203,8 @@ public sealed partial class EditorDocumentViewModel : ViewModelBase
             var result = await Task.Run(() => analysisService.Analyze(FilePath, openDocuments), token);
             if (!token.IsCancellationRequested)
             {
-                Diagnostics = result;
+                Diagnostics = result.Diagnostics;
+                Outline = result.Outline ?? Outline;
             }
         }
         catch (OperationCanceledException)

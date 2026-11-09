@@ -80,7 +80,7 @@ public static class DesignData
 
     private sealed class NoopCodeAnalysisService : ICodeAnalysisService
     {
-        public IReadOnlyList<EditorDiagnostic> Analyze(string filePath, IReadOnlyDictionary<string, string> openDocuments) => [];
+        public DocumentAnalysis Analyze(string filePath, IReadOnlyDictionary<string, string> openDocuments) => DocumentAnalysis.Empty;
     }
 
     private sealed class NoopThemeService : IThemeService
@@ -92,8 +92,6 @@ public static class DesignData
         }
 
         public void Apply(AppTheme theme) => Current = theme;
-
-        public void Toggle() => Current = Current == AppTheme.Light ? AppTheme.Dark : AppTheme.Light;
     }
 
     private sealed class NoopFlowService : IFlowService

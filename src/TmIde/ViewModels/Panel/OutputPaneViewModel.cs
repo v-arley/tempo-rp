@@ -94,7 +94,7 @@ public sealed class OutputPaneViewModel : BottomPaneViewModel
     /// Activa un diagnóstico a partir de su número
     /// de línea visible en Output.
     /// </summary>
-    public bool ActivateLine(int outputLine)
+    public bool TryActivateLine(int outputLine)
     {
         if (!_diagnosticLocations.TryGetValue(
                 outputLine,

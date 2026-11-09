@@ -39,7 +39,7 @@ public sealed class FileExplorerViewModelTests : IDisposable
 
         analysis
             .Analyze(default!, default!)
-            .ReturnsForAnyArgs([]);
+            .ReturnsForAnyArgs(DocumentAnalysis.Empty);
 
         _editorHost = new EditorHostViewModel(
             analysis,

@@ -166,7 +166,7 @@ public sealed class DiagnosticCategoryClassifierTests
         Assert.True(diagnosticLine > 0);
 
         // El encabezado no debe abrir el editor.
-        Assert.False(output.ActivateLine(headerLine));
+        Assert.False(output.TryActivateLine(headerLine));
 
         DiagnosticNavigationTarget? activated = null;
 
@@ -180,7 +180,7 @@ public sealed class DiagnosticCategoryClassifierTests
         {
             activated = null;
 
-            Assert.True(output.ActivateLine(line));
+            Assert.True(output.TryActivateLine(line));
             Assert.NotNull(activated);
             Assert.Equal(path, activated.FilePath);
             Assert.Equal(4, activated.Line);

@@ -32,20 +32,22 @@ public sealed class CodeAnalysisService : ICodeAnalysisService
         _messenger = messenger;
     }
 
-    public IReadOnlyList<EditorDiagnostic> Analyze(string filePath, IReadOnlyDictionary<string, string> openDocuments)
+    public DocumentAnalysis Analyze(string filePath, IReadOnlyDictionary<string, string> openDocuments)
     {
         try
         {
             var compilation = Compilation.FromPath(ProjectPathOf(filePath), openDocuments);
             _messenger.Send(ProjectAnalyzedMessage.From(compilation));
 
-            return compilation.DiagnosticsOf(filePath).Select(ToEditorDiagnostic).ToList();
+            return new DocumentAnalysis(
+                compilation.DiagnosticsOf(filePath).Select(ToEditorDiagnostic).ToList(),
+                compilation.OutlineOf(filePath));
         }
         catch (Exception)
         {
             // Un fallo interno del compilador no debe tumbar el editor: sin
             // diagnósticos hasta el siguiente cambio de texto.
-            return [];
+            return DocumentAnalysis.Empty;
         }
     }
 

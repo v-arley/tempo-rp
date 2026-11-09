@@ -20,7 +20,7 @@ public sealed class EditorInsertionTests
 
         analysis
             .Analyze(default!, default!)
-            .ReturnsForAnyArgs([]);
+            .ReturnsForAnyArgs(DocumentAnalysis.Empty);
 
         return new EditorHostViewModel(
             analysis,
@@ -32,7 +32,7 @@ public sealed class EditorInsertionTests
     {
         var editor = CreateEditor();
 
-        var result = editor.InsertExampleAtCaret(
+        var result = editor.TryInsertExampleAtCaret(
             "sample numero = 10;");
 
         Assert.False(result);
@@ -57,7 +57,7 @@ public sealed class EditorInsertionTests
         document.CaretLine = 1;
         document.CaretColumn = 2;
 
-        var result = editor.InsertExampleAtCaret("123");
+        var result = editor.TryInsertExampleAtCaret("123");
 
         Assert.True(result);
         Assert.Equal(
@@ -84,7 +84,7 @@ public sealed class EditorInsertionTests
         document.CaretLine = 1;
         document.CaretColumn = 2;
 
-        editor.InsertExampleAtCaret("XYZ");
+        editor.TryInsertExampleAtCaret("XYZ");
 
         Assert.NotNull(editor.NavigationRequest);
 
@@ -111,7 +111,7 @@ public sealed class EditorInsertionTests
 
         editor.OpenDocument(path);
 
-        editor.InsertExampleAtCaret("nuevo");
+        editor.TryInsertExampleAtCaret("nuevo");
 
         Assert.Equal(
             "original",
@@ -135,7 +135,7 @@ public sealed class EditorInsertionTests
 
         editor.OpenDocument(path);
 
-        var result = editor.InsertExampleAtCaret("");
+        var result = editor.TryInsertExampleAtCaret("");
 
         Assert.False(result);
         Assert.Equal(

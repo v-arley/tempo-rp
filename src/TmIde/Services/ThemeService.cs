@@ -33,8 +33,6 @@ public sealed class ThemeService : IThemeService
         _settings.Save(_settings.Load() with { Theme = theme });
     }
 
-    public void Toggle() => Apply(Current == AppTheme.Light ? AppTheme.Dark : AppTheme.Light);
-
     private void ApplyResources(AppTheme theme)
     {
         var app = Application.Current

@@ -48,14 +48,14 @@ public sealed class OutputDiagnosticNavigationTests
             activated = target;
 
         // La primera línea contiene el mensaje COMPILE.
-        Assert.False(output.ActivateLine(1));
+        Assert.False(output.TryActivateLine(1));
 
         // El diagnóstico estándar ocupa cinco líneas.
         for (var line = 2; line <= 6; line++)
         {
             activated = null;
 
-            Assert.True(output.ActivateLine(line));
+            Assert.True(output.TryActivateLine(line));
             Assert.NotNull(activated);
             Assert.Equal(path, activated.FilePath);
             Assert.Equal(4, activated.Line);
@@ -72,8 +72,8 @@ public sealed class OutputDiagnosticNavigationTests
             CreateDiagnostic(),
             null);
 
-        Assert.False(output.ActivateLine(1));
-        Assert.False(output.ActivateLine(2));
+        Assert.False(output.TryActivateLine(1));
+        Assert.False(output.TryActivateLine(2));
     }
 
     [Fact]
@@ -83,7 +83,7 @@ public sealed class OutputDiagnosticNavigationTests
 
         output.AppendLine("Compilación exitosa");
 
-        Assert.False(output.ActivateLine(1));
+        Assert.False(output.TryActivateLine(1));
     }
 
     [Fact]
@@ -95,13 +95,13 @@ public sealed class OutputDiagnosticNavigationTests
             CreateDiagnostic(),
             Path.GetFullPath("principal.tmpr"));
 
-        Assert.True(output.ActivateLine(1));
+        Assert.True(output.TryActivateLine(1));
 
         var originalCount = output.Lines.Count;
 
         output.ClearDiagnosticLinks();
 
-        Assert.False(output.ActivateLine(1));
+        Assert.False(output.TryActivateLine(1));
 
         // El historial visible debe conservarse.
         Assert.Equal(originalCount, output.Lines.Count);
@@ -216,7 +216,7 @@ public sealed class OutputDiagnosticNavigationTests
 
         analysis
             .Analyze(default!, default!)
-            .ReturnsForAnyArgs([]);
+            .ReturnsForAnyArgs(DocumentAnalysis.Empty);
 
         var editor = new EditorHostViewModel(
             analysis,
