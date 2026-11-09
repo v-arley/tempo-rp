@@ -283,13 +283,161 @@
                     Focusable="False"
                     Cursor="Hand">
 
-                    
-                    <!-- Opciones musicales con clic derecho -->
+                            
+                    <!-- Menú contextual del piano -->
                     <ToggleButton.ContextMenu>
+
                         <ContextMenu
                             DataContext="{Binding PlacementTarget.DataContext,
-                                                RelativeSource={RelativeSource Self}}">
+                                                RelativeSource={RelativeSource Self}}"
+                            Background="{DynamicResource SurfaceBackgroundBrush}"
+                            Foreground="{DynamicResource PrimaryForegroundBrush}"
+                            BorderBrush="{DynamicResource DividerBrush}"
+                            BorderThickness="1"
+                            Padding="4">
+                            <ContextMenu.Template>
+                                <ControlTemplate TargetType="{x:Type ContextMenu}">
+                                    <Border
+                                        Background="{TemplateBinding Background}"
+                                        BorderBrush="{TemplateBinding BorderBrush}"
+                                        BorderThickness="{TemplateBinding BorderThickness}"
+                                        Padding="{TemplateBinding Padding}"
+                                        SnapsToDevicePixels="True">
 
+                                        <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Cycle" />
+                                    </Border>
+                                </ControlTemplate>
+                            </ContextMenu.Template>
+
+                            <!-- Colores específicos para las opciones del piano -->                          
+                            <ContextMenu.Resources>
+
+                                <!-- Estilo propio para las opciones del piano -->
+                                <Style TargetType="{x:Type MenuItem}">
+
+                                    <Setter Property="Foreground"
+                                            Value="{DynamicResource PrimaryForegroundBrush}" />
+
+                                    <Setter Property="FontFamily"
+                                            Value="{DynamicResource CodeFontFamily}" />
+
+                                    <Setter Property="FontSize"
+                                            Value="{DynamicResource FontSizeSmall}" />
+
+                                    <Setter Property="Padding"
+                                            Value="8,6" />
+
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+
+                                            <ControlTemplate TargetType="{x:Type MenuItem}">
+
+                                                <!-- Fondo uniforme, sin franja blanca -->
+                                                <Border
+                                                    x:Name="ItemBackground"
+                                                    Background="Transparent"
+                                                    CornerRadius="2"
+                                                    Padding="{TemplateBinding Padding}">
+
+                                                    <Grid>
+
+                                                        <Grid.ColumnDefinitions>
+                                                            <!-- Espacio para la marca -->
+                                                            <ColumnDefinition Width="22" />
+
+                                                            <!-- Texto de la opción -->
+                                                            <ColumnDefinition Width="*" />
+                                                        </Grid.ColumnDefinitions>
+
+                                                        <!-- Marca cuando la opción está activada -->
+                                                        <TextBlock
+                                                            x:Name="CheckMark"
+                                                            Grid.Column="0"
+                                                            Text="✓"
+                                                            FontWeight="Bold"
+                                                            Foreground="{DynamicResource AccentBrush}"
+                                                            VerticalAlignment="Center"
+                                                            Visibility="Collapsed" />
+
+                                                        <!-- Contenido del menú -->
+                                                        <ContentPresenter
+                                                            Grid.Column="1"
+                                                            ContentSource="Header"
+                                                            RecognizesAccessKey="True"
+                                                            VerticalAlignment="Center" />
+
+                                                    </Grid>
+
+                                                </Border>
+
+                                                <ControlTemplate.Triggers>
+
+                                                    <!-- Opción seleccionada -->
+                                                    <Trigger Property="IsChecked"
+                                                            Value="True">
+
+                                                        <Setter
+                                                            TargetName="CheckMark"
+                                                            Property="Visibility"
+                                                            Value="Visible" />
+
+                                                    </Trigger>
+
+                                                    <!-- Mouse sobre una opción -->
+                                                    <Trigger Property="IsHighlighted"
+                                                            Value="True">
+
+                                                        <Setter
+                                                            TargetName="ItemBackground"
+                                                            Property="Background"
+                                                            Value="{DynamicResource HoverBackgroundBrush}" />
+
+                                                    </Trigger>
+
+                                                    <!-- Opciones informativas deshabilitadas -->
+                                                    <Trigger Property="IsEnabled"
+                                                            Value="False">
+
+                                                        <Setter
+                                                            Property="Foreground"
+                                                            Value="{DynamicResource SecondaryForegroundBrush}" />
+
+                                                    </Trigger>
+
+                                                </ControlTemplate.Triggers>
+
+                                            </ControlTemplate>
+
+                                        </Setter.Value>
+                                    </Setter>
+
+                                </Style>
+
+                                <!-- Separadores con el estilo de Tempo -->
+                                <Style TargetType="{x:Type Separator}">
+
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+
+                                            <ControlTemplate TargetType="{x:Type Separator}">
+
+                                                <Border
+                                                    Height="1"
+                                                    Margin="8,5"
+                                                    Background="{DynamicResource SecondaryForegroundBrush}"
+                                                    Opacity="0.4" />
+
+                                            </ControlTemplate>
+
+                                        </Setter.Value>
+                                    </Setter>
+
+                                </Style>
+
+                            </ContextMenu.Resources>
+
+
+                            <!-- Activar modo interpretación -->
                             <MenuItem
                                 Header="Modo interpretación (sin escribir código)"
                                 IsCheckable="True"
@@ -299,10 +447,12 @@
 
                             <Separator />
 
+                            <!-- Octava actual -->
                             <MenuItem
                                 Header="{Binding Piano.OctaveLabel}"
                                 IsEnabled="False" />
 
+                            <!-- Controles de octava -->
                             <MenuItem
                                 Header="Subir octava (X)"
                                 Click="OnPianoOctaveUp" />
@@ -313,12 +463,15 @@
 
                             <Separator />
 
+                            <!-- Instrucciones -->
                             <MenuItem
                                 Header="En modo interpretación: Esc vuelve a escritura"
                                 IsEnabled="False" />
 
                         </ContextMenu>
+
                     </ToggleButton.ContextMenu>
+
 
 
                     <ToggleButton.Template>
