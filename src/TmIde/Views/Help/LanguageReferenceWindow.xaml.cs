@@ -34,7 +34,7 @@ public partial class LanguageReferenceWindow : Window
     }
 
     /// Copia el ejemplo seleccionado al portapapeles.
-    private void CopyExample_Click(
+    private void OnCopyExampleClick(
         object sender,
         RoutedEventArgs e)
     {
@@ -52,7 +52,7 @@ public partial class LanguageReferenceWindow : Window
     }
 
     /// Solicita insertar el ejemplo seleccionado
-    private void InsertExample_Click(
+    private void OnInsertExampleClick(
         object sender,
         RoutedEventArgs e)
     {

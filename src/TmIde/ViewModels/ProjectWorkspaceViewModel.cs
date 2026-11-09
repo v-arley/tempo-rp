@@ -231,7 +231,7 @@ public sealed partial class ProjectWorkspaceViewModel : ViewModelBase
         PublishProjectState(ProjectActivityState.Compiling);
 
         // Instantánea en el hilo de la UI; la compilación corre fuera de él.
-        var openDocuments = _editorHost.OpenDocumentTexts();
+        var openDocuments = _editorHost.TextsOfOpenDocuments();
         _bottomPanel.Log($"COMPILE → {projectDirectory}");
 
         Compilation compilation;

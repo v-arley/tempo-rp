@@ -9,7 +9,7 @@ public static class RuntimeErrorSuggestions
 {
     private const string GenericSuggestion = "Revise la operacion que produjo el error.";
 
-    private static readonly Dictionary<string, string> _suggestions =
+    private static readonly Dictionary<string, string> Suggestions =
         new(StringComparer.Ordinal)
         {
             [RuntimeErrorCodes.DivisionByZero] =
@@ -40,7 +40,7 @@ public static class RuntimeErrorSuggestions
     /// </summary>
     public static string For(string code)
     {
-        if (code is not null && _suggestions.TryGetValue(code, out string? suggestion))
+        if (code is not null && Suggestions.TryGetValue(code, out string? suggestion))
         {
             return suggestion;
         }

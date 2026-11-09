@@ -22,9 +22,6 @@ public sealed partial class FileNodeViewModel : ViewModelBase
     private bool _isExpanded;
 
     [ObservableProperty]
-    private bool _isVisible = true;
-
-    [ObservableProperty]
     private bool _isSelected;
 
     public FileNodeViewModel(string fullPath, bool isDirectory, Action<FileNodeViewModel>? onOpen, IEnumerable<FileNodeViewModel> children)
@@ -91,38 +88,4 @@ public sealed partial class FileNodeViewModel : ViewModelBase
     }
 
     partial void OnIsExpandedChanged(bool value) => OnPropertyChanged(nameof(IconKey));
-
-    /// <summary>
-    /// Marca la visibilidad de este nodo y sus descendientes según un filtro de
-    /// texto. Un nodo es visible si su nombre contiene el texto o si algún
-    /// descendiente es visible (en cuyo caso además se expande).
-    /// </summary>
-    public bool ApplyFilter(string text)
-    {
-        if (string.IsNullOrWhiteSpace(text))
-        {
-            IsVisible = true;
-            foreach (var child in Children)
-            {
-                child.ApplyFilter(text);
-            }
-
-            return true;
-        }
-
-        var selfMatch = Name.Contains(text, StringComparison.OrdinalIgnoreCase);
-        var anyChildVisible = false;
-        foreach (var child in Children)
-        {
-            anyChildVisible |= child.ApplyFilter(text);
-        }
-
-        IsVisible = selfMatch || anyChildVisible;
-        if (anyChildVisible)
-        {
-            IsExpanded = true;
-        }
-
-        return IsVisible;
-    }
 }

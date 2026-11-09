@@ -25,8 +25,7 @@ public sealed class OutputLogColorizer : DocumentColorizingTransformer
     }
 
     /// Determina el recurso de color para una línea.
-    /// Los nombres corresponden a Theme.Light.xaml
-    /// y Theme.Dark.xaml.
+    /// Los nombres son claves que definen todos los temas (Theme.*.xaml).
     public static string? GetBrushKeyForLine(string text)
     {
         if (string.IsNullOrWhiteSpace(text))

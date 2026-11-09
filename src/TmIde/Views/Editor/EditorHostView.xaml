@@ -40,8 +40,8 @@
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="8" />
                 </Grid.ColumnDefinitions>
-                <Rectangle Grid.Column="0" Fill="#1B212A" />
-                <Path Grid.Column="1" Stretch="Fill" Fill="#1B212A" Data="M0,0 L1,1 L0,1 Z" />
+                <Rectangle Grid.Column="0" Fill="{DynamicResource TabStripLeadBrush}" />
+                <Path Grid.Column="1" Stretch="Fill" Fill="{DynamicResource TabStripLeadBrush}" Data="M0,0 L1,1 L0,1 Z" />
             </Grid>
 
             <!-- El TabControl genera un contenedor (TabItem) por cada documento de
@@ -52,9 +52,9 @@
                         SelectedItem="{Binding SelectedDocument, Mode=TwoWay}">
                 <TabControl.Resources>
                     <Style TargetType="TabItem" BasedOn="{StaticResource {x:Type TabItem}}">
-                        <!-- Pestaña inactiva: fondo oscuro fijo con texto claro -->
-                        <Setter Property="Foreground" Value="#B6C1D3" />
-                        <Setter Property="Background" Value="{DynamicResource ChromeShapeBrush}" />
+                        <!-- Pestaña inactiva; la activa la redefinen los triggers -->
+                        <Setter Property="Foreground" Value="{DynamicResource InactiveTabForegroundBrush}" />
+                        <Setter Property="Background" Value="{DynamicResource InactiveTabBackgroundBrush}" />
                         <Setter Property="Margin" Value="0" />
                         <Setter Property="Padding" Value="0" />
                         <Setter Property="Height" Value="22" />
@@ -94,12 +94,12 @@
                                     </Grid>
                                     <ControlTemplate.Triggers>
                                         <Trigger Property="IsMouseOver" Value="True">
-                                            <!-- Aclarado del fondo oscuro al pasar el cursor -->
-                                            <Setter Property="Background" Value="{DynamicResource ChromeShapeHoverBrush}" />
+                                            <!-- Realce de la pestaña inactiva al pasar el cursor -->
+                                            <Setter Property="Background" Value="{DynamicResource InactiveTabHoverBackgroundBrush}" />
                                         </Trigger>
                                         <Trigger Property="IsSelected" Value="True">
-                                            <Setter Property="Background" Value="{DynamicResource WindowBackgroundBrush}" />
-                                            <Setter Property="Foreground" Value="{DynamicResource PrimaryForegroundBrush}" />
+                                            <Setter Property="Background" Value="{DynamicResource ActiveTabBackgroundBrush}" />
+                                            <Setter Property="Foreground" Value="{DynamicResource ActiveTabForegroundBrush}" />
                                         </Trigger>
                                     </ControlTemplate.Triggers>
                                 </ControlTemplate>
@@ -127,9 +127,19 @@
                             <Button Grid.Column="2" Command="{Binding CloseCommand}"
                                     Padding="2"
                                     ToolTip="Cerrar pestaña">
-                                <!-- Icono claro fijo, a juego con el texto de la pestaña sobre el acento -->
-                                <Path Style="{StaticResource IconPath}" Data="{StaticResource IconWindowClose}"
-                                        Width="10" Height="10" Fill="#B6C1D3" />
+                                <!-- Color del icono según el estado de la pestaña -->
+                                <Path Data="{StaticResource IconWindowClose}" Width="10" Height="10">
+                                    <Path.Style>
+                                        <Style TargetType="Path" BasedOn="{StaticResource IconPath}">
+                                            <Setter Property="Fill" Value="{DynamicResource InactiveTabCloseIconBrush}" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=TabItem}}" Value="True">
+                                                    <Setter Property="Fill" Value="{DynamicResource ActiveTabCloseIconBrush}" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Path.Style>
+                                </Path>
                             </Button>
                         </Grid>
                     </DataTemplate>
@@ -140,7 +150,7 @@
         <!-- Ruta de navegación (breadcrumb) del documento activo -->
         <ItemsControl Grid.Row="1"
                         ItemsSource="{Binding Breadcrumb}"
-                        Background="{DynamicResource WindowBackgroundBrush}"
+                        Background="{DynamicResource DocumentPathBackgroundBrush}"
                         Padding="12,5">
             <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>
@@ -151,9 +161,9 @@
                 <DataTemplate>
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="{Binding Text}" FontSize="{DynamicResource FontSizeCaption}"
-                                    Foreground="{DynamicResource SecondaryForegroundBrush}" />
+                                    Foreground="{DynamicResource DocumentPathForegroundBrush}" />
                         <TextBlock Text="  •  " FontSize="{DynamicResource FontSizeCaption}"
-                                    Foreground="{DynamicResource TertiaryForegroundBrush}">
+                                    Foreground="{DynamicResource DocumentPathSeparatorBrush}">
                             <TextBlock.Style>
                                 <Style TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
                                     <Setter Property="Visibility" Value="Visible" />
@@ -183,6 +193,8 @@
                             Mode=TwoWay,
                             FallbackValue=1}"
                 Diagnostics="{Binding SelectedDocument.Diagnostics}"
+                Outline="{Binding SelectedDocument.Outline}"
+                ActionRequest="{Binding ActionRequest}"
                 NavigationRequest="{Binding NavigationRequest}" />
     </Grid>
 </UserControl>

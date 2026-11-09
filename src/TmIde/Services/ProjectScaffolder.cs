@@ -22,7 +22,7 @@ public sealed class ProjectScaffolder : IProjectScaffolder
 
     public string MainFileName => "principal.tmpr";
 
-    public string? Validate(string location, string name)
+    public string? ValidationErrorFor(string location, string name)
     {
         ArgumentNullException.ThrowIfNull(location);
         ArgumentNullException.ThrowIfNull(name);
@@ -67,7 +67,7 @@ public sealed class ProjectScaffolder : IProjectScaffolder
 
     public string Create(string location, string name)
     {
-        if (Validate(location, name) is { } error)
+        if (ValidationErrorFor(location, name) is { } error)
         {
             throw new InvalidOperationException(error);
         }

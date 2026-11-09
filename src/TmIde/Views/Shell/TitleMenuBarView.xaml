@@ -93,7 +93,7 @@
     </UserControl.Resources>
 
     <!-- Header: contenedor principal a todo el ancho con dos hijos en columna.
-            Fila 0: franja superior oscura, más baja que la barra.
+            Fila 0: franja del borde superior, más baja que la barra.
             Fila 1: barra en tres secciones (menús | título | operaciones de ventana).
             Sin Border: los fondos van en Grid y las líneas en Rectangle/Path. -->
     <Grid Background="{DynamicResource WindowBackgroundBrush}">
@@ -102,15 +102,15 @@
             <RowDefinition Height="28" />
         </Grid.RowDefinitions>
 
-        <!-- Hijo superior: franja oscura -->
-        <Grid Grid.Row="0" Background="{DynamicResource DividerBrush}" />
+        <!-- Hijo superior: franja del borde superior -->
+        <Grid Grid.Row="0" Background="{DynamicResource WindowBandBrush}" />
 
         <!-- Hijo inferior: izquierda / centro / derecha. Los laterales son iguales
             (el título queda centrado respecto a la ventana) y el centro es más
             ancho (1.5*). -->
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
-                <!-- Menús y toggle PIANO -->
+                <!-- Menús -->
                 <ColumnDefinition Width="*" MinWidth="350" />
 
                 <!-- Título central -->
@@ -138,42 +138,42 @@
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="14" />
                     </Grid.ColumnDefinitions>
-                    <Path Grid.Column="0" Fill="{DynamicResource DividerBrush}"
+                    <Path Grid.Column="0" Fill="{DynamicResource WindowBandBrush}"
                             Data="M0,0 L14,0 L14,22 Z" />
-                    <Rectangle Grid.Column="1" Fill="{DynamicResource DividerBrush}" />
-                    <Path Grid.Column="2" Fill="{DynamicResource DividerBrush}"
+                    <Rectangle Grid.Column="1" Fill="{DynamicResource WindowBandBrush}" />
+                    <Path Grid.Column="2" Fill="{DynamicResource WindowBandBrush}"
                             Data="M0,0 L14,0 L0,22 Z" />
                 </Grid>
                 <TextBlock Grid.Row="0" Text="{Binding Title, RelativeSource={RelativeSource AncestorType=Window}}"
                             HorizontalAlignment="Center" VerticalAlignment="Center"
                             FontFamily="{DynamicResource HeaderFontFamily}"
                             FontSize="{DynamicResource FontSizeSmall}" FontWeight="Medium"
-                            Foreground="#A4B1C7" />
+                            Foreground="{DynamicResource TitlePlateForegroundBrush}" />
             </Grid>
 
-            <!-- Izquierda: menús raíz separados por "|" (MENU / TOOLS / VER / OTROS) -->
-            <StackPanel Grid.Column="0"
-                        Orientation="Horizontal"
-                        VerticalAlignment="Center"
-                        HorizontalAlignment="Left"
-                        Margin="3,0,0,0">
+            <!-- Izquierda: menús raíz separados por "|", generados desde MenuBar.Roots
+                (MENU / EDITAR / EJECUCIÓN / VER / AYUDA): añadir un menú en el modelo
+                de vista basta para que aparezca aquí. -->
+            <ItemsControl Grid.Column="0" ItemsSource="{Binding MenuBar.Roots}"
+                          VerticalAlignment="Center" HorizontalAlignment="Left" Margin="3,0,0,0"
+                          Focusable="False">
 
-                        <StackPanel.Style>
-                            <Style TargetType="StackPanel">
-                                <Style.Triggers>
-                                    <DataTrigger
-                                        Binding="{Binding ShowMenus,
-                                                RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                        Value="False">
+                <ItemsControl.Style>
+                    <Style TargetType="ItemsControl">
+                        <Style.Triggers>
+                            <DataTrigger
+                                Binding="{Binding ShowMenus,
+                                        RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                Value="False">
 
-                                        <Setter Property="Visibility" Value="Collapsed" />
+                                <Setter Property="Visibility" Value="Collapsed" />
 
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </StackPanel.Style>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </ItemsControl.Style>
 
-                <StackPanel.Resources>
+                <ItemsControl.Resources>
                     <Style x:Key="MenuSep" TargetType="Rectangle">
                         <Setter Property="Width" Value="1" />
                         <Setter Property="Height" Value="14" />
@@ -183,12 +183,93 @@
                         <Setter Property="Opacity" Value="0.7" />
                         <Setter Property="SnapsToDevicePixels" Value="True" />
                     </Style>
+
+                    <!--
+                        Fila del desplegable. Columnas: marcador | etiqueta | atajo.
+                        Al resaltarse, el marcador crece desde el centro y la fila se tiñe
+                        del acento.
+                    -->
+                    <Style x:Key="DropdownEntry" TargetType="MenuItem" BasedOn="{StaticResource MenuEntryStyle}">
+                        <Setter Property="FontFamily" Value="{DynamicResource CodeFontFamily}" />
+                        <Setter Property="FontSize" Value="{DynamicResource FontSizeSmall}" />
+                        <Setter Property="Foreground" Value="{StaticResource OverlaySecondaryTextBrush}" />
+                        <Setter Property="Cursor" Value="Hand" />
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="MenuItem">
+                                    <Grid Height="28" Background="Transparent" SnapsToDevicePixels="True">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="2" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <!-- Tinte de la fila resaltada -->
+                                        <Rectangle x:Name="Wash" Grid.ColumnSpan="3" Fill="{DynamicResource AccentBrush}" Opacity="0" />
+
+                                        <Rectangle Grid.Column="0" Fill="{DynamicResource AccentBrush}" RenderTransformOrigin="0.5,0.5">
+                                            <Rectangle.RenderTransform>
+                                                <ScaleTransform x:Name="MarkerScale" ScaleX="1" ScaleY="0" />
+                                            </Rectangle.RenderTransform>
+                                        </Rectangle>
+
+                                        <TextBlock x:Name="Label" Grid.Column="1" Margin="12,0,28,0" VerticalAlignment="Center"
+                                                   FontFamily="{TemplateBinding FontFamily}" FontSize="{TemplateBinding FontSize}"
+                                                   Foreground="{TemplateBinding Foreground}"
+                                                   Text="{Binding Header}" />
+
+                                        <TextBlock x:Name="Shortcut" Grid.Column="2" Margin="0,0,12,0" VerticalAlignment="Center"
+                                                   FontFamily="{TemplateBinding FontFamily}" FontSize="{DynamicResource FontSizeCaption}"
+                                                   Foreground="{StaticResource OverlayMutedTextBrush}"
+                                                   Text="{Binding Shortcut}"
+                                                   Visibility="{Binding HasShortcut, Converter={StaticResource BoolToVisibility}}" />
+                                    </Grid>
+
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsHighlighted" Value="True">
+                                            <Setter TargetName="Label" Property="Foreground" Value="#F2F5F8" />
+                                            <Setter TargetName="Shortcut" Property="Foreground" Value="{StaticResource OverlaySecondaryTextBrush}" />
+                                            <Trigger.EnterActions>
+                                                <BeginStoryboard>
+                                                    <Storyboard>
+                                                        <DoubleAnimation Storyboard.TargetName="MarkerScale" Storyboard.TargetProperty="ScaleY"
+                                                                         To="1" Duration="0:0:0.16">
+                                                            <DoubleAnimation.EasingFunction>
+                                                                <CubicEase EasingMode="EaseOut" />
+                                                            </DoubleAnimation.EasingFunction>
+                                                        </DoubleAnimation>
+                                                        <DoubleAnimation Storyboard.TargetName="Wash" Storyboard.TargetProperty="Opacity"
+                                                                         To="0.16" Duration="0:0:0.12" />
+                                                    </Storyboard>
+                                                </BeginStoryboard>
+                                            </Trigger.EnterActions>
+                                            <Trigger.ExitActions>
+                                                <BeginStoryboard>
+                                                    <Storyboard>
+                                                        <DoubleAnimation Storyboard.TargetName="MarkerScale" Storyboard.TargetProperty="ScaleY"
+                                                                         To="0" Duration="0:0:0.10" />
+                                                        <DoubleAnimation Storyboard.TargetName="Wash" Storyboard.TargetProperty="Opacity"
+                                                                         To="0" Duration="0:0:0.10" />
+                                                    </Storyboard>
+                                                </BeginStoryboard>
+                                            </Trigger.ExitActions>
+                                        </Trigger>
+                                        <Trigger Property="IsEnabled" Value="False">
+                                            <Setter Property="Opacity" Value="0.4" />
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+
                     <Style x:Key="RootMenuItem" TargetType="MenuItem" BasedOn="{StaticResource MenuEntryStyle}">
                         <Setter Property="FontFamily" Value="{DynamicResource CodeFontFamily}" />
                         <Setter Property="FontWeight" Value="Medium" />
                         <Setter Property="FontSize" Value="{DynamicResource FontSizeSmall}" />
                         <Setter Property="Foreground" Value="{DynamicResource TitleMenuForegroundBrush}" />
                         <Setter Property="Padding" Value="8,3" />
+                        <Setter Property="ItemContainerStyle" Value="{StaticResource DropdownEntry}" />
                         <!-- Hover: subrayado inferior que crece de izquierda a derecha,
                             sin relleno de fondo. -->
                         <Setter Property="Template">
@@ -202,21 +283,39 @@
                                         <Rectangle x:Name="Underline"
                                                 Height="2"
                                                 VerticalAlignment="Bottom"
-                                                Fill="{DynamicResource AccentBrush}"
+                                                Fill="{DynamicResource ChromeAccentBrush}"
                                                 RenderTransformOrigin="0,0.5">
                                             <Rectangle.RenderTransform>
                                                 <ScaleTransform x:Name="UnderlineScale" ScaleX="0" ScaleY="1" />
                                             </Rectangle.RenderTransform>
                                         </Rectangle>
+
+                                        <!--
+                                            Desplegable: se desliza bajo el menú raíz. Franja de acento y filas
+                                            de entradas. La sombra va en una capa propia para no desenfocar el texto.
+                                        -->
                                         <Popup x:Name="PART_Popup"
                                                 Placement="Bottom"
                                                 IsOpen="{TemplateBinding IsSubmenuOpen}"
                                                 AllowsTransparency="True"
                                                 Focusable="False"
-                                                PopupAnimation="Fade">
-                                            <Grid Background="{DynamicResource SurfaceBackgroundBrush}"
-                                                    SnapsToDevicePixels="True">
-                                                <StackPanel Margin="4" IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Cycle" />
+                                                PopupAnimation="Slide">
+                                            <Grid Margin="0,0,14,14" MinWidth="240" SnapsToDevicePixels="True">
+                                                <Border Background="{StaticResource OverlayShadowBrush}">
+                                                    <Border.Effect>
+                                                        <DropShadowEffect Color="Black" BlurRadius="16" ShadowDepth="5" Direction="290" Opacity="0.55" />
+                                                    </Border.Effect>
+                                                </Border>
+
+                                                <Border Background="{DynamicResource PanelOverlayBrush}"
+                                                        BorderBrush="{StaticResource OverlayEdgeBrush}" BorderThickness="1,0,1,1">
+                                                    <DockPanel>
+                                                        <Rectangle DockPanel.Dock="Top" Height="2" Fill="{DynamicResource AccentBrush}" />
+
+                                                        <StackPanel Margin="0,4,0,5" IsItemsHost="True"
+                                                                    KeyboardNavigation.DirectionalNavigation="Cycle" />
+                                                    </DockPanel>
+                                                </Border>
                                             </Grid>
                                         </Popup>
                                     </Grid>
@@ -253,37 +352,97 @@
                             </Setter.Value>
                         </Setter>
                     </Style>
-                </StackPanel.Resources>
+                </ItemsControl.Resources>
 
-                <Menu Background="Transparent" VerticalAlignment="Center" Padding="0">
-                    <MenuItem DataContext="{Binding MenuBar.Roots[0]}" Style="{StaticResource RootMenuItem}" />
-                </Menu>
-                <Rectangle Style="{StaticResource MenuSep}" />
-                <Menu Background="Transparent" VerticalAlignment="Center" Padding="0">
-                    <MenuItem DataContext="{Binding MenuBar.Roots[1]}" Style="{StaticResource RootMenuItem}" />
-                </Menu>
-                <Rectangle Style="{StaticResource MenuSep}" />
-                <Menu Background="Transparent" VerticalAlignment="Center" Padding="0">
-                    <MenuItem DataContext="{Binding MenuBar.Roots[2]}" Style="{StaticResource RootMenuItem}" />
-                </Menu>
-                <Rectangle Style="{StaticResource MenuSep}" />
-                <Menu Background="Transparent" VerticalAlignment="Center" Padding="0">
-                    <MenuItem DataContext="{Binding MenuBar.Roots[3]}" Style="{StaticResource RootMenuItem}" />
-                </Menu>
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel Orientation="Horizontal" />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
 
-                
-                <!-- Toggle musical: No se muestra en ventanas auxiliares porque el StackPanel de menús se oculta con ShowMenus=False. -->
+                <!-- Cada menú raíz va precedido de "|" salvo el primero -->
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel Orientation="Horizontal">
+                            <Rectangle x:Name="Separator" Style="{StaticResource MenuSep}" />
+                            <Menu Background="Transparent" VerticalAlignment="Center" Padding="0">
+                                <MenuItem Style="{StaticResource RootMenuItem}" />
+                            </Menu>
+                        </StackPanel>
+                        <DataTemplate.Triggers>
+                            <DataTrigger Binding="{Binding RelativeSource={RelativeSource PreviousData}}" Value="{x:Null}">
+                                <Setter TargetName="Separator" Property="Visibility" Value="Collapsed" />
+                            </DataTrigger>
+                        </DataTemplate.Triggers>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            
+            <!-- Identificación de las ventanas auxiliares -->
+            <TextBlock
+                Grid.Column="0"
+                Text="AYUDA"
+                Margin="12,0,0,0"
+                VerticalAlignment="Center"
+                FontFamily="{DynamicResource CodeFontFamily}"
+                FontSize="{DynamicResource FontSizeSmall}"
+                FontWeight="Medium"
+                Foreground="{DynamicResource TitleMenuForegroundBrush}">
+
+                <TextBlock.Style>
+                    <Style TargetType="TextBlock">
+
+                        <Setter Property="Visibility"
+                                Value="Collapsed" />
+
+                        <Style.Triggers>
+                            <DataTrigger
+                                Binding="{Binding ShowMenus,
+                                        RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                Value="False">
+
+                                <Setter Property="Visibility"
+                                        Value="Visible" />
+
+                            </DataTrigger>
+                        </Style.Triggers>
+
+                    </Style>
+                </TextBlock.Style>
+
+            </TextBlock>
+
+
+            <!-- Derecha: toggle PIANO y operaciones de ventana. Botones de 24 en una
+                barra de 28: 2px arriba y abajo. -->
+            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center"
+                        HorizontalAlignment="Right" Margin="0,0,3,0">
+                <!-- Toggle musical junto a los botones de ventana: siempre a la vista sin
+                    competir con los menús. No aparece en ventanas auxiliares (ShowMenus=False). -->
                 <ToggleButton
                     IsChecked="{Binding Piano.Enabled, Mode=TwoWay}"
                     ToolTip="Clic: activar/desactivar sonido. Clic derecho: elegir modo y octava."
                     Height="23"
-                    Margin="4,0,0,0"
+                    Margin="0,0,10,0"
                     Padding="4,2"
                     VerticalAlignment="Center"
                     Focusable="False"
                     Cursor="Hand">
 
-                            
+                    <ToggleButton.Style>
+                        <Style TargetType="ToggleButton">
+                            <Style.Triggers>
+                                <DataTrigger
+                                    Binding="{Binding ShowMenus,
+                                            RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                    Value="False">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </ToggleButton.Style>
+
                     <!-- Menú contextual del piano -->
                     <ToggleButton.ContextMenu>
 
@@ -546,49 +705,6 @@
 
                 </ToggleButton>
 
-
-            </StackPanel>
-
-            
-            <!-- Identificación de las ventanas auxiliares -->
-            <TextBlock
-                Grid.Column="0"
-                Text="AYUDA"
-                Margin="12,0,0,0"
-                VerticalAlignment="Center"
-                FontFamily="{DynamicResource CodeFontFamily}"
-                FontSize="{DynamicResource FontSizeSmall}"
-                FontWeight="Medium"
-                Foreground="{DynamicResource TitleMenuForegroundBrush}">
-
-                <TextBlock.Style>
-                    <Style TargetType="TextBlock">
-
-                        <Setter Property="Visibility"
-                                Value="Collapsed" />
-
-                        <Style.Triggers>
-                            <DataTrigger
-                                Binding="{Binding ShowMenus,
-                                        RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                Value="False">
-
-                                <Setter Property="Visibility"
-                                        Value="Visible" />
-
-                            </DataTrigger>
-                        </Style.Triggers>
-
-                    </Style>
-                </TextBlock.Style>
-
-            </TextBlock>
-
-
-            <!-- Derecha: operaciones de ventana. Botones de 24 en una barra de 28:
-                2px arriba y abajo. -->
-            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center"
-                        HorizontalAlignment="Right" Margin="0,0,3,0">
                 <Button Style="{StaticResource CaptionGroupButton}" Click="OnMinimize" ToolTip="Minimizar">
                     <Path Style="{StaticResource CaptionGlyph}" Width="8" Height="8"
                             Data="{StaticResource IconCaptionMin}" />

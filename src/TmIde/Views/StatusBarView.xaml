@@ -14,7 +14,7 @@
             a todo el ancho con dos hijos en columna.
             Fila 0: barra en tres secciones de igual ancho
                     (indicadores | reservado | acciones).
-            Fila 1: franja inferior oscura de 6px.
+            Fila 1: franja del borde inferior, de 6px.
             Sin Border: los fondos van en Grid. -->
     <Grid Background="{DynamicResource WindowBackgroundBrush}">
         <Grid.RowDefinitions>
@@ -34,7 +34,7 @@
             <TextBlock Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center"
                         Margin="11,0,0,0"
                         FontFamily="{DynamicResource CodeFontFamily}" FontWeight="Medium" FontSize="{DynamicResource FontSizeSmall}"
-                        Foreground="{DynamicResource AccentBrush}">
+                        Foreground="{DynamicResource ChromeAccentBrush}">
                 <Run Text="{Binding CaretPosition, Mode=OneWay}" />
                 <Run Text="   " />
                 <Run Text="{Binding Encoding, Mode=OneWay}" />
@@ -46,7 +46,7 @@
             <!-- Centro: indicador del estado del proyecto -->
             <Grid Grid.Column="1">
 
-                <!-- Decoración original de Tempo -->
+                <!-- Trapecio de fondo del indicador -->
                 <Path
                     HorizontalAlignment="Center"
                     VerticalAlignment="Bottom"
@@ -54,7 +54,7 @@
                     Height="22"
                     IsHitTestVisible="False"
                     Stretch="Fill"
-                    Fill="{DynamicResource DividerBrush}"
+                    Fill="{DynamicResource StatusIndicatorBackgroundBrush}"
                     Data="M14,0 L198,0 L212,22 L0,22 Z" />
 
                 <!-- Estado de compilación y ejecución -->
@@ -65,7 +65,7 @@
                     FontFamily="{DynamicResource CodeFontFamily}"
                     FontWeight="SemiBold"
                     FontSize="{DynamicResource FontSizeSmall}"
-                    Foreground="#D5D5D5">
+                    Foreground="{DynamicResource StatusIndicatorForegroundBrush}">
 
                 </TextBlock>
 
@@ -91,7 +91,7 @@
             </StackPanel>
         </Grid>
 
-        <!-- Hijo inferior: franja oscura -->
-        <Grid Grid.Row="1" Background="{DynamicResource DividerBrush}" />
+        <!-- Hijo inferior: franja del borde inferior -->
+        <Grid Grid.Row="1" Background="{DynamicResource WindowBandBrush}" />
     </Grid>
 </UserControl>

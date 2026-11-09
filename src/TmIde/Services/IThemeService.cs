@@ -16,7 +16,4 @@ public interface IThemeService
 
     /// <summary>Aplica <paramref name="theme"/> y lo guarda como preferencia.</summary>
     void Apply(AppTheme theme);
-
-    /// <summary>Alterna entre <see cref="AppTheme.Light"/> y <see cref="AppTheme.Dark"/>.</summary>
-    void Toggle();
 }

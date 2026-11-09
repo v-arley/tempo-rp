@@ -75,7 +75,7 @@ public sealed partial class NewProjectViewModel : ViewModelBase
     /// muestra nada (el botón de crear ya está deshabilitado).
     /// </summary>
     public string? ValidationMessage => CreationError
-        ?? (string.IsNullOrWhiteSpace(Name) ? null : _scaffolder.Validate(Location, Name));
+        ?? (string.IsNullOrWhiteSpace(Name) ? null : _scaffolder.ValidationErrorFor(Location, Name));
 
     public bool HasValidationMessage => ValidationMessage is not null;
 
@@ -109,7 +109,7 @@ public sealed partial class NewProjectViewModel : ViewModelBase
         }
     }
 
-    private bool CanCreate() => _scaffolder.Validate(Location, Name) is null;
+    private bool CanCreate() => _scaffolder.ValidationErrorFor(Location, Name) is null;
 
     [RelayCommand]
     private void Cancel() => _onCancelled();

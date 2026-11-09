@@ -1,7 +1,11 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:sys="clr-namespace:System;assembly=mscorlib"
-                    xmlns:search="clr-namespace:ICSharpCode.AvalonEdit.Search;assembly=ICSharpCode.AvalonEdit">
+                    xmlns:search="clr-namespace:ICSharpCode.AvalonEdit.Search;assembly=ICSharpCode.AvalonEdit"
+                    xmlns:completion="clr-namespace:ICSharpCode.AvalonEdit.CodeCompletion;assembly=ICSharpCode.AvalonEdit"
+                    xmlns:completionModel="clr-namespace:TmIde.Services.Completion"
+                    xmlns:completionView="clr-namespace:TmIde.Controls.Completion"
+                    xmlns:searchReplace="clr-namespace:TmIde.Controls.Search">
 
     <!--
         Estilos compartidos: se mergean en App.xaml para que todas las ventanas
@@ -15,6 +19,15 @@
     <!-- Recursos base -->
 
     <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
+
+    <!-- Paleta de los paneles flotantes (búsqueda, desplegables, autocompletado):
+        son oscuros en ambos temas, así que su texto usa tonos claros fijos. -->
+    <SolidColorBrush x:Key="OverlayTextBrush"          Color="#E7EBEF" />
+    <SolidColorBrush x:Key="OverlaySecondaryTextBrush" Color="#A8B3BF" />
+    <SolidColorBrush x:Key="OverlayMutedTextBrush"     Color="#6F7B87" />
+    <SolidColorBrush x:Key="OverlayRuleBrush"          Color="#3A4452" />
+    <SolidColorBrush x:Key="OverlayShadowBrush"        Color="#12161C" />
+    <SolidColorBrush x:Key="OverlayEdgeBrush"          Color="#0B0E12" />
 
     <!-- Tipografía única: IBM Plex Mono (src/Assets). La ruta "../Assets/" es relativa
         a este archivo (Resources/); con "./Assets/" WPF no encontraba las fuentes y
@@ -129,18 +142,18 @@
         </Setter>
     </Style>
 
-    <!-- COMPILE y RUN: fondo de acento (#BF3B2C) con texto negro. -->
+    <!-- COMPILE y RUN: fondo con el acento de las barras y su color de texto. -->
     <Style x:Key="StatusPrimaryActionButton" TargetType="Button"
             BasedOn="{StaticResource StatusActionButton}">
-        <Setter Property="Background" Value="{DynamicResource AccentBrush}" />
-        <Setter Property="Foreground" Value="Black" />
+        <Setter Property="Background" Value="{DynamicResource ChromeAccentBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource ChromeAccentForegroundBrush}" />
     </Style>
 
-    <!-- STOP (prueba): mismo fondo oscuro con borde de acento (#BF3B2C). -->
+    <!-- STOP: fondo de la barra con borde y texto del acento de las barras. -->
     <Style x:Key="StatusStopActionButton" TargetType="Button"
             BasedOn="{StaticResource StatusActionButton}">
-        <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
-        <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource ChromeAccentBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource ChromeAccentBrush}" />
         <Setter Property="Background" Value="{DynamicResource StopButtonBackgroundBrush}" />
     </Style>
 
@@ -262,9 +275,8 @@
     <!-- GridSplitter -->
 
     <!-- La línea ocupa todo el splitter, sin márgenes ni relleno: su grosor es
-        el Width/Height que fije cada GridSplitter. Su color sale de SplitterBrush
-        (rojo #BF3B2C en el tema oscuro, #1B212A en el claro); en hover pasa al
-        rojo de acento. -->
+        el Width/Height que fije cada GridSplitter. Su color sale de SplitterBrush;
+        en hover pasa al rojo de acento. -->
     <Style TargetType="GridSplitter">
         <Setter Property="Background" Value="{DynamicResource SplitterBrush}" />
         <Setter Property="ShowsPreview" Value="True" />
@@ -336,7 +348,6 @@
         <Setter Property="FontFamily" Value="{DynamicResource UiFontFamily}" />
         <Setter Property="Foreground" Value="{DynamicResource PrimaryForegroundBrush}" />
         <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
-        <Setter Property="Visibility" Value="{Binding IsVisible, Converter={StaticResource BoolToVisibility}}" />
         <Setter Property="Padding" Value="2" />
         <Setter Property="Template">
             <Setter.Value>
@@ -487,7 +498,7 @@
         del árbol del UserControl del editor. -->
 
     <Style x:Key="SearchIconButton" TargetType="Button">
-        <Setter Property="Foreground" Value="#E7EBEF" />
+        <Setter Property="Foreground" Value="{StaticResource OverlayTextBrush}" />
         <Setter Property="Width" Value="24" />
         <Setter Property="Height" Value="24" />
         <Setter Property="Focusable" Value="False" />
@@ -514,7 +525,7 @@
     </Style>
 
     <Style x:Key="SearchToggleButton" TargetType="ToggleButton">
-        <Setter Property="Foreground" Value="#E7EBEF" />
+        <Setter Property="Foreground" Value="{StaticResource OverlayTextBrush}" />
         <Setter Property="Width" Value="24" />
         <Setter Property="Height" Value="24" />
         <Setter Property="Focusable" Value="False" />
@@ -550,11 +561,16 @@
                             BorderBrush="{DynamicResource DividerBrush}" BorderThickness="1"
                             HorizontalAlignment="Right" VerticalAlignment="Top"
                             Margin="0,4,22,0" Padding="4" Cursor="Arrow">
+                        <StackPanel>
                         <StackPanel Orientation="Horizontal">
+                            <!-- Muestra u oculta la fila de reemplazo (Ctrl+H la abre) -->
+                            <ToggleButton Style="{StaticResource SearchToggleButton}" Margin="0,0,4,0" Content="⇄"
+                                          FontSize="{DynamicResource FontSizeSmall}" ToolTip="Reemplazar (Ctrl+H)"
+                                          IsChecked="{Binding (searchReplace:SearchPanelReplace.IsReplaceVisible), RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}" />
                             <TextBox x:Name="PART_searchTextBox" Width="190" Height="24" Focusable="True"
                                      Padding="6,0" VerticalContentAlignment="Center"
                                      Background="{DynamicResource InputBackgroundBrush}"
-                                     Foreground="#E7EBEF" CaretBrush="#E7EBEF"
+                                     Foreground="{StaticResource OverlayTextBrush}" CaretBrush="{StaticResource OverlayTextBrush}"
                                      FontFamily="{DynamicResource CodeFontFamily}" FontSize="{DynamicResource FontSizeBody}"
                                      Text="{Binding SearchPattern, RelativeSource={RelativeSource TemplatedParent}, UpdateSourceTrigger=PropertyChanged}" />
                             <ToggleButton Style="{StaticResource SearchToggleButton}" Margin="4,0,0,0" Content="Aa"
@@ -575,10 +591,226 @@
                             <Button Style="{StaticResource SearchIconButton}" Content="✕"
                                     Command="search:SearchCommands.CloseSearchPanel" />
                         </StackPanel>
+
+                        <!-- Fila de reemplazo: actúa solo sobre el documento visible y no guarda -->
+                        <StackPanel Orientation="Horizontal" Margin="28,4,0,0"
+                                    Visibility="{Binding (searchReplace:SearchPanelReplace.IsReplaceVisible), RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource BoolToVisibility}}">
+                            <TextBox Width="190" Height="24" Padding="6,0" VerticalContentAlignment="Center"
+                                     Background="{DynamicResource InputBackgroundBrush}"
+                                     Foreground="{StaticResource OverlayTextBrush}" CaretBrush="{StaticResource OverlayTextBrush}"
+                                     FontFamily="{DynamicResource CodeFontFamily}" FontSize="{DynamicResource FontSizeBody}"
+                                     ToolTip="Reemplazar por (admite $1 con expresión regular)"
+                                     Text="{Binding (searchReplace:SearchPanelReplace.ReplacementText), RelativeSource={RelativeSource TemplatedParent}, UpdateSourceTrigger=PropertyChanged}">
+                                <TextBox.InputBindings>
+                                    <KeyBinding Key="Enter" Command="searchReplace:SearchPanelReplace.ReplaceNext" />
+                                    <KeyBinding Key="Enter" Modifiers="Control+Alt" Command="searchReplace:SearchPanelReplace.ReplaceAll" />
+                                </TextBox.InputBindings>
+                            </TextBox>
+                            <Button Style="{StaticResource SearchIconButton}" Margin="4,0,0,0" Content="↵"
+                                    Command="searchReplace:SearchPanelReplace.ReplaceNext"
+                                    ToolTip="Reemplazar (Enter)" />
+                            <Button Style="{StaticResource SearchIconButton}" Content="⇊"
+                                    Command="searchReplace:SearchPanelReplace.ReplaceAll"
+                                    ToolTip="Reemplazar todo (Ctrl+Alt+Enter)" />
+                            <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" MaxWidth="160" TextTrimming="CharacterEllipsis"
+                                       FontSize="{DynamicResource FontSizeSmall}" Foreground="{DynamicResource SecondaryForegroundBrush}"
+                                       Text="{Binding (searchReplace:SearchPanelReplace.Status), RelativeSource={RelativeSource TemplatedParent}}" />
+                        </StackPanel>
+                        </StackPanel>
                     </Border>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
     </Style>
+
+
+    <!--
+        Autocompletado del editor (Ctrl+Espacio, AvalonEdit). La lista se abre en su
+        propia ventana, fuera del árbol del editor, por eso sus estilos viven a nivel
+        de aplicación. Comparte el lenguaje visual del desplegable de la barra de
+        título: franja de acento y filas con marcador. La ficha al pie explica la
+        sugerencia seleccionada.
+    -->
+
+    <!-- Ventana transparente (EditorCompletionController): el contenedor dibuja
+        su propio marco recto y su sombra. -->
+    <Style TargetType="completion:CompletionWindow">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="FontFamily" Value="{DynamicResource CodeFontFamily}" />
+    </Style>
+
+    <!-- Fila: marcador | contenido (CompletionSuggestion). Seleccionada: el marcador
+        crece y la fila se tiñe del acento; con el mouse encima, un tinte más leve. -->
+    <Style x:Key="CompletionRow" TargetType="ListBoxItem">
+        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ListBoxItem">
+                    <Grid Height="26" Background="Transparent" SnapsToDevicePixels="True">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="2" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Rectangle x:Name="Wash" Grid.ColumnSpan="2" Fill="{DynamicResource AccentBrush}" Opacity="0" />
+                        <Rectangle Grid.Column="0" Fill="{DynamicResource AccentBrush}" RenderTransformOrigin="0.5,0.5">
+                            <Rectangle.RenderTransform>
+                                <ScaleTransform x:Name="MarkerScale" ScaleX="1" ScaleY="0" />
+                            </Rectangle.RenderTransform>
+                        </Rectangle>
+                        <ContentPresenter Grid.Column="1" Margin="8,0,10,0" VerticalAlignment="Center" />
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Wash" Property="Opacity" Value="0.07" />
+                        </Trigger>
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter TargetName="Wash" Property="Opacity" Value="0.18" />
+                            <Trigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="MarkerScale" Storyboard.TargetProperty="ScaleY"
+                                                         To="1" Duration="0:0:0.14">
+                                            <DoubleAnimation.EasingFunction>
+                                                <CubicEase EasingMode="EaseOut" />
+                                            </DoubleAnimation.EasingFunction>
+                                        </DoubleAnimation>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.EnterActions>
+                            <Trigger.ExitActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="MarkerScale" Storyboard.TargetProperty="ScaleY"
+                                                         To="0" Duration="0:0:0.08" />
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.ExitActions>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style TargetType="completion:CompletionListBox">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled" />
+    </Style>
+
+    <!-- Contenedor de la lista: plantilla propia con filas y ficha.
+        PART_ListBox es el nombre que AvalonEdit espera. -->
+    <Style TargetType="completion:CompletionList">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="completion:CompletionList">
+                    <Grid Margin="0,0,12,12" SnapsToDevicePixels="True">
+                        <!-- Sombra en capa propia: no desenfoca el texto -->
+                        <Border Background="{StaticResource OverlayShadowBrush}">
+                            <Border.Effect>
+                                <DropShadowEffect Color="Black" BlurRadius="16" ShadowDepth="5" Direction="290" Opacity="0.55" />
+                            </Border.Effect>
+                        </Border>
+
+                        <Border Background="{DynamicResource PanelOverlayBrush}" BorderBrush="{StaticResource OverlayEdgeBrush}" BorderThickness="1,0,1,1">
+                            <DockPanel>
+                                <Rectangle DockPanel.Dock="Top" Height="2" Fill="{DynamicResource AccentBrush}" />
+
+                                <!-- Ficha de la sugerencia seleccionada -->
+                                <StackPanel DockPanel.Dock="Bottom">
+                                    <Rectangle Height="1" Margin="10,2,10,0" Stroke="{StaticResource OverlayRuleBrush}" StrokeDashArray="2 3" StrokeThickness="1" />
+                                    <ContentPresenter Margin="10,6,10,8"
+                                                      Content="{Binding SelectedItem.Details, ElementName=PART_ListBox}" />
+                                </StackPanel>
+
+                                <completion:CompletionListBox x:Name="PART_ListBox" MaxHeight="208"
+                                                              ItemContainerStyle="{StaticResource CompletionRow}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <ContentPresenter Content="{Binding Content}" />
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </completion:CompletionListBox>
+                            </DockPanel>
+                        </Border>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Contenido de la fila: insignia de la clase (letra y color de sintaxis), etiqueta y detalle -->
+    <DataTemplate DataType="{x:Type completionModel:CompletionSuggestion}">
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="20" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <TextBlock x:Name="Badge" Grid.Column="0" FontWeight="Bold" FontSize="{DynamicResource FontSizeSmall}"
+                       FontFamily="{DynamicResource CodeFontFamily}"
+                       VerticalAlignment="Center" Text="k" Foreground="#E0604F" />
+            <TextBlock Grid.Column="1" Text="{Binding Label}" FontFamily="{DynamicResource CodeFontFamily}"
+                       FontSize="{DynamicResource CodeFontSize}" Foreground="{StaticResource OverlayTextBrush}"
+                       VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+            <TextBlock Grid.Column="2" Text="{Binding Detail}" Margin="12,0,0,0" VerticalAlignment="Center" MaxWidth="150"
+                       TextTrimming="CharacterEllipsis"
+                       FontFamily="{DynamicResource CodeFontFamily}" FontSize="{DynamicResource FontSizeCaption}" Foreground="{StaticResource OverlayMutedTextBrush}" />
+        </Grid>
+
+        <!-- Letra y color de la insignia por clase de sugerencia (paleta oscura de sintaxis) -->
+        <DataTemplate.Triggers>
+            <DataTrigger Binding="{Binding Kind}" Value="Snippet">
+                <Setter TargetName="Badge" Property="Text" Value="▸" />
+                <Setter TargetName="Badge" Property="Foreground" Value="#E5C07B" />
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Kind}" Value="Type">
+                <Setter TargetName="Badge" Property="Text" Value="T" />
+                <Setter TargetName="Badge" Property="Foreground" Value="#6CB6E8" />
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Kind}" Value="Literal">
+                <Setter TargetName="Badge" Property="Text" Value="L" />
+                <Setter TargetName="Badge" Property="Foreground" Value="#C792EA" />
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Kind}" Value="Function">
+                <Setter TargetName="Badge" Property="Text" Value="ƒ" />
+                <Setter TargetName="Badge" Property="Foreground" Value="#7FD1B0" />
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Kind}" Value="Variable">
+                <Setter TargetName="Badge" Property="Text" Value="v" />
+                <Setter TargetName="Badge" Property="Foreground" Value="{StaticResource OverlayTextBrush}" />
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Kind}" Value="Parameter">
+                <Setter TargetName="Badge" Property="Text" Value="p" />
+                <Setter TargetName="Badge" Property="Foreground" Value="{StaticResource OverlaySecondaryTextBrush}" />
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Kind}" Value="Constant">
+                <Setter TargetName="Badge" Property="Text" Value="c" />
+                <Setter TargetName="Badge" Property="Foreground" Value="#C792EA" />
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Kind}" Value="Word">
+                <Setter TargetName="Badge" Property="Text" Value="a" />
+                <Setter TargetName="Badge" Property="Foreground" Value="{StaticResource OverlayMutedTextBrush}" />
+            </DataTrigger>
+        </DataTemplate.Triggers>
+    </DataTemplate>
+
+    <!-- Ficha al pie: nombre y detalle en una línea, explicación debajo -->
+    <DataTemplate DataType="{x:Type completionView:CompletionDescription}">
+        <StackPanel>
+            <TextBlock TextWrapping="Wrap" FontFamily="{DynamicResource CodeFontFamily}">
+                <Run Text="{Binding Title, Mode=OneWay}" FontSize="{DynamicResource FontSizeBody}" FontWeight="SemiBold" Foreground="#6CB6E8" />
+                <Run Text="  " />
+                <Run Text="{Binding Detail, Mode=OneWay}" FontSize="{DynamicResource FontSizeCaption}" Foreground="{StaticResource OverlaySecondaryTextBrush}" />
+            </TextBlock>
+            <TextBlock Text="{Binding Text}" Margin="0,4,0,0" TextWrapping="Wrap"
+                       FontFamily="{DynamicResource CodeFontFamily}" FontSize="{DynamicResource FontSizeSmall}"
+                       Foreground="#C7CBD2" />
+        </StackPanel>
+    </DataTemplate>
 
 </ResourceDictionary>

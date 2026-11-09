@@ -459,7 +459,7 @@ public sealed class StatementExecutor
                     mixCase.Value,
                     environment);
 
-            if (!RuntimeValuesEqual(
+            if (!AreRuntimeValuesEqual(
                     control,
                     caseValue))
             {
@@ -583,7 +583,7 @@ public sealed class StatementExecutor
         }
     }
 
-    private static bool RuntimeValuesEqual(
+    private static bool AreRuntimeValuesEqual(
         RuntimeValue left,
         RuntimeValue right)
     {

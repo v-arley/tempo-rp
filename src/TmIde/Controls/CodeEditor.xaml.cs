@@ -12,9 +12,13 @@ using ICSharpCode.AvalonEdit.Document;
 using ICSharpCode.AvalonEdit.Folding;
 using ICSharpCode.AvalonEdit.Rendering;
 using ICSharpCode.AvalonEdit.Search;
+using Tempo.Language.Outline;
+using TmIde.Controls.Completion;
 using TmIde.Controls.Diagnostics;
+using TmIde.Controls.Search;
 using TmIde.Controls.Syntax;
 using TmIde.Services.Analysis;
+using TmIde.Services.Completion;
 using TmIde.ViewModels.Editor;
 using TmIde.Services.Audio;
 
@@ -24,8 +28,8 @@ namespace TmIde.Controls;
 /// Editor de código TM sobre AvalonEdit con coloreado de sintaxis y subrayado de
 /// diagnósticos. Edita el <see cref="Document"/> que se le enlace (uno por
 /// pestaña) y recuerda cursor, desplazamiento y plegados de cada documento al
-/// cambiar de uno a otro. Incluye búsqueda (Ctrl+F), plegado de bloques y
-/// sangría automática. Expone <see cref="CaretLine"/> y <see cref="CaretColumn"/> como
+/// cambiar de uno a otro. Incluye búsqueda (Ctrl+F), autocompletado
+/// (Ctrl+Espacio), plegado de bloques y sangría automática. Expone <see cref="CaretLine"/> y <see cref="CaretColumn"/> como
 /// propiedades de dependencia enlazables.
 /// </summary>
 
@@ -67,6 +71,18 @@ public partial class CodeEditor : UserControl
         typeof(CodeEditor),
         new PropertyMetadata(null));
 
+    public static readonly DependencyProperty ActionRequestProperty = DependencyProperty.Register(
+        nameof(ActionRequest),
+        typeof(EditorActionRequest),
+        typeof(CodeEditor),
+        new PropertyMetadata(null, OnActionRequestChanged));
+
+    public static readonly DependencyProperty OutlineProperty = DependencyProperty.Register(
+        nameof(Outline),
+        typeof(FileOutline),
+        typeof(CodeEditor),
+        new FrameworkPropertyMetadata(FileOutline.Empty));
+
     public static readonly DependencyProperty SelectionAccentBrushProperty = RegisterThemeBrush(nameof(SelectionAccentBrush));
 
     public static readonly DependencyProperty CaretBrushProperty = RegisterThemeBrush(nameof(CaretBrush));
@@ -104,6 +120,8 @@ public partial class CodeEditor : UserControl
     private readonly DispatcherTimer _foldingTimer = new() { Interval = TimeSpan.FromMilliseconds(300) };
     private readonly SearchPanel _searchPanel;
     private readonly TmIndentationStrategy _indentationStrategy = new();
+    private readonly EditorCompletionController _completion;
+    private readonly FindReplaceController _findReplace;
     private FoldingManager? _foldingManager;
 
     public CodeEditor()
@@ -135,6 +153,7 @@ public partial class CodeEditor : UserControl
 
         Editor.TextChanged += OnEditorTextChanged;
         _searchPanel = SearchPanel.Install(Editor);
+        _findReplace = new FindReplaceController(_searchPanel, Editor.TextArea, () => Editor.IsReadOnly);
 
         // Sangría de 4 espacios (Tab inserta espacios, no tabulaciones); Enter la
         // hereda y '<' al inicio de línea cierra el bloque.
@@ -150,11 +169,18 @@ public partial class CodeEditor : UserControl
         Editor.TextArea.LostKeyboardFocus += OnPianoEditorLostKeyboardFocus;
         // Enter y Backspace no siempre generan TextEntered, por lo que se detectan por separado.
         Editor.TextArea.PreviewKeyDown += OnPianoSpecialKeyDown;
+
+        // Autocompletado: se abre al escribir o con Ctrl+Espacio. Los nombres del
+        // usuario salen del resumen enlazado en Outline, que se lee en cada petición.
+        _completion = new EditorCompletionController(
+            Editor.TextArea,
+            CompletionEngine.WithSymbols(() => Outline ?? FileOutline.Empty));
+
         _foldingTimer.Tick += OnFoldingTimerTick;
         InstallFolding();
         Editor.TextArea.Caret.PositionChanged += OnCaretPositionChanged;
 
-        SetResourceReference(SelectionAccentBrushProperty, "AccentBrush");
+        SetResourceReference(SelectionAccentBrushProperty, "SurfaceAccentBrush");
         SetResourceReference(CaretBrushProperty, "PrimaryForegroundBrush");
         SetResourceReference(FoldingMarkerBrushProperty, "TertiaryForegroundBrush");
         SetResourceReference(SelectedFoldingMarkerBrushProperty, "SecondaryForegroundBrush");
@@ -193,6 +219,30 @@ public partial class CodeEditor : UserControl
     {
         get => (IReadOnlyList<EditorDiagnostic>?)GetValue(DiagnosticsProperty);
         set => SetValue(DiagnosticsProperty, value);
+    }
+
+    /// <summary>Acción pedida desde fuera del editor (menú EDITAR); se ejecuta con <see cref="Execute"/>.</summary>
+    public EditorActionRequest? ActionRequest
+    {
+        get => (EditorActionRequest?)GetValue(ActionRequestProperty);
+        set => SetValue(ActionRequestProperty, value);
+    }
+
+    // Se ejecuta cuando el menú ya se cerró, para que el foco quede en el editor o en el panel.
+    private static void OnActionRequestChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (e.NewValue is EditorActionRequest request)
+        {
+            var editor = (CodeEditor)d;
+            editor.Dispatcher.BeginInvoke(DispatcherPriority.Input, new Action(() => editor.Execute(request.Action)));
+        }
+    }
+
+    /// <summary>Funciones y nombres del documento actual; alimentan el autocompletado.</summary>
+    public FileOutline? Outline
+    {
+        get => (FileOutline?)GetValue(OutlineProperty);
+        set => SetValue(OutlineProperty, value);
     }
 
     /// <summary>Color base de la selección y de las coincidencias de búsqueda (se aplica con transparencia).</summary>
@@ -262,6 +312,13 @@ public partial class CodeEditor : UserControl
         object sender,
         KeyEventArgs e)
     {
+        if (Keyboard.Modifiers == ModifierKeys.Control && EditorShortcuts.TryGetValue(e.Key, out var action))
+        {
+            Execute(action);
+            e.Handled = true;
+            return;
+        }
+
         if (!KeywordHoverOptions.RequireControlKey)
         {
             return;
@@ -285,6 +342,33 @@ public partial class CodeEditor : UserControl
                         Mouse.GetPosition(textView));
                 }
             }));
+    }
+
+    // Atajos de edición con Ctrl: tecla → acción. El menú EDITAR dispara las
+    // mismas acciones por EditorActionRequest.
+    private static readonly Dictionary<Key, EditorAction> EditorShortcuts = new()
+    {
+        [Key.Space] = EditorAction.Complete,
+        [Key.F] = EditorAction.Find,
+        [Key.H] = EditorAction.Replace,
+    };
+
+    /// <summary>Ejecuta una acción de edición sobre el documento visible.</summary>
+    public void Execute(EditorAction action)
+    {
+        switch (action)
+        {
+            case EditorAction.Find:
+                _findReplace.OpenFind();
+                break;
+            case EditorAction.Replace:
+                _findReplace.OpenReplace();
+                break;
+            case EditorAction.Complete:
+                Editor.TextArea.Focus();
+                _completion.ShowSuggestions();
+                break;
+        }
     }
 
     /// Al soltar Ctrl se oculta la ayuda educativa.
@@ -471,6 +555,7 @@ public partial class CodeEditor : UserControl
 
         _diagnosticToolTip.IsOpen = false;
         _keywordToolTip.IsOpen = false;
+        _completion.Close();
         Editor.Document = next ?? new TextDocument();
         Editor.IsReadOnly = next is null;
         _syntaxColorizer.Rescan(Editor.Document);

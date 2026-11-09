@@ -26,6 +26,10 @@ public sealed partial class EditorHostViewModel : ViewModelBase
     [ObservableProperty]
     private EditorNavigationRequest? _navigationRequest;
 
+    /// <summary>Acción de edición (buscar, reemplazar, autocompletar) pedida al editor visible.</summary>
+    [ObservableProperty]
+    private EditorActionRequest? _actionRequest;
+
     private readonly ICodeAnalysisService _analysisService;
     private readonly IMessenger _messenger;
 
@@ -98,10 +102,25 @@ public sealed partial class EditorHostViewModel : ViewModelBase
     }
 
 
+    /// <summary>
+    /// Pide al editor que ejecute <paramref name="action"/> sobre el documento
+    /// visible. Sin documento abierto no hay sobre qué actuar y devuelve <c>false</c>.
+    /// </summary>
+    public bool TryRequestAction(EditorAction action)
+    {
+        if (SelectedDocument is null)
+        {
+            return false;
+        }
+
+        ActionRequest = new EditorActionRequest(action);
+        return true;
+    }
+
     /// Inserta un ejemplo en la posicion actual del cursor del documento activo.
     /// No reemplaza todo el archivo.
     /// No guarda automaticamente.
-    public bool InsertExampleAtCaret(string example)
+    public bool TryInsertExampleAtCaret(string example)
     {
         if (SelectedDocument is not { } selected ||
             string.IsNullOrEmpty(example))
@@ -151,7 +170,7 @@ public sealed partial class EditorHostViewModel : ViewModelBase
 
         var document = new EditorDocumentViewModel(
             fullPath, RelativePathOf(fullPath), File.ReadAllText(fullPath),
-            CloseDocument, _analysisService, OpenDocumentTexts);
+            CloseDocument, _analysisService, TextsOfOpenDocuments);
         document.ContentChanged += OnDocumentContentChanged;
 
         Documents.Add(document);
@@ -177,7 +196,7 @@ public sealed partial class EditorHostViewModel : ViewModelBase
     /// en lugar del contenido en disco: lo que se compila es lo que el usuario ve,
     /// aunque no lo haya guardado. Solo desde el hilo de la UI.
     /// </summary>
-    public IReadOnlyDictionary<string, string> OpenDocumentTexts()
+    public IReadOnlyDictionary<string, string> TextsOfOpenDocuments()
     {
         var texts = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 

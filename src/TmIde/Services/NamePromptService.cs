@@ -7,12 +7,12 @@ namespace TmIde.Services;
 
 public sealed class NamePromptService : INamePromptService
 {
-    // Tamaños de la escala común (Styles.xaml); el valor local es solo el respaldo.
-    // Fuente de la interfaz (Styles.xaml); IBM Plex Mono no está si no hay Application.
-    private static FontFamily ScaleFont() =>
+    // Fuente de la interfaz (Styles.xaml); sin Application se usa Consolas.
+    private static FontFamily UiFontFamily() =>
         Application.Current?.TryFindResource("UiFontFamily") as FontFamily ?? new FontFamily("Consolas");
 
-    private static double ScaleSize(string key, double fallback) =>
+    // Tamaño de la escala tipográfica común (Styles.xaml), o el respaldo si no existe.
+    private static double FontSizeOrDefault(string key, double fallback) =>
         Application.Current?.TryFindResource(key) is double size ? size : fallback;
 
     public string? RequestName(
@@ -70,7 +70,7 @@ public sealed class NamePromptService : INamePromptService
         var label = new TextBlock
         {
             Text = message,
-            FontSize = ScaleSize("FontSizeTitle", 15),
+            FontSize = FontSizeOrDefault("FontSizeTitle", 15),
             FontWeight = FontWeights.SemiBold,
             Margin = new Thickness(0, 0, 0, 14),
             TextWrapping = TextWrapping.Wrap
@@ -106,8 +106,8 @@ public sealed class NamePromptService : INamePromptService
             Style = new Style(typeof(TextBox)),
             Text = initialName,
             Height = 44,
-            FontSize = ScaleSize("FontSizeTitle", 15),
-            FontFamily = ScaleFont(),
+            FontSize = FontSizeOrDefault("FontSizeTitle", 15),
+            FontFamily = UiFontFamily(),
             Padding = new Thickness(12, 0, 12, 0),
             Margin = new Thickness(0),
             BorderThickness = new Thickness(0),
@@ -128,7 +128,7 @@ public sealed class NamePromptService : INamePromptService
 
         input.SetResourceReference(
             TextBox.SelectionBrushProperty,
-            "AccentBrush");
+            "SurfaceAccentBrush");
 
         inputBorder.Child = input;
 
@@ -149,7 +149,7 @@ public sealed class NamePromptService : INamePromptService
             Content = "Cancelar",
             Width = 110,
             Height = 38,
-            FontSize = ScaleSize("FontSizeEmphasis", 13),
+            FontSize = FontSizeOrDefault("FontSizeEmphasis", 13),
             FontWeight = FontWeights.SemiBold,
             BorderThickness = new Thickness(1),
             Cursor = Cursors.Hand,
@@ -175,21 +175,24 @@ public sealed class NamePromptService : INamePromptService
             Content = "Aceptar",
             Width = 110,
             Height = 38,
-            FontSize = ScaleSize("FontSizeEmphasis", 13),
+            FontSize = FontSizeOrDefault("FontSizeEmphasis", 13),
             FontWeight = FontWeights.SemiBold,
-            Foreground = Brushes.White,
             BorderThickness = new Thickness(1),
             Cursor = Cursors.Hand,
             IsDefault = true
         };
 
         acceptButton.SetResourceReference(
+            Button.ForegroundProperty,
+            "SurfaceAccentForegroundBrush");
+
+        acceptButton.SetResourceReference(
             Button.BackgroundProperty,
-            "AccentBrush");
+            "SurfaceAccentBrush");
 
         acceptButton.SetResourceReference(
             Button.BorderBrushProperty,
-            "AccentBrush");
+            "SurfaceAccentBrush");
 
         string? result = null;
 

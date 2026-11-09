@@ -45,7 +45,7 @@ public sealed class LanguageReferenceService
         if (result == true &&
             dialog.RequestedExample is { } example)
         {
-            _editorHost.InsertExampleAtCaret(example);
+            _editorHost.TryInsertExampleAtCaret(example);
         }
     }
 }

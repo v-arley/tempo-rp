@@ -11,7 +11,7 @@ public partial class BottomPanelView : UserControl
         InitializeComponent();
     }
 
-    /// Envía al ViewModel de Output la línea sobre la que se hizo doble clic
+    /// <summary>Envía al ViewModel de Output la línea sobre la que se hizo doble clic.</summary>
     private void OnOutputLineDoubleClicked(
         object sender,
         LogLineDoubleClickedEventArgs e)
@@ -26,12 +26,6 @@ public partial class BottomPanelView : UserControl
             return;
         }
 
-        output.ActivateLine(e.LineNumber);
-    }
-
-    private void TabControl_SelectionChanged(
-        object sender,
-        SelectionChangedEventArgs e)
-    {
+        output.TryActivateLine(e.LineNumber);
     }
 }
