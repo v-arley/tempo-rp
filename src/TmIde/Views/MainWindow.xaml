@@ -67,7 +67,7 @@
         </Grid>
 
         <!-- Fila 1: separador header / centro, a todo el ancho -->
-        <Grid Grid.Row="1" Background="{DynamicResource DividerBrush}" />
+        <Grid Grid.Row="1" Background="{DynamicResource WindowBandBrush}" />
 
         <!-- Fila 2: zona central = explorador (izq., altura completa) | editor + panel inferior (der.) -->
         <Grid Grid.Row="2">
@@ -79,12 +79,19 @@
 
             <!-- Explorador: ocupa todo el espacio entre header y footer, sin márgenes -->
             <Border Grid.Column="0"
-                    Background="{DynamicResource PanelOverlayBrush}">
+                    Background="{DynamicResource ExplorerBackgroundBrush}">
                 <explorer:FileExplorerView DataContext="{Binding Explorer}" />
             </Border>
 
+            <!-- Color propio en un estilo derivado: así conserva el realce rojo al pasar el cursor -->
             <GridSplitter Grid.Column="1" Width="2" HorizontalAlignment="Center"
-                            VerticalAlignment="Stretch" />
+                            VerticalAlignment="Stretch">
+                <GridSplitter.Style>
+                    <Style TargetType="GridSplitter" BasedOn="{StaticResource {x:Type GridSplitter}}">
+                        <Setter Property="Background" Value="{DynamicResource ExplorerSplitterBrush}" />
+                    </Style>
+                </GridSplitter.Style>
+            </GridSplitter>
 
             <!-- Sección derecha: editor arriba; abajo, Output / Run y el panel de partículas -->
             <Grid Grid.Column="2">
@@ -126,7 +133,7 @@
         </Grid>
 
         <!-- Fila 3: separador centro / footer, a todo el ancho -->
-        <Grid Grid.Row="3" Background="{DynamicResource DividerBrush}" />
+        <Grid Grid.Row="3" Background="{DynamicResource WindowBandBrush}" />
 
         <!-- Fila 4: footer -->
         <Grid Grid.Row="4">

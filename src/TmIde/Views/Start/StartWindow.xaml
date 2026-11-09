@@ -282,9 +282,8 @@
             </Button>
         </DataTemplate>
 
-        <!-- Plantilla "línea de tiempo": los proyectos son nodos sobre un riel
-            vertical, con la fecha a la derecha (como un historial de
-            commits). El nodo seleccionado se rellena de rojo con un halo. -->
+        <!-- Plantilla "línea de tiempo": cada proyecto es un nodo con la fecha a
+            la derecha. El nodo seleccionado se rellena de rojo con un halo. -->
         <Style x:Key="RecentTimelineButton" TargetType="Button">
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="Cursor" Value="Hand" />
@@ -317,9 +316,7 @@
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
 
-                    <!-- Riel + nodo -->
-                    <Rectangle Grid.Column="1" Width="1" HorizontalAlignment="Center"
-                            Fill="{DynamicResource StartCaptionBrush}" Opacity="0.35" />
+                    <!-- Nodo -->
                     <Grid Grid.Column="1" Width="22" Height="22" HorizontalAlignment="Center"
                             VerticalAlignment="Center">
                         <Ellipse x:Name="Halo" Stroke="#BF3B2C" StrokeThickness="1" Opacity="0" />
@@ -624,23 +621,16 @@
             <!-- Fila 1 · recientes: bloque de ancho fijo centrado en ambos ejes -->
             <Grid Grid.Row="1" Margin="20,2,20,2" HorizontalAlignment="Stretch">
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
+                    <!-- Separación entre los botones y la lista -->
+                    <RowDefinition Height="12" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
-                <!-- Prolongación del riel hacia arriba (altura fija) y hacia abajo (rellena
-                    el resto hasta el borde): ambos extremos dejan el mismo margen de 2px
-                    contra los botones y contra el borde de la ventana. Misma x que el riel
-                    de los ítems: columna 6 + mitad de 36. -->
-                <Rectangle Grid.Row="0" Width="1" Height="12" HorizontalAlignment="Left" Margin="23.5,0,0,0"
-                        Fill="{DynamicResource StartCaptionBrush}" Opacity="0.35" />
                 <!-- Diseño de la lista: RecentItemTimeline (línea de tiempo), RecentItemRows (filas planas) o
                     RecentItemClassic (tarjetas). La plantilla activa se elige con la
                     clave de ItemTemplate. -->
                 <ItemsControl Grid.Row="1" ItemsSource="{Binding RecentProjects}"
                         ItemTemplate="{StaticResource RecentItemTimeline}" />
-                <Rectangle Grid.Row="2" Width="1" MinHeight="12" HorizontalAlignment="Left" Margin="23.5,0,0,0"
-                        Fill="{DynamicResource StartCaptionBrush}" Opacity="0.35" />
 
                 <TextBlock Grid.Row="1" Text="No hay proyectos recientes." HorizontalAlignment="Center" FontSize="{DynamicResource FontSizeBody}"
                             Foreground="{DynamicResource StartTextDimBrush}"

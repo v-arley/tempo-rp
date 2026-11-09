@@ -28,7 +28,7 @@
                                 <!-- Subrayado de la pestaña activa -->
                                 <Border x:Name="ActiveUnderline"
                                         Height="1" VerticalAlignment="Bottom"
-                                        Background="{DynamicResource AccentBrush}" Visibility="Collapsed" />
+                                        Background="{DynamicResource SurfaceAccentBrush}" Visibility="Collapsed" />
                                 <!-- Subrayado del hover (se despliega de izquierda a derecha) -->
                                 <Border x:Name="Underline"
                                         Height="1" VerticalAlignment="Bottom"
@@ -101,7 +101,7 @@
                                        VerticalAlignment="Center" Margin="0,0,6,0"
                                        FontFamily="{DynamicResource CodeFontFamily}"
                                        FontSize="{DynamicResource CodeFontSize}"
-                                       Foreground="{DynamicResource AccentBrush}" />
+                                       Foreground="{DynamicResource SurfaceAccentBrush}" />
                             <TextBox Grid.Column="1"
                                      Text="{Binding CurrentInput, UpdateSourceTrigger=PropertyChanged}"
                                      Background="Transparent" Padding="0" BorderThickness="0"

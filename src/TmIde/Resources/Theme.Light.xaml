@@ -3,14 +3,14 @@
 
     <!--
         Tema CLARO — diccionario por defecto (se mergea estáticamente en App.xaml).
-        Las 15 claves y sus roles son idénticos en Theme.Dark.xaml; solo cambian
-        los colores. Se consumen siempre con {DynamicResource}.
+        Las claves y sus roles son idénticos en todos los temas (Theme.*.xaml);
+        solo cambian los colores. Se consumen siempre con {DynamicResource}.
 
         Roles de fondo:
           WindowBackgroundBrush  marco de la ventana y barra de título
           SurfaceBackgroundBrush editor, panel inferior y barra de estado
-          PanelOverlayBrush      cuerpo del explorador (área del árbol)
-          PanelHeaderBrush       cabecera del explorador (sección de búsqueda)
+          PanelOverlayBrush      paneles flotantes (búsqueda, desplegables, autocompletado)
+          PanelHeaderBrush       cabecera del explorador (título y acciones)
           InputBackgroundBrush   fondo de los campos de texto (caja de búsqueda)
           HoverBackgroundBrush   realce al pasar el cursor
 
@@ -25,7 +25,7 @@
     <SolidColorBrush x:Key="WindowBackgroundBrush"      Color="#A4B1C7" />
     <SolidColorBrush x:Key="SurfaceBackgroundBrush"     Color="#A4B1C7" />
     <SolidColorBrush x:Key="PanelOverlayBrush"          Color="#20262E" />
-    <SolidColorBrush x:Key="PanelHeaderBrush"           Color="#585C66" />
+    <SolidColorBrush x:Key="PanelHeaderBrush"           Color="#20262E" />
     <SolidColorBrush x:Key="InputBackgroundBrush"       Color="#464A52" />
     <SolidColorBrush x:Key="DividerBrush"               Color="#1B212A" />
     <SolidColorBrush x:Key="SplitterBrush"               Color="#1B212A" />
@@ -34,6 +34,14 @@
     <SolidColorBrush x:Key="HoverBackgroundBrush"       Color="#C2CBD2" />
     <SolidColorBrush x:Key="ScrollbarThumbBrush"        Color="#7C8890" />
     <SolidColorBrush x:Key="AccentBrush"                Color="#BF3B2C" />
+    <!-- Acento sobre las superficies de lectura: selección, subrayados y botón principal -->
+    <SolidColorBrush x:Key="SurfaceAccentBrush"           Color="#BF3B2C" />
+    <SolidColorBrush x:Key="SurfaceAccentForegroundBrush" Color="#FFFFFF" />
+    <!-- Acento sobre las barras de la ventana: subrayado de menús, cursor, COMPILE / RUN / STOP -->
+    <SolidColorBrush x:Key="ChromeAccentBrush"           Color="#BF3B2C" />
+    <SolidColorBrush x:Key="ChromeAccentForegroundBrush" Color="#000000" />
+    <!-- Encabezado, pie y recuadro de código de la ventana de ayuda -->
+    <SolidColorBrush x:Key="ReferencePanelBackgroundBrush" Color="#A4B1C7" />
     <SolidColorBrush x:Key="PrimaryForegroundBrush"     Color="#23303A" />
     <SolidColorBrush x:Key="SecondaryForegroundBrush"   Color="#4E5B65" />
     <SolidColorBrush x:Key="TertiaryForegroundBrush"    Color="#7C8890" />
@@ -41,6 +49,39 @@
     <SolidColorBrush x:Key="TitleMenuForegroundBrush"   Color="#4F5E7C" />
     <SolidColorBrush x:Key="ChromeShapeBrush"           Color="#1B212A" />
     <SolidColorBrush x:Key="ChromeShapeHoverBrush"      Color="#2A323D" />
+
+    <!-- Explorador de archivos: cuerpo del árbol y texto de sus entradas -->
+    <SolidColorBrush x:Key="ExplorerBackgroundBrush"         Color="#20262E" />
+    <SolidColorBrush x:Key="ExplorerItemForegroundBrush"     Color="#E6EEF8" />
+    <SolidColorBrush x:Key="ExplorerMainFileForegroundBrush" Color="#8ED8FF" />
+
+    <!-- Pestañas del editor: la activa toma el tono de la ruta, las demás el oscuro -->
+    <SolidColorBrush x:Key="ActiveTabBackgroundBrush"        Color="#A4B1C7" />
+    <SolidColorBrush x:Key="ActiveTabForegroundBrush"        Color="#23303A" />
+    <SolidColorBrush x:Key="ActiveTabCloseIconBrush"         Color="#B6C1D3" />
+    <SolidColorBrush x:Key="InactiveTabBackgroundBrush"      Color="#1B212A" />
+    <SolidColorBrush x:Key="InactiveTabHoverBackgroundBrush" Color="#2A323D" />
+    <SolidColorBrush x:Key="InactiveTabForegroundBrush"      Color="#B6C1D3" />
+    <SolidColorBrush x:Key="InactiveTabCloseIconBrush"       Color="#B6C1D3" />
+
+    <!-- Figura decorativa al inicio de la barra de pestañas -->
+    <SolidColorBrush x:Key="TabStripLeadBrush"     Color="#1B212A" />
+
+    <!-- Divisor entre el explorador y el editor (separador y borde del explorador) -->
+    <SolidColorBrush x:Key="ExplorerSplitterBrush" Color="#1B212A" />
+
+    <!-- Ruta del archivo, bajo las pestañas -->
+    <SolidColorBrush x:Key="DocumentPathBackgroundBrush"   Color="#A4B1C7" />
+    <SolidColorBrush x:Key="DocumentPathForegroundBrush"   Color="#4E5B65" />
+    <SolidColorBrush x:Key="DocumentPathSeparatorBrush"    Color="#7C8890" />
+
+    <!-- Franjas horizontales de la ventana: bordes, separadores y placa del título -->
+    <SolidColorBrush x:Key="WindowBandBrush"       Color="#1B212A" />
+    <SolidColorBrush x:Key="TitlePlateForegroundBrush" Color="#A4B1C7" />
+
+    <!-- Indicador de estado del proyecto, al centro de la barra de estado -->
+    <SolidColorBrush x:Key="StatusIndicatorBackgroundBrush" Color="#1B212A" />
+    <SolidColorBrush x:Key="StatusIndicatorForegroundBrush" Color="#D5D5D5" />
 
     <!-- Colores de sintaxis del editor (sobre SurfaceBackgroundBrush) -->
     <SolidColorBrush x:Key="SyntaxKeywordBrush"         Color="#A02D20" />

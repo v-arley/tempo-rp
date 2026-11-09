@@ -87,7 +87,7 @@ public partial class LogView : UserControl
         // Ocultar el cursor visual del log de solo lectura
         Editor.TextArea.Caret.CaretBrush = Brushes.Transparent;
 
-        SetResourceReference(SelectionAccentBrushProperty, "AccentBrush");
+        SetResourceReference(SelectionAccentBrushProperty, "SurfaceAccentBrush");
 
         // Detectar doble clic sobre el texto de AvalonEdit
         Editor.PreviewMouseLeftButtonDown += OnLogPreviewMouseLeftButtonDown;
