@@ -81,11 +81,11 @@ public sealed class DotRendererTests
     public void ShadowTones_StandOutOnBothThemes(DiagnosticState state)
     {
         // Diferencia mínima de luminosidad (suma de canales) para distinguir un punto.
-        const int Legible = 120;
+        const int legible = 120;
         var shadow = DotPalette.For(state).Shadow;
 
-        Assert.True(Lightness(shadow) - Lightness(DarkSurface) >= Legible, "Se ve sobre el tema oscuro");
-        Assert.True(DistanceFromBackground(shadow) >= Legible, "Se ve sobre el tema claro");
+        Assert.True(Lightness(shadow) - Lightness(DarkSurface) >= legible, "Se ve sobre el tema oscuro");
+        Assert.True(DistanceFromBackground(shadow) >= legible, "Se ve sobre el tema claro");
     }
 
     [Fact]

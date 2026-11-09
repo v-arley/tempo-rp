@@ -20,7 +20,7 @@ public sealed class TempoProject
 {
     private const string SourcePattern = "*.tm*";
 
-    private static readonly IReadOnlyDictionary<string, string> _noOpenDocuments =
+    private static readonly IReadOnlyDictionary<string, string> NoOpenDocuments =
         new Dictionary<string, string>();
 
     private readonly List<SyntaxTree> _files = new();
@@ -34,7 +34,7 @@ public sealed class TempoProject
     {
         RootDirectory = rootDirectory;
         IsWholeDirectory = isWholeDirectory;
-        _openDocuments = (openDocuments ?? _noOpenDocuments)
+        _openDocuments = (openDocuments ?? NoOpenDocuments)
             .ToDictionary(
                 document => Path.GetFullPath(document.Key),
                 document => document.Value,

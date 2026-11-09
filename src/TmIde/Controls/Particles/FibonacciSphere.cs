@@ -17,9 +17,9 @@ public static class FibonacciSphere
 
     /// <summary>Direcciones unitarias de <paramref name="count"/> puntos.</summary>
     public static Vector3[] Points(int count) =>
-        Enumerable.Range(0, count).Select(index => OnSpiral(index, count)).ToArray();
+        Enumerable.Range(0, count).Select(index => PointOnSpiral(index, count)).ToArray();
 
-    private static Vector3 OnSpiral(int index, int count)
+    private static Vector3 PointOnSpiral(int index, int count)
     {
         var height = 1 - 2 * (index + 0.5f) / count;
         var radius = MathF.Sqrt(1 - height * height);

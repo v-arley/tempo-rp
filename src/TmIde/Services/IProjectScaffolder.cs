@@ -15,7 +15,7 @@ public interface IProjectScaffolder
     /// <paramref name="location"/>. Devuelve el motivo si no es posible, o
     /// <c>null</c> si lo es.
     /// </summary>
-    string? Validate(string location, string name);
+    string? ValidationErrorFor(string location, string name);
 
     /// <summary>Ruta de la carpeta que tendría el proyecto.</summary>
     string GetProjectPath(string location, string name);
