@@ -1,0 +1,5 @@
+# Tests: el nombre describe el escenario (Metodo_Escenario_Resultado), no el
+# modelo de ejecución. Los tests asíncronos de xUnit no llevan sufijo Async.
+
+[*.cs]
+dotnet_naming_rule.async_methods_end_with_async.severity = none

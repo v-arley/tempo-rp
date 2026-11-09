@@ -1,5 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+
+using Tempo.Language.Syntax;
 
 namespace TmIde.Controls.Syntax;
 
@@ -16,39 +19,19 @@ public static class TmSyntaxScanner
 {
     private const string BlockCommentDelimiter = "##";
 
-    private static readonly Dictionary<string, TmSyntaxKind> ReservedWordKinds = new(StringComparer.Ordinal)
+    // Color de cada papel de palabra reservada. Las palabras salen de
+    // SyntaxFacts, la tabla única del lenguaje; aquí solo se decide el color.
+    // Los compuestos (sequence, score) se pintan como palabra clave.
+    private static readonly Dictionary<ReservedWordRole, TmSyntaxKind> KindByRole = new()
     {
-        ["compose"] = TmSyntaxKind.Keyword,
-        ["session"] = TmSyntaxKind.Keyword,
-        ["output"] = TmSyntaxKind.Keyword,
-        ["input"] = TmSyntaxKind.Keyword,
-        ["mix"] = TmSyntaxKind.Keyword,
-        ["case"] = TmSyntaxKind.Keyword,
-        ["default"] = TmSyntaxKind.Keyword,
-        ["loop"] = TmSyntaxKind.Keyword,
-        ["repeat"] = TmSyntaxKind.Keyword,
-        ["if"] = TmSyntaxKind.Keyword,
-        ["else"] = TmSyntaxKind.Keyword,
-        ["ret"] = TmSyntaxKind.Keyword,
-        ["import"] = TmSyntaxKind.Keyword,
-        ["const"] = TmSyntaxKind.Keyword,
-        ["sequence"] = TmSyntaxKind.Keyword,
-        ["score"] = TmSyntaxKind.Keyword,
-        ["and"] = TmSyntaxKind.Keyword,
-        ["or"] = TmSyntaxKind.Keyword,
-        ["not"] = TmSyntaxKind.Keyword,
-        ["tempo"] = TmSyntaxKind.Keyword,
-        ["pulse"] = TmSyntaxKind.Keyword,
-        ["sample"] = TmSyntaxKind.Type,
-        ["wave"] = TmSyntaxKind.Type,
-        ["tone"] = TmSyntaxKind.Type,
-        ["phrase"] = TmSyntaxKind.Type,
-        ["signal"] = TmSyntaxKind.Type,
-        ["void"] = TmSyntaxKind.Type,
-        ["true"] = TmSyntaxKind.BuiltInValue,
-        ["false"] = TmSyntaxKind.BuiltInValue,
-        ["silence"] = TmSyntaxKind.BuiltInValue,
+        [ReservedWordRole.Keyword] = TmSyntaxKind.Keyword,
+        [ReservedWordRole.CompositeType] = TmSyntaxKind.Keyword,
+        [ReservedWordRole.PrimitiveType] = TmSyntaxKind.Type,
+        [ReservedWordRole.Literal] = TmSyntaxKind.BuiltInValue,
     };
+
+    private static readonly Dictionary<string, TmSyntaxKind> ReservedWordKinds = SyntaxFacts.ReservedWords
+        .ToDictionary(word => word.Lexeme, word => KindByRole[word.Role], StringComparer.Ordinal);
 
     public static IReadOnlyList<TmSyntaxSpan> Scan(string text)
     {

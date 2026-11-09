@@ -30,49 +30,6 @@ public sealed class Lexer : ILexer
     private int _line;       // Línea actual (1-based)
     private int _column;     // Columna actual (1-based)
 
-    // Palabras reservadas de TM indexadas por su lexema. Permite decidir en
-    // tiempo constante si una secuencia de letras es una keyword o un
-    // identificador de usuario.
-    private static readonly Dictionary<string, TokenType> ReservedWords;
-
-    // Puebla la tabla de palabras reservadas una sola vez para toda la clase.
-    static Lexer()
-    {
-        ReservedWords = new Dictionary<string, TokenType>(StringComparer.Ordinal)
-            {
-                { "compose", TokenType.Compose },
-                { "session", TokenType.Session },
-                { "output", TokenType.Output },
-                { "input", TokenType.Input },
-                { "mix", TokenType.Mix },
-                { "case", TokenType.Case },
-                { "default", TokenType.Default },
-                { "loop", TokenType.Loop },
-                { "repeat", TokenType.Repeat },
-                { "if", TokenType.If },
-                { "else", TokenType.Else },
-                { "ret", TokenType.Ret },
-                { "import", TokenType.Import },
-                { "const", TokenType.Const },
-                { "sequence", TokenType.Sequence },
-                { "score", TokenType.Score },
-                { "true", TokenType.True },
-                { "false", TokenType.False },
-                { "silence", TokenType.Silence },
-                { "sample", TokenType.Sample },
-                { "wave", TokenType.Wave },
-                { "tone", TokenType.Tone },
-                { "phrase", TokenType.Phrase },
-                { "signal", TokenType.Signal },
-                { "void", TokenType.Void },
-                { "and", TokenType.And },
-                { "or", TokenType.Or },
-                { "not", TokenType.Not },
-                { "tempo", TokenType.Tempo },
-                { "pulse", TokenType.Pulse }
-            };
-    }
-
     /// <summary>
     /// Crea un analizador léxico posicionado al inicio de <paramref name="source"/>.
     /// </summary>
@@ -177,8 +134,8 @@ public sealed class Lexer : ILexer
     /// <summary>
     /// Crea un token con los metadatos de ubicación actuales (antes de avanzar).
     /// </summary>
-    private Token CreateToken(TokenType type, string lexeme, int lineOffset = 0, int colOffset = 0) =>
-        new Token(type, lexeme, _line + lineOffset, _column + colOffset);
+    private Token CreateToken(TokenType type, string lexeme, int lineOffset = 0, int columnOffset = 0) =>
+        new Token(type, lexeme, _line + lineOffset, _column + columnOffset);
 
     /// <summary>
     /// Avanza el cursor sobre todo el espacio en blanco y los comentarios (de
@@ -276,7 +233,7 @@ public sealed class Lexer : ILexer
         int startColumn = _column;
 
         // Identificadores y palabras reservadas
-        if (IsLetter(c))
+        if (SyntaxFacts.IsIdentifierStart(c))
         {
             return ReadIdentifierOrKeyword(startLine, startColumn);
         }
@@ -307,8 +264,8 @@ public sealed class Lexer : ILexer
 
     /// <summary>
     /// Lee una palabra: una letra inicial seguida de letras, dígitos o guion
-    /// bajo. Si el lexema figura en la tabla de palabras reservadas devuelve la
-    /// keyword correspondiente; si no, un identificador. La comparación
+    /// bajo. Si el lexema figura en la tabla de <see cref="SyntaxFacts"/> devuelve
+    /// la keyword correspondiente; si no, un identificador. La comparación
     /// distingue mayúsculas de minúsculas.
     /// EBNF: identifier = letter, { letter | digit | "_" };
     /// </summary>
@@ -316,16 +273,16 @@ public sealed class Lexer : ILexer
     {
         var lexemeBuilder = new StringBuilder();
 
-        while (!IsAtEnd() && IsIdentifierPart(Peek()))
+        while (!IsAtEnd() && SyntaxFacts.IsIdentifierPart(Peek()))
         {
             lexemeBuilder.Append(Advance());
         }
 
         string lexeme = lexemeBuilder.ToString();
 
-        if (ReservedWords.TryGetValue(lexeme, out TokenType keywordType))
+        if (SyntaxFacts.TryGetReservedWord(lexeme, out ReservedWord reserved))
         {
-            return new Token(keywordType, lexeme, startLine, startColumn);
+            return new Token(reserved.Token, lexeme, startLine, startColumn);
         }
 
         return new Token(TokenType.Identifier, lexeme, startLine, startColumn);
@@ -370,7 +327,7 @@ public sealed class Lexer : ILexer
                 lexemeBuilder.Append(Advance());
             }
         }
-        else if (Peek() == '.' && !IsIdentifierPart(PeekNext()))
+        else if (Peek() == '.' && !SyntaxFacts.IsIdentifierPart(PeekNext()))
         {
             throw new LexerException(
                 DiagnosticCodes.MalformedNumericLiteral,
@@ -644,21 +601,4 @@ public sealed class Lexer : ILexer
                     _fileName, startLine, startColumn);
         }
     }
-
-    // Clasificación de caracteres
-
-    /// <summary>
-    /// Indica si el carácter es una letra ASCII, el único inicio válido de un
-    /// identificador o palabra reservada en TM.
-    /// EBNF: letter = "a".."z" | "A".."Z";
-    /// </summary>
-    private static bool IsLetter(char c) =>
-        (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
-
-    /// <summary>
-    /// Indica si el carácter puede aparecer después del primero en un
-    /// identificador: una letra, un dígito o un guion bajo.
-    /// </summary>
-    private static bool IsIdentifierPart(char c) =>
-        IsLetter(c) || char.IsDigit(c) || c == '_';
 }
