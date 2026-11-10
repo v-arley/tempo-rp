@@ -1,93 +1,141 @@
-# Tempo Programming Language
+# Tempo
 
+Tempo (**TM**) es un lenguaje de programación imperativo de tipado estático
+cuyo vocabulario procede de la música. Este repositorio contiene su
+implementación completa: el compilador y el intérprete, una herramienta de
+línea de comandos y **TmIde**, un entorno de desarrollo para Windows.
 
-### Documentación
+```tm
+sample : compose fibonacci(sample n) >
+    if [n <= 1] >
+        ret n;
+    <
+    ret fibonacci(n - 1) + fibonacci(n - 2);
+<
 
-- [Especificación formal del lenguaje TM v1.1](docs/ESPECIFICACION-TM.md) —
-  gramática léxica y sintáctica (EBNF), sistema de tipos, semántica estática y
-  dinámica, formato de errores y suite de pruebas canónicas. Es la referencia
-  autoritativa para `Tempo.Language` (Lexer, Parser, análisis semántico e
-  intérprete implementados).
-
-- [Arquitectura del proyecto](docs/ARQUITECTURA.md) — estado real del repo: la
-  organización por fases de `Tempo.Language` (modelo Roslyn/Minsk), el host
-  `Tempo.Cli`, el esqueleto de `TmIde` y la infraestructura de build
-  (`global.json`, `Directory.*.props`, `.editorconfig`).
-
-- [Convenciones de código](docs/CONVENTIONS.md) — nomenclatura C#/.NET (estándar
-  Microsoft), verificadas en compilación vía `.editorconfig` +
-  `EnforceCodeStyleInBuild` + `TreatWarningsAsErrors`.
-
-### Estructura de archivos y directorios
-
-```
-tempo-rp/
-├── tempo-rp.slnx
-├── global.json                          # SDK .NET fijado (10.0.x)
-├── Directory.Build.props                # props comunes: Nullable, analizadores, warnings-as-errors
-├── Directory.Packages.props             # Central Package Management (versiones NuGet)
-├── .editorconfig                        # estilo + nomenclatura C#
-├── README.md
-├── .gitignore
-├── docs/
-│   ├── ESPECIFICACION-TM.md
-│   ├── ARQUITECTURA.md
-│   └── CONVENTIONS.md
-├── samples/                             # programas TM de ejemplo (prueba-*.tmpr)
-│   └── importaciones/                   # proyecto multiarchivo: principal.tmpr + utilidades.tm
-├── src/
-│   ├── Assets/                          # fuentes .ttf + iconos .svg compartidos (JetBrains/IBM Plex Mono)
-│   ├── Tempo.Language/                  # Biblioteca: TODO el lenguaje, organizada por fase
-│   │   ├── Compilation.cs               # fachada: compila un proyecto y lo ejecuta
-│   │   ├── Projects/                    # TempoProject, ImportGraph, reglas de proyecto (§6.6)
-│   │   ├── Diagnostics/                 # Diagnostic, DiagnosticBag, ProjectDiagnostics, catálogo y códigos (§7)
-│   │   ├── Syntax/                      # SyntaxTree, Lexer, Parser, Token/TokenType, AST (33 nodos), *Exception
-│   │   ├── Symbols/                     # TmType, TypeKind, TypeNameParser, FunctionSymbol, VariableSymbol
-│   │   ├── Binding/                     # ProjectAnalyzer, SemanticAnalyzer, analizadores, SymbolTable/Scope, reglas de tipos
-│   │   ├── Evaluation/                  # Interpreter, ejecutores, RuntimeValue/Environment, errores de ejecución
-│   │   └── IO/                          # reportes de texto: tokens, AST y diagnósticos
-│   ├── Tempo.Cli/                       # Host de consola: pipeline completo + E/S por consola
-│   └── TmIde/                           # IDE gráfico (WPF, net10.0-windows, MVVM con
-│       ├── Resources/                   #   CommunityToolkit.Mvvm). Esqueleto visual:
-│       ├── Services/                    #   chrome propio (WindowChrome), theming en
-│       ├── Controls/                    #   caliente, explorador, editor de texto plano,
-│       ├── ViewModels/                  #   panel Terminal/Output/Debug, barra de estado.
-│       └── Views/
-└── tests/
-    └── Tempo.Language.Tests/            # xUnit; carpetas espejo de las fases:
-        ├── Syntax/                      #   LexerTests, ParserTests
-        ├── Symbols/                     #   TmTypeTests, TypeNameParserTests
-        ├── Binding/                     #   análisis semántico (+ SemanticTestHarness)
-        ├── Diagnostics/                 #   DiagnosticTests
-        ├── Evaluation/                  #   intérprete y programas canónicos
-        └── Projects/                    #   proyectos multiarchivo (I1–I3, C1) + ProjectWorkspace
+session >
+    output >> "Fib(7) = " + fibonacci(7);
+<
 ```
 
-`Tempo.Language` sigue el modelo de **Roslyn/Minsk** ("el compilador como
-API"): un único proyecto con todo el lenguaje, dividido en carpetas y namespaces
-según la **fase del pipeline** (texto → `Syntax` → `Binding` → `Evaluation`).
-Los namespaces coinciden con la carpeta
-(`Tempo.Language.Syntax`, `Tempo.Language.Binding`, …). Los hosts, como
-`Tempo.Cli`, consumen la biblioteca a través de la fachada `Compilation`; la
-biblioteca no depende de ningún host.
+## Características
+
+**Lenguaje**
+
+- Tipos primitivos `sample` (entero), `wave` (real), `tone` (carácter),
+  `phrase` (cadena) y `signal` (booleano), el valor nulo `silence` y las
+  colecciones `sequence<T>` y `score<T>`.
+- Tipado fuerte sin conversiones implícitas entre tipos numéricos.
+- Funciones con recursión, constantes, condicionales, selección múltiple `mix`
+  y bucles `loop` y `repeat`.
+- Proyectos multiarchivo con un archivo principal `.tmpr` y módulos `.tm`
+  enlazados con `import`.
+- Catálogo de diagnósticos con código, archivo, línea, descripción y posible
+  solución.
+
+**TmIde**
+
+- Editor con coloreado de sintaxis, diagnósticos mientras se escribe,
+  autocompletado, búsqueda y reemplazo, plegado de bloques y ayuda contextual.
+- Explorador de archivos del proyecto, compilación con diagnósticos navegables y
+  ejecución integrada con entrada interactiva.
+- Panel de partículas que refleja el estado del proyecto, el ritmo declarado con
+  `tempo` y las ráfagas de `pulse`.
+- Temas claro y oscuro, proyectos recientes y un piano que suena al escribir.
+
+## Requisitos
+
+| Componente | Requisito |
+|---|---|
+| SDK | [.NET SDK 10](https://dotnet.microsoft.com/download), versión fijada en `global.json`. |
+| Solución completa y TmIde | Windows 10 o posterior. |
+| `Tempo.Language` y `Tempo.Cli` | Multiplataforma (Windows, Linux o macOS). |
+
+## Primeros pasos
 
 ```powershell
-dotnet build                                            # compila toda la solución
-dotnet test                                             # corre Tempo.Language.Tests
-dotnet run --project src/Tempo.Cli -- samples/prueba-correcta.tmpr [--tokens]
-dotnet run --project src/Tempo.Cli -- samples/importaciones   # proyecto multiarchivo (directorio)
-dotnet run --project src/TmIde/TmIde.csproj
+git clone https://github.com/v-arley/tempo-rp.git
+cd tempo-rp
+dotnet build tempo-rp.slnx
 ```
 
-`TmIde` es un proyecto **WPF SDK-style sobre `net10.0-windows`**. Patrón MVVM con
-`CommunityToolkit.Mvvm` (`[ObservableProperty]` / `[RelayCommand]`), composición
-manual en `App.OnStartup` (sin contenedor de DI), ventana sin chrome nativo con
-`System.Windows.Shell.WindowChrome`, y tema claro/oscuro intercambiable en
-caliente (15 brushes por rol en `Resources/Theme.*.xaml`, consumidos con
-`{DynamicResource}`). El editor es un `TextBox` monoespaciado con canaleta de
-números de línea, sin resaltado de sintaxis. El árbol del explorador, las
-pestañas del editor y el panel Terminal arrancan vacíos, y los botones de crear
-archivo/carpeta y COMPILE / RUN / DEBUG son decorativos (sin acción). `TmIde` no
-referencia a `Tempo.Language`.
+### Ejecutar un programa desde la línea de comandos
 
----
+```powershell
+dotnet run --project src/Tempo.Cli -- <directorio | archivo.tmpr | archivo.tm> [--tokens] [--ast]
+```
+
+```powershell
+dotnet run --project src/Tempo.Cli -- samples/prueba-correcta.tmpr
+dotnet run --project src/Tempo.Cli -- samples/importaciones
+```
+
+La CLI imprime los diagnósticos de cada archivo y, si el proyecto no tiene
+errores, lo ejecuta. Termina con el código `0` si todo fue correcto, `1` ante
+errores de compilación y `2` ante un error de ejecución.
+
+### Abrir el entorno de desarrollo
+
+```powershell
+dotnet run --project src/TmIde
+```
+
+Desde la ventana de inicio se crea un proyecto nuevo, que incluye un
+`principal.tmpr` listo para ejecutar, o se abre una carpeta existente.
+
+| Atajo | Acción |
+|---|---|
+| `Ctrl+S` | Guardar el documento activo |
+| `Ctrl+F` / `Ctrl+H` | Buscar / reemplazar |
+| `Ctrl+Espacio` | Autocompletar |
+| `F1` | Referencia del lenguaje |
+
+Compilar, Ejecutar y Detener están en el menú EJECUCIÓN.
+
+### Ejecutar las pruebas
+
+```powershell
+dotnet test tempo-rp.slnx
+```
+
+## Estructura del repositorio
+
+```text
+tempo-rp/
+├── src/
+│   ├── Tempo.Language/      Compilador e intérprete de TM
+│   ├── Tempo.Cli/           Herramienta de línea de comandos
+│   ├── TmIde/               Entorno de desarrollo (WPF)
+│   └── Assets/              Fuentes e iconos del IDE
+├── tests/
+│   ├── Tempo.Language.Tests/
+│   └── TmIde.Tests/
+├── samples/                 Programas de ejemplo y de diagnóstico
+├── docs/                    Documentación técnica
+├── tempo-rp.slnx            Solución
+├── global.json              Versión del SDK
+├── Directory.Build.props    Propiedades comunes de compilación
+└── Directory.Packages.props Versiones centralizadas de NuGet
+```
+
+## Documentación
+
+| Documento | Contenido |
+|---|---|
+| [Especificación del lenguaje](docs/ESPECIFICACION-TM.md) | Léxico, gramática, tipos, semántica, proyectos, diagnósticos y ejecución. |
+| [Arquitectura](docs/ARQUITECTURA.md) | Diseño del compilador, del intérprete, de la CLI y de TmIde. |
+| [Convenciones](docs/CONVENTIONS.md) | Normas de código, diseño, pruebas y control de versiones. |
+
+## Ejemplos
+
+La carpeta [samples/](samples/) contiene programas listos para ejecutar con la
+CLI o abrir en TmIde:
+
+| Ejemplo | Muestra |
+|---|---|
+| `prueba-correcta.tmpr` | Programa válido mínimo. |
+| `prueba-comparacion.tmpr`, `prueba-mix-keywords.tmpr` | Comparaciones y selección múltiple. |
+| `importaciones/` | Proyecto con un módulo importado. |
+| `prueba-error.tmpr`, `prueba-s1.tmpr`, `prueba-s4.tmpr` | Errores de tipo y de sintaxis. |
+| `prueba-e011-*.tmpr`, `prueba-e015/` | Errores de estructura del proyecto. |
+| `prueba-r001.tmpr`, `prueba-cli.tmpr`, `prueba-r001-importado/` | Errores de ejecución. |
