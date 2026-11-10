@@ -90,6 +90,117 @@
                 </DataTrigger>
             </Style.Triggers>
         </Style>
+
+
+        <!-- Selector visible del modo musical -->
+        <Style x:Key="PianoModeHeaderToggle"
+            TargetType="ToggleButton">
+
+            <Setter Property="Content" Value="ESCRITURA" />
+            <Setter Property="Foreground"
+                    Value="{DynamicResource TitleMenuForegroundBrush}" />
+            <Setter Property="FontFamily"
+                    Value="{DynamicResource CodeFontFamily}" />
+            <Setter Property="FontSize"
+                    Value="{DynamicResource FontSizeSmall}" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Width" Value="150" />
+            <Setter Property="Height" Value="23" />
+            <Setter Property="Margin" Value="0,0,8,0" />
+            <Setter Property="Focusable" Value="False" />
+            <Setter Property="Cursor" Value="Hand" />
+
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ToggleButton">
+
+                        <Border x:Name="ModeBorder"
+                                Background="Transparent"
+                                BorderBrush="{DynamicResource SecondaryForegroundBrush}"
+                                BorderThickness="1"
+                                Padding="7,0">
+
+                            <StackPanel Orientation="Horizontal"
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center">
+
+                                <TextBlock Text="MODO"
+                                        Foreground="{DynamicResource TitleMenuForegroundBrush}"
+                                        FontSize="{DynamicResource FontSizeSmall}"
+                                        Margin="0,0,7,0"
+                                        VerticalAlignment="Center" />
+
+                                <ContentPresenter
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center" />
+
+                            </StackPanel>
+                        </Border>
+
+                        <ControlTemplate.Triggers>
+
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="ModeBorder"
+                                        Property="BorderBrush"
+                                        Value="{DynamicResource AccentBrush}" />
+                            </Trigger>
+
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="ModeBorder"
+                                        Property="Background"
+                                        Value="{DynamicResource HoverBackgroundBrush}" />
+                            </Trigger>
+
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="ModeBorder"
+                                        Property="Background"
+                                        Value="#33000000" />
+                            </Trigger>
+
+                        </ControlTemplate.Triggers>
+
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+
+            <Style.Triggers>
+
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="Opacity" Value="0.4" />
+                </Trigger>
+
+                <Trigger Property="IsChecked" Value="True">
+                    <Setter Property="Content"
+                            Value="INTERPRETACIÓN" />
+                </Trigger>
+
+                <DataTrigger
+                    Binding="{Binding ShowMenus,
+                            RelativeSource={RelativeSource AncestorType=UserControl}}"
+                    Value="False">
+                    <Setter Property="Visibility"
+                            Value="Collapsed" />
+                </DataTrigger>
+
+            </Style.Triggers>
+        </Style>
+
+        <!-- Botones para cambiar la octava -->
+        <Style x:Key="PianoOctaveHeaderButton"
+            TargetType="Button"
+            BasedOn="{StaticResource {x:Type Button}}">
+
+            <Setter Property="Width" Value="20" />
+            <Setter Property="Height" Value="20" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Margin" Value="0" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Focusable" Value="False" />
+            <Setter Property="Foreground"
+                    Value="{DynamicResource TitleMenuForegroundBrush}" />
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+
     </UserControl.Resources>
 
     <!-- Header: contenedor principal a todo el ancho con dos hijos en columna.
@@ -116,8 +227,8 @@
                 <!-- Título central -->
                 <ColumnDefinition Width="1.5*" />
 
-                <!-- Botones de ventana -->
-                <ColumnDefinition Width="*" MinWidth="350" />
+                <!-- Controles musicales y botones de ventana -->
+                <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
 
             <!-- Centro: contenedor que ocupa todo el segmento central y, dentro, la
@@ -704,6 +815,81 @@
                     </ToggleButton.Template>
 
                 </ToggleButton>
+
+
+                <!-- Selector directo del modo musical -->
+                <ToggleButton
+                    Style="{StaticResource PianoModeHeaderToggle}"
+                    IsChecked="{Binding Piano.IsPerformanceMode,
+                                        Mode=TwoWay,
+                                        UpdateSourceTrigger=PropertyChanged}"
+                    IsEnabled="{Binding Piano.Enabled}"
+                    ToolTip="Cambiar entre modo escritura y modo interpretación" />
+
+                <!-- Indicador y controles de octava -->
+                <Border Height="23"
+                        Margin="0,0,10,0"
+                        Padding="5,0"
+                        Background="Transparent"
+                        BorderBrush="{DynamicResource SecondaryForegroundBrush}"
+                        BorderThickness="1"
+                        IsEnabled="{Binding Piano.Enabled}"
+                        VerticalAlignment="Center">
+
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Style.Triggers>
+
+                                <Trigger Property="IsEnabled" Value="False">
+                                    <Setter Property="Opacity" Value="0.4" />
+                                </Trigger>
+
+                                <DataTrigger
+                                    Binding="{Binding ShowMenus,
+                                            RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                    Value="False">
+                                    <Setter Property="Visibility"
+                                            Value="Collapsed" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+
+                    <StackPanel Orientation="Horizontal"
+                                VerticalAlignment="Center">
+
+                        <!-- Bajar octava -->
+                        <Button Content="−"
+                                Style="{StaticResource PianoOctaveHeaderButton}"
+                                Click="OnPianoOctaveDown"
+                                ToolTip="Bajar octava (Z)" />
+
+                        <!-- Octava actual -->
+                        <TextBlock Text="OCT"
+                                Foreground="{DynamicResource TitleMenuForegroundBrush}"
+                                FontFamily="{DynamicResource CodeFontFamily}"
+                                FontSize="{DynamicResource FontSizeSmall}"
+                                VerticalAlignment="Center"
+                                Margin="3,0,4,0" />
+
+                        <TextBlock Text="{Binding Piano.Octave}"
+                                Foreground="{DynamicResource TitleMenuForegroundBrush}"
+                                FontFamily="{DynamicResource CodeFontFamily}"
+                                FontSize="{DynamicResource FontSizeSmall}"
+                                FontWeight="Bold"
+                                Width="16"
+                                TextAlignment="Center"
+                                VerticalAlignment="Center" />
+
+                        <!-- Subir octava -->
+                        <Button Content="+"
+                                Style="{StaticResource PianoOctaveHeaderButton}"
+                                Click="OnPianoOctaveUp"
+                                ToolTip="Subir octava (X)" />
+
+                    </StackPanel>
+                </Border>
+
 
                 <Button Style="{StaticResource CaptionGroupButton}" Click="OnMinimize" ToolTip="Minimizar">
                     <Path Style="{StaticResource CaptionGlyph}" Width="8" Height="8"
