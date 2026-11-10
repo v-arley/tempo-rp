@@ -1,0 +1,243 @@
+
+<Window x:Class="TmIde.Views.Dialogs.ConfirmDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
+        Title="Confirmar"
+        Width="520"
+        MinHeight="240"
+        MaxHeight="440"
+        SizeToContent="Height"
+        ResizeMode="NoResize"
+        WindowStyle="None"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False"
+        Background="{DynamicResource WindowBackgroundBrush}"
+        Foreground="{DynamicResource PrimaryForegroundBrush}"
+        FontFamily="{DynamicResource UiFontFamily}"
+        UseLayoutRounding="True">
+
+    <WindowChrome.WindowChrome>
+        <shell:WindowChrome CaptionHeight="0"
+                            ResizeBorderThickness="0"
+                            GlassFrameThickness="0"
+                            CornerRadius="0"
+                            UseAeroCaptionButtons="False" />
+    </WindowChrome.WindowChrome>
+
+    <Window.Resources>
+
+        <!-- Botones rectangulares -->
+        <Style x:Key="ConfirmActionButton" TargetType="Button">
+            <Setter Property="Width" Value="112" />
+            <Setter Property="Height" Value="36" />
+            <Setter Property="FontFamily"
+                    Value="{DynamicResource UiFontFamily}" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Cursor" Value="Hand" />
+
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Grid>
+                            <Border Background="{TemplateBinding Background}"
+                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="{TemplateBinding BorderThickness}" />
+
+                            <Border x:Name="HoverLayer"
+                                    Background="#22FFFFFF"
+                                    Visibility="Collapsed"
+                                    IsHitTestVisible="False" />
+
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center" />
+                        </Grid>
+
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="HoverLayer"
+                                        Property="Visibility"
+                                        Value="Visible" />
+                            </Trigger>
+
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="HoverLayer"
+                                        Property="Background"
+                                        Value="#33000000" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Botón X personalizado -->
+        <Style x:Key="ConfirmCloseButton" TargetType="Button">
+            <Setter Property="Width" Value="26" />
+            <Setter Property="Height" Value="26" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Cursor" Value="Hand" />
+
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Grid x:Name="CloseChrome"
+                              Background="{TemplateBinding Background}">
+
+                            <Path x:Name="CloseGlyph"
+                                  Data="{StaticResource IconCaptionClose}"
+                                  Stroke="{DynamicResource SecondaryForegroundBrush}"
+                                  StrokeThickness="1"
+                                  Width="8"
+                                  Height="8"
+                                  Stretch="None"
+                                  HorizontalAlignment="Center"
+                                  VerticalAlignment="Center" />
+                        </Grid>
+
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="CloseChrome"
+                                        Property="Background"
+                                        Value="{DynamicResource CloseButtonHoverBrush}" />
+
+                                <Setter TargetName="CloseGlyph"
+                                        Property="Stroke"
+                                        Value="White" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+    </Window.Resources>
+
+    <!-- Contenedor principal -->
+    <Border BorderBrush="{StaticResource OverlayEdgeBrush}"
+            BorderThickness="1"
+            Background="{DynamicResource SurfaceBackgroundBrush}">
+
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="34" />
+                <RowDefinition Height="3" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <!-- Barra superior -->
+            <Grid Grid.Row="0"
+                  Background="{DynamicResource WindowBackgroundBrush}"
+                  MouseLeftButtonDown="Header_MouseLeftButtonDown">
+
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="210" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <!-- Placa geométrica -->
+                <Grid Grid.Column="1" Height="34">
+
+                    <Path Data="M0,0 L240,0 L230,34 L10,34 Z"
+                          Stretch="Fill"
+                          Fill="{DynamicResource WindowBandBrush}" />
+
+                    <TextBlock Text="CONFIRMAR"
+                               Foreground="{DynamicResource TitlePlateForegroundBrush}"
+                               FontSize="12"
+                               FontWeight="SemiBold"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center" />
+                </Grid>
+
+                <!-- Botón de cerrar -->
+                <Button Grid.Column="2"
+                        Style="{StaticResource ConfirmCloseButton}"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Center"
+                        Margin="0,0,8,0"
+                        ToolTip="Cerrar"
+                        Click="Close_Click" />
+            </Grid>
+
+            <!-- Línea roja -->
+            <Border Grid.Row="1"
+                    Background="{DynamicResource SurfaceAccentBrush}" />
+
+            <!-- Mensaje de confirmación -->
+            <Grid Grid.Row="2"
+                  Margin="26,26,26,22"
+                  MinHeight="94">
+
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="42" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <!-- Icono de advertencia -->
+                <Grid Grid.Column="0"
+                      Width="34"
+                      Height="34"
+                      HorizontalAlignment="Left"
+                      VerticalAlignment="Top">
+
+                    <Path Data="M17,2 L33,30 L1,30 Z"
+                          Fill="#22BF3B2C"
+                          Stroke="{DynamicResource SurfaceAccentBrush}"
+                          StrokeThickness="1.5" />
+
+                    <TextBlock Text="!"
+                               Foreground="{DynamicResource SurfaceAccentBrush}"
+                               FontWeight="Bold"
+                               FontSize="18"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               Margin="0,6,0,0" />
+                </Grid>
+
+                <!-- Texto dinámico -->
+                <ScrollViewer Grid.Column="1"
+                              VerticalScrollBarVisibility="Auto"
+                              HorizontalScrollBarVisibility="Disabled"
+                              MaxHeight="200">
+
+                    <TextBlock x:Name="ConfirmationMessage"
+                               FontSize="13"
+                               TextWrapping="Wrap"
+                               LineHeight="21"
+                               VerticalAlignment="Center"
+                               Foreground="{DynamicResource PrimaryForegroundBrush}" />
+
+                </ScrollViewer>
+            </Grid>
+
+            <!-- Botones -->
+            <Grid Grid.Row="3"
+                  Margin="26,0,26,22">
+
+                <StackPanel Orientation="Horizontal"
+                            HorizontalAlignment="Right">
+
+                    <Button Content="No"
+                            IsCancel="True"
+                            Style="{StaticResource ConfirmActionButton}"
+                            Background="{DynamicResource HoverBackgroundBrush}"
+                            Foreground="{DynamicResource PrimaryForegroundBrush}"
+                            Margin="0,0,10,0"
+                            Click="Cancel_Click" />
+
+                    <Button Content="Sí"
+                            IsDefault="True"
+                            Style="{StaticResource ConfirmActionButton}"
+                            Background="{DynamicResource SurfaceAccentBrush}"
+                            Foreground="{DynamicResource SurfaceAccentForegroundBrush}"
+                            Click="Confirm_Click" />
+
+                </StackPanel>
+            </Grid>
+        </Grid>
+    </Border>
+</Window>

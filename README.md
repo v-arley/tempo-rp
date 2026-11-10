@@ -76,6 +76,7 @@ dotnet build                                            # compila toda la soluci
 dotnet test                                             # corre Tempo.Language.Tests
 dotnet run --project src/Tempo.Cli -- samples/prueba-correcta.tmpr [--tokens]
 dotnet run --project src/Tempo.Cli -- samples/importaciones   # proyecto multiarchivo (directorio)
+dotnet run --project src/TmIde/TmIde.csproj
 ```
 
 `TmIde` es un proyecto **WPF SDK-style sobre `net10.0-windows`**. Patrón MVVM con
