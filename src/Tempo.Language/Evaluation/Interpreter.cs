@@ -60,6 +60,10 @@ public sealed class Interpreter : IInterpreter
                 _program.Session.Body,
                 globalEnvironment);
         }
+        catch (ReturnSignal)
+        {
+            // 'ret;' en session termina el programa con normalidad.
+        }
         catch (TmRuntimeException ex)
         {
             ex.SetFileNameIfMissing(_entryFileName);
