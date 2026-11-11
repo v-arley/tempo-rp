@@ -192,9 +192,11 @@
                 CaretColumn="{Binding SelectedDocument.CaretColumn,
                             Mode=TwoWay,
                             FallbackValue=1}"
-                Diagnostics="{Binding SelectedDocument.Diagnostics}"
+                Diagnostics="{Binding SelectedDocument.Diagnostics}"  
                 Outline="{Binding SelectedDocument.Outline}"
+                GoToDefinitionCommand="{Binding GoToDefinitionCommand}"
                 ActionRequest="{Binding ActionRequest}"
                 NavigationRequest="{Binding NavigationRequest}" />
+
     </Grid>
 </UserControl>

@@ -82,6 +82,15 @@ public partial class CodeEditor : UserControl
         typeof(FileOutline),
         typeof(CodeEditor),
         new FrameworkPropertyMetadata(FileOutline.Empty));
+     
+    
+    public static readonly DependencyProperty GoToDefinitionCommandProperty =
+        DependencyProperty.Register(
+            nameof(GoToDefinitionCommand),
+            typeof(ICommand),
+            typeof(CodeEditor),
+            new PropertyMetadata(null));
+    
 
     public static readonly DependencyProperty SelectionAccentBrushProperty = RegisterThemeBrush(nameof(SelectionAccentBrush));
 
@@ -134,6 +143,7 @@ public partial class CodeEditor : UserControl
         textView.BackgroundRenderers.Add(_diagnosticsRenderer);
         textView.MouseHover += OnTextViewMouseHover;
         textView.MouseHoverStopped += OnTextViewMouseHoverStopped;
+        textView.PreviewMouseLeftButtonDown += OnTextViewPreviewMouseLeftButtonDown;
         _diagnosticToolTip.ContentTemplate = (DataTemplate)Resources["DiagnosticToolTipTemplate"];
         _diagnosticToolTip.SetResourceReference(BackgroundProperty, "SurfaceBackgroundBrush");
         _diagnosticToolTip.SetResourceReference(ForegroundProperty, "PrimaryForegroundBrush");
@@ -244,6 +254,14 @@ public partial class CodeEditor : UserControl
         get => (FileOutline?)GetValue(OutlineProperty);
         set => SetValue(OutlineProperty, value);
     }
+
+
+    public ICommand? GoToDefinitionCommand
+    {
+        get => (ICommand?)GetValue(GoToDefinitionCommandProperty);
+        set => SetValue(GoToDefinitionCommandProperty, value);
+    }
+
 
     /// <summary>Color base de la selección y de las coincidencias de búsqueda (se aplica con transparencia).</summary>
     public Brush? SelectionAccentBrush
@@ -491,6 +509,107 @@ public partial class CodeEditor : UserControl
         _diagnosticToolTip.IsOpen = false;
         _keywordToolTip.IsOpen = false;
     }
+
+
+    private void OnTextViewPreviewMouseLeftButtonDown(
+        object sender,
+        MouseButtonEventArgs e)
+    {
+        // Solo actuar cuando Ctrl está presionado.
+        if ((Keyboard.Modifiers & ModifierKeys.Control) == 0)
+        {
+            return;
+        }
+
+        var textView = Editor.TextArea.TextView;
+
+        // Obtener la posición del clic dentro del código.
+        var position = textView.GetPositionFloor(
+            e.GetPosition(textView) + textView.ScrollOffset);
+
+        if (position is null)
+        {
+            return;
+        }
+
+        var offset = Editor.Document.GetOffset(
+            position.Value.Location);
+
+        // Comprobar si se hizo clic sobre una función.
+        var name = FunctionCallAt(offset);
+
+        if (name is not null &&
+            GoToDefinitionCommand?.CanExecute(name) == true)
+        {
+            GoToDefinitionCommand.Execute(name);
+            e.Handled = true;
+        }
+    }
+
+    private string? FunctionCallAt(int offset)
+    {
+        var text = Editor.Document.Text;
+
+        if (offset < 0 ||
+            offset >= text.Length ||
+            !TmSyntaxScanner.IsWordPart(text[offset]))
+        {
+            return null;
+        }
+
+        // Encontrar el inicio de la palabra.
+        var start = offset;
+
+        while (start > 0 &&
+            TmSyntaxScanner.IsWordPart(text[start - 1]))
+        {
+            start--;
+        }
+
+        if (!TmSyntaxScanner.IsWordStart(text[start]))
+        {
+            return null;
+        }
+
+        // Encontrar el final de la palabra.
+        var end = offset + 1;
+
+        while (end < text.Length &&
+            TmSyntaxScanner.IsWordPart(text[end]))
+        {
+            end++;
+        }
+
+        // Una función debe estar seguida por '('.
+        var afterName = end;
+
+        while (afterName < text.Length &&
+            char.IsWhiteSpace(text[afterName]))
+        {
+            afterName++;
+        }
+
+        // Ignorar texto que no es una llamada de función,
+        // así como comentarios y cadenas.
+        if (afterName >= text.Length ||
+            text[afterName] != '(' ||
+            TmSyntaxScanner.Scan(text).Any(span =>
+                span.Contains(start) &&
+                (span.Kind == TmSyntaxKind.Comment ||
+                span.Kind == TmSyntaxKind.StringLiteral)))
+        {
+            return null;
+        }
+
+        var name = text[start..end];
+
+        // Solo aceptar funciones que conoce el compilador.
+        return Outline?.Functions.Any(
+            function => function.Name == name) == true
+            ? name
+            : null;
+    }
+
 
     /// <summary>
     /// Atiende solicitudes externas para mover el cursor.

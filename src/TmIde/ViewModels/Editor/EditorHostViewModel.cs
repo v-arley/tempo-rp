@@ -6,6 +6,7 @@ using System.Linq;
 
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
+using CommunityToolkit.Mvvm.Input;
 
 using TmIde.Services.Analysis;
 using TmIde.ViewModels;
@@ -100,6 +101,53 @@ public sealed partial class EditorHostViewModel : ViewModelBase
             document,
             offset);
     }
+
+
+    [RelayCommand]
+    private void GoToDefinition(string? functionName)
+    {
+        if (string.IsNullOrEmpty(functionName) ||
+            SelectedDocument is not { } current)
+        {
+            return;
+        }
+
+        // Buscar la función en el resumen del compilador.
+        var definition = current.Outline.Functions.FirstOrDefault(
+            function => string.Equals(
+                function.Name,
+                functionName,
+                StringComparison.Ordinal));
+
+        if (definition is null)
+        {
+            return;
+        }
+
+        // Obtener la ubicación del archivo donde se declaró.
+        var directory = Path.GetDirectoryName(current.FilePath)!;
+
+        var targetPath = Path.GetFullPath(
+            Path.Combine(directory, definition.FileName));
+
+        // Comprobar que el archivo exista o esté abierto.
+        if (!File.Exists(targetPath) &&
+            !Documents.Any(document =>
+                string.Equals(
+                    document.FilePath,
+                    targetPath,
+                    StringComparison.OrdinalIgnoreCase)))
+        {
+            return;
+        }
+
+        // Navegar usando el sistema existente del IDE.
+        NavigateToDiagnostic(
+            targetPath,
+            definition.Line,
+            1);
+    }
+
 
 
     /// <summary>
