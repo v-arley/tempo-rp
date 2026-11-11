@@ -1,11 +1,11 @@
 ﻿<#
 .SYNOPSIS
-    Genera el ejecutable distribuible de TmIde.
+    Genera el ejecutable distribuible de TmIde (TempoIDE.exe).
 
 .DESCRIPTION
     Publica TmIde en modo Release para Windows en la carpeta publish/<variante>.
 
-    Autocontenido: un único TmIde.exe que incluye el runtime de .NET; no requiere
+    Autocontenido: un único TempoIDE.exe que incluye el runtime de .NET; no requiere
     nada instalado en el equipo de destino. Se distribuye junto a appsettings.json.
 
     Dependiente: una carpeta liviana que requiere el .NET Desktop Runtime 10
@@ -39,8 +39,8 @@ $proyecto = Join-Path $raiz 'src\TmIde\TmIde.csproj'
 $salida = Join-Path $raiz "publish\$($Variante.ToLowerInvariant())-$Plataforma"
 
 # Un TmIde abierto desde el repositorio bloquea los archivos de la compilación.
-if (Get-Process -Name 'TmIde' -ErrorAction SilentlyContinue) {
-    throw 'TmIde está en ejecución. Ciérrelo antes de publicar.'
+if (Get-Process -Name 'TempoIDE' -ErrorAction SilentlyContinue) {
+    throw 'TempoIDE está en ejecución. Ciérrelo antes de publicar.'
 }
 
 $argumentos = @(
@@ -84,7 +84,7 @@ Write-Host ("  Carpeta:  {0}" -f $salida)
 Write-Host ("  Archivos: {0}, {1:N1} MB" -f $archivos.Count, $tamano)
 
 if ($Variante -eq 'Autocontenido') {
-    Write-Host '  Distribuya TmIde.exe junto con appsettings.json.'
+    Write-Host '  Distribuya TempoIDE.exe junto con appsettings.json.'
 }
 else {
     Write-Host '  Distribuya la carpeta completa. Requiere el .NET Desktop Runtime 10.'

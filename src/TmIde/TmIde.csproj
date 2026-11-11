@@ -5,11 +5,11 @@
     <TargetFramework>net10.0-windows</TargetFramework>
     <UseWPF>true</UseWPF>
     <RootNamespace>TmIde</RootNamespace>
-    <AssemblyName>TmIde</AssemblyName>
+    <AssemblyName>TempoIDE</AssemblyName>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>..\Assets\Tempo.ico</ApplicationIcon>
     <!-- La mayoría de propiedades comunes (Nullable, LangVersion, analizadores,
-         TreatWarningsAsErrors, CPM) vienen de ../../Directory.Build.props -->
+        TreatWarningsAsErrors, CPM) vienen de ../../Directory.Build.props -->
   </PropertyGroup>
 
   <ItemGroup>

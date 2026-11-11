@@ -101,13 +101,13 @@ dotnet test tempo-rp.slnx
 ### Generar el ejecutable de TmIde
 
 ```powershell
-.\publish.ps1                            # Autocontenido: un único TmIde.exe
+.\publish.ps1                            # Autocontenido: un único TempoIDE.exe
 .\publish.ps1 -Variante Dependiente      # Liviano: requiere .NET Desktop Runtime 10
 ```
 
 | Variante | Resultado en `publish/` | Requisito en el equipo de destino |
 |---|---|---|
-| `Autocontenido` | `TmIde.exe` y `appsettings.json` | Ninguno |
+| `Autocontenido` | `TempoIDE.exe` y `appsettings.json` | Ninguno |
 | `Dependiente` | Carpeta con el programa y sus bibliotecas | .NET Desktop Runtime 10 |
 
 El parámetro `-Plataforma win-arm64` genera la versión para equipos ARM.

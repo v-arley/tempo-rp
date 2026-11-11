@@ -13,6 +13,10 @@ public sealed class ThemeService : IThemeService
 {
     private const string ThemeDictionaryMarker = "Resources/Theme.";
 
+    // Nombre del ensamblado que contiene los temas, leído en ejecución para que
+    // las URI pack no dependan del nombre con que se publique el ejecutable.
+    private static readonly string ResourceAssemblyName = typeof(ThemeService).Assembly.GetName().Name!;
+
     private readonly IUserSettingsStore _settings;
     private readonly IOptions<IdeOptions> _options;
 
@@ -42,7 +46,9 @@ public sealed class ThemeService : IThemeService
 
         var newDictionary = new ResourceDictionary
         {
-            Source = new Uri($"pack://application:,,,/TmIde;component/Resources/Theme.{theme}.xaml", UriKind.Absolute),
+            Source = new Uri(
+                $"pack://application:,,,/{ResourceAssemblyName};component/Resources/Theme.{theme}.xaml",
+                UriKind.Absolute),
         };
 
         var previous = merged.FirstOrDefault(
