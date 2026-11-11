@@ -15,47 +15,55 @@
         UseLayoutRounding="True">
 
     <Window.Resources>
-        <!-- Título de cada punto de la guía -->
-        <Style x:Key="HelpTitle" TargetType="TextBlock">
-            <Setter Property="FontFamily" Value="{DynamicResource CodeFontFamily}" />
-            <Setter Property="FontSize" Value="{DynamicResource FontSizeSmall}" />
-            <Setter Property="FontWeight" Value="Medium" />
-            <Setter Property="Foreground" Value="#E4E9F0" />
-        </Style>
+        <ResourceDictionary>
+            <!-- La pantalla de inicio conserva siempre el tema oscuro: los recursos
+                de la ventana tienen prioridad sobre el tema activo de la aplicación. -->
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/Resources/Theme.Dark.xaml" />
+            </ResourceDictionary.MergedDictionaries>
 
-        <!-- Descripción del punto -->
-        <Style x:Key="HelpBody" TargetType="TextBlock">
-            <Setter Property="FontSize" Value="{DynamicResource FontSizeBody}" />
-            <Setter Property="Foreground" Value="#8C99AD" />
-            <Setter Property="TextWrapping" Value="Wrap" />
-            <Setter Property="Margin" Value="0,3,0,0" />
-        </Style>
+            <!-- Título de cada punto de la guía -->
+            <Style x:Key="HelpTitle" TargetType="TextBlock">
+                <Setter Property="FontFamily" Value="{DynamicResource CodeFontFamily}" />
+                <Setter Property="FontSize" Value="{DynamicResource FontSizeSmall}" />
+                <Setter Property="FontWeight" Value="Medium" />
+                <Setter Property="Foreground" Value="#E4E9F0" />
+            </Style>
 
-        <!-- Un punto = marca roja de 3px + título + descripción -->
-        <Style x:Key="HelpItem" TargetType="Grid">
-            <Setter Property="Margin" Value="0,0,0,14" />
-        </Style>
+            <!-- Descripción del punto -->
+            <Style x:Key="HelpBody" TargetType="TextBlock">
+                <Setter Property="FontSize" Value="{DynamicResource FontSizeBody}" />
+                <Setter Property="Foreground" Value="#8C99AD" />
+                <Setter Property="TextWrapping" Value="Wrap" />
+                <Setter Property="Margin" Value="0,3,0,0" />
+            </Style>
 
-        <Style x:Key="HelpCloseButton" TargetType="Button">
-            <Setter Property="Background" Value="Transparent" />
-            <Setter Property="Width" Value="24" />
-            <Setter Property="Height" Value="24" />
-            <Setter Property="Margin" Value="0,0,3,0" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Grid x:Name="Chrome" Background="{TemplateBinding Background}">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
-                        </Grid>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Chrome" Property="Background" Value="{DynamicResource CloseButtonHoverBrush}" />
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
+            <!-- Un punto = marca roja de 3px + título + descripción -->
+            <Style x:Key="HelpItem" TargetType="Grid">
+                <Setter Property="Margin" Value="0,0,0,14" />
+            </Style>
+
+            <Style x:Key="HelpCloseButton" TargetType="Button">
+                <Setter Property="Background" Value="Transparent" />
+                <Setter Property="Width" Value="24" />
+                <Setter Property="Height" Value="24" />
+                <Setter Property="Margin" Value="0,0,3,0" />
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="Button">
+                            <Grid x:Name="Chrome" Background="{TemplateBinding Background}">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Grid>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="Chrome" Property="Background" Value="{DynamicResource CloseButtonHoverBrush}" />
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+        </ResourceDictionary>
     </Window.Resources>
 
     <Grid>

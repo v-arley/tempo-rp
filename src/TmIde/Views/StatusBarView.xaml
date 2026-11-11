@@ -5,10 +5,11 @@
             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
             xmlns:design="clr-namespace:TmIde.Design"
             xmlns:vm="clr-namespace:TmIde.ViewModels"
+            xmlns:controls="clr-namespace:TmIde.Controls"
             mc:Ignorable="d"
             d:DataContext="{x:Static design:DesignData.StatusBar}"
             d:DesignWidth="900"
-            Height="34">
+            Height="40">
 
     <!-- Footer: misma distribución que el header, reflejada. Contenedor principal
             a todo el ancho con dos hijos en columna.
@@ -18,20 +19,17 @@
             Sin Border: los fondos van en Grid. -->
     <Grid Background="{DynamicResource WindowBackgroundBrush}">
         <Grid.RowDefinitions>
-            <RowDefinition Height="28" />
+            <RowDefinition Height="34" />
             <RowDefinition Height="6" />
         </Grid.RowDefinitions>
 
-        <!-- Hijo superior: izquierda / centro / derecha, un tercio cada una -->
-        <Grid Grid.Row="0">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
+        <!-- Hijo superior: inicio / centro / fin. El panel centra el indicador
+            respecto a la ventana y deja a los laterales su ancho natural, así que
+            las acciones nunca se recortan. -->
+        <controls:SymmetricBarPanel Grid.Row="0" CenterRatio="0.3333">
 
-            <!-- Izquierda: posición del cursor y codificación del documento activo -->
-            <TextBlock Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center"
+            <!-- Inicio: posición del cursor y codificación del documento activo -->
+            <TextBlock HorizontalAlignment="Left" VerticalAlignment="Center"
                         Margin="11,0,0,0"
                         FontFamily="{DynamicResource CodeFontFamily}" FontWeight="Medium" FontSize="{DynamicResource FontSizeSmall}"
                         Foreground="{DynamicResource ChromeAccentBrush}">
@@ -44,18 +42,18 @@
 
             
             <!-- Centro: indicador del estado del proyecto -->
-            <Grid Grid.Column="1">
+            <Grid ClipToBounds="True">
 
                 <!-- Trapecio de fondo del indicador -->
                 <Path
                     HorizontalAlignment="Center"
                     VerticalAlignment="Bottom"
                     Width="212"
-                    Height="22"
+                    Height="28"
                     IsHitTestVisible="False"
                     Stretch="Fill"
                     Fill="{DynamicResource StatusIndicatorBackgroundBrush}"
-                    Data="M14,0 L198,0 L212,22 L0,22 Z" />
+                    Data="M14,0 L198,0 L212,28 L0,28 Z" />
 
                 <!-- Estado de compilación y ejecución -->
                 <TextBlock
@@ -72,10 +70,10 @@
             </Grid>
 
 
-            <!-- Derecha: acciones del proyecto (STOP solo activo durante RUN). Botones
-                de 16 en una barra de 28: 6px arriba y abajo. Cierra el grupo una figura
+            <!-- Fin: acciones del proyecto (STOP solo activo durante RUN). Botones
+                de 20 en una barra de 34: 7px arriba y abajo. Cierra el grupo una figura
                 con la misma forma pero con el lateral derecho recto, pegada al borde. -->
-            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center"
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center"
                         HorizontalAlignment="Right">
                 <Button Style="{StaticResource StatusPrimaryActionButton}" Content="COMPILE"
                         Command="{Binding Commands.Compile}" />
@@ -83,13 +81,13 @@
                         Command="{Binding Commands.Run}" />
                 <Button Style="{StaticResource StatusStopActionButton}" Content="STOP"
                         Command="{Binding Commands.Stop}" />
-                <!-- 22x16 (25% del ancho de un botón). Geometría a tamaño real, sin
-                    Stretch, para conservar la inclinación de 3px de los botones. -->
-                <Path Width="22" Height="16" Margin="8,0,0,0" IsHitTestVisible="False"
-                        Fill="{DynamicResource ChromeShapeBrush}"
-                        Data="M0,0 L22,0 L22,16 L3,16 Z" />
+                <!-- 26x20 (25% del ancho de un botón). Geometría a tamaño real, sin
+                    Stretch, para conservar la inclinación de 3.5px de los botones. -->
+                <Path Width="26" Height="20" Margin="8,0,0,0" IsHitTestVisible="False"
+                        Fill="{DynamicResource StatusActionsTailBrush}"
+                        Data="M0,0 L26,0 L26,20 L3.5,20 Z" />
             </StackPanel>
-        </Grid>
+        </controls:SymmetricBarPanel>
 
         <!-- Hijo inferior: franja del borde inferior -->
         <Grid Grid.Row="1" Background="{DynamicResource WindowBandBrush}" />

@@ -4,11 +4,12 @@
             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
             xmlns:vm="clr-namespace:TmIde.ViewModels"
+            xmlns:controls="clr-namespace:TmIde.Controls"
             xmlns:design="clr-namespace:TmIde.Design"
             mc:Ignorable="d"
             d:DataContext="{x:Static design:DesignData.MainWindow}"
             d:DesignWidth="900"
-            Height="34">
+            Height="40">
 
     <UserControl.Resources>
         <Style x:Key="MenuEntryStyle" TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}">
@@ -210,37 +211,293 @@
     <Grid Background="{DynamicResource WindowBackgroundBrush}">
         <Grid.RowDefinitions>
             <RowDefinition Height="6" />
-            <RowDefinition Height="28" />
+            <RowDefinition Height="34" />
         </Grid.RowDefinitions>
 
         <!-- Hijo superior: franja del borde superior -->
         <Grid Grid.Row="0" Background="{DynamicResource WindowBandBrush}" />
 
-        <!-- Hijo inferior: izquierda / centro / derecha. Los laterales son iguales
-            (el título queda centrado respecto a la ventana) y el centro es más
-            ancho (1.5*). -->
-        <Grid Grid.Row="1">
-            <Grid.ColumnDefinitions>
-                <!-- Menús -->
-                <ColumnDefinition Width="*" MinWidth="350" />
+        <!-- Hijo inferior: inicio / centro / fin. El panel centra el título respecto
+            a la ventana a cualquier ancho: la placa mide 3/7 del ancho (proporción
+            1 : 1.5 : 1) y se estrecha por igual a ambos lados antes de tocar el
+            lateral más ancho. -->
+        <controls:SymmetricBarPanel Grid.Row="1" CenterRatio="0.4286">
 
-                <!-- Título central -->
-                <ColumnDefinition Width="1.5*" />
+            <!-- Inicio: menús de la ventana principal o rótulo de las auxiliares -->
+            <Grid>
 
-                <!-- Controles musicales y botones de ventana -->
-                <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
+                <!-- Menús raíz separados por "|", generados desde MenuBar.Roots
+                    (MENU / EDITAR / EJECUCIÓN / VER / AYUDA): añadir un menú en el modelo
+                    de vista basta para que aparezca aquí. -->
+                <ItemsControl ItemsSource="{Binding MenuBar.Roots}"
+                              VerticalAlignment="Center" HorizontalAlignment="Left" Margin="3,0,0,0"
+                              Focusable="False">
 
-            <!-- Centro: contenedor que ocupa todo el segmento central y, dentro, la
-                placa trapezoidal que cuelga de la franja superior con el nombre del
-                archivo abierto encima (decorativa, no interactiva). La fila de 22
-                es la altura de la placa, para centrar el título sobre ella. -->
-            <Grid Grid.Column="1" IsHitTestVisible="False" ClipToBounds="True">
+                    <ItemsControl.Style>
+                        <Style TargetType="ItemsControl">
+                            <Style.Triggers>
+                                <DataTrigger
+                                    Binding="{Binding ShowMenus,
+                                            RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                    Value="False">
+
+                                    <Setter Property="Visibility" Value="Collapsed" />
+
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </ItemsControl.Style>
+
+                    <ItemsControl.Resources>
+                        <Style x:Key="MenuSep" TargetType="Rectangle">
+                            <Setter Property="Width" Value="1" />
+                            <Setter Property="Height" Value="14" />
+                            <Setter Property="Margin" Value="10,0" />
+                            <Setter Property="VerticalAlignment" Value="Center" />
+                            <Setter Property="Fill" Value="{DynamicResource TitleMenuForegroundBrush}" />
+                            <Setter Property="Opacity" Value="0.7" />
+                            <Setter Property="SnapsToDevicePixels" Value="True" />
+                        </Style>
+
+                        <!--
+                            Fila del desplegable. Columnas: marcador | etiqueta | atajo.
+                            Al resaltarse, el marcador crece desde el centro y la fila se tiñe
+                            del acento.
+                        -->
+                        <Style x:Key="DropdownEntry" TargetType="MenuItem" BasedOn="{StaticResource MenuEntryStyle}">
+                            <Setter Property="FontFamily" Value="{DynamicResource CodeFontFamily}" />
+                            <Setter Property="FontSize" Value="{DynamicResource FontSizeSmall}" />
+                            <Setter Property="Foreground" Value="{StaticResource OverlaySecondaryTextBrush}" />
+                            <Setter Property="Cursor" Value="Hand" />
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="MenuItem">
+                                        <Grid Height="28" Background="Transparent" SnapsToDevicePixels="True">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="2" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+
+                                            <!-- Tinte de la fila resaltada -->
+                                            <Rectangle x:Name="Wash" Grid.ColumnSpan="3" Fill="{DynamicResource AccentBrush}" Opacity="0" />
+
+                                            <Rectangle Grid.Column="0" Fill="{DynamicResource AccentBrush}" RenderTransformOrigin="0.5,0.5">
+                                                <Rectangle.RenderTransform>
+                                                    <ScaleTransform x:Name="MarkerScale" ScaleX="1" ScaleY="0" />
+                                                </Rectangle.RenderTransform>
+                                            </Rectangle>
+
+                                            <TextBlock x:Name="Label" Grid.Column="1" Margin="12,0,28,0" VerticalAlignment="Center"
+                                                       FontFamily="{TemplateBinding FontFamily}" FontSize="{TemplateBinding FontSize}"
+                                                       Foreground="{TemplateBinding Foreground}"
+                                                       Text="{Binding Header}" />
+
+                                            <TextBlock x:Name="Shortcut" Grid.Column="2" Margin="0,0,12,0" VerticalAlignment="Center"
+                                                       FontFamily="{TemplateBinding FontFamily}" FontSize="{DynamicResource FontSizeCaption}"
+                                                       Foreground="{StaticResource OverlayMutedTextBrush}"
+                                                       Text="{Binding Shortcut}"
+                                                       Visibility="{Binding HasShortcut, Converter={StaticResource BoolToVisibility}}" />
+                                        </Grid>
+
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsHighlighted" Value="True">
+                                                <Setter TargetName="Label" Property="Foreground" Value="#F2F5F8" />
+                                                <Setter TargetName="Shortcut" Property="Foreground" Value="{StaticResource OverlaySecondaryTextBrush}" />
+                                                <Trigger.EnterActions>
+                                                    <BeginStoryboard>
+                                                        <Storyboard>
+                                                            <DoubleAnimation Storyboard.TargetName="MarkerScale" Storyboard.TargetProperty="ScaleY"
+                                                                             To="1" Duration="0:0:0.16">
+                                                                <DoubleAnimation.EasingFunction>
+                                                                    <CubicEase EasingMode="EaseOut" />
+                                                                </DoubleAnimation.EasingFunction>
+                                                            </DoubleAnimation>
+                                                            <DoubleAnimation Storyboard.TargetName="Wash" Storyboard.TargetProperty="Opacity"
+                                                                             To="0.16" Duration="0:0:0.12" />
+                                                        </Storyboard>
+                                                    </BeginStoryboard>
+                                                </Trigger.EnterActions>
+                                                <Trigger.ExitActions>
+                                                    <BeginStoryboard>
+                                                        <Storyboard>
+                                                            <DoubleAnimation Storyboard.TargetName="MarkerScale" Storyboard.TargetProperty="ScaleY"
+                                                                             To="0" Duration="0:0:0.10" />
+                                                            <DoubleAnimation Storyboard.TargetName="Wash" Storyboard.TargetProperty="Opacity"
+                                                                             To="0" Duration="0:0:0.10" />
+                                                        </Storyboard>
+                                                    </BeginStoryboard>
+                                                </Trigger.ExitActions>
+                                            </Trigger>
+                                            <Trigger Property="IsEnabled" Value="False">
+                                                <Setter Property="Opacity" Value="0.4" />
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+
+                        <Style x:Key="RootMenuItem" TargetType="MenuItem" BasedOn="{StaticResource MenuEntryStyle}">
+                            <Setter Property="FontFamily" Value="{DynamicResource CodeFontFamily}" />
+                            <Setter Property="FontWeight" Value="Medium" />
+                            <Setter Property="FontSize" Value="{DynamicResource FontSizeSmall}" />
+                            <Setter Property="Foreground" Value="{DynamicResource TitleMenuForegroundBrush}" />
+                            <Setter Property="Padding" Value="8,3" />
+                            <Setter Property="ItemContainerStyle" Value="{StaticResource DropdownEntry}" />
+                            <!-- Hover: subrayado inferior que crece de izquierda a derecha,
+                                sin relleno de fondo. -->
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="MenuItem">
+                                        <Grid x:Name="Chrome" Background="Transparent">
+                                            <ContentPresenter ContentSource="Header"
+                                                                Margin="{TemplateBinding Padding}"
+                                                                VerticalAlignment="Center"
+                                                                RecognizesAccessKey="True" />
+                                            <Rectangle x:Name="Underline"
+                                                    Height="2"
+                                                    VerticalAlignment="Bottom"
+                                                    Fill="{DynamicResource ChromeAccentBrush}"
+                                                    RenderTransformOrigin="0,0.5">
+                                                <Rectangle.RenderTransform>
+                                                    <ScaleTransform x:Name="UnderlineScale" ScaleX="0" ScaleY="1" />
+                                                </Rectangle.RenderTransform>
+                                            </Rectangle>
+
+                                            <!--
+                                                Desplegable: se desliza bajo el menú raíz. Franja de acento y filas
+                                                de entradas. La sombra va en una capa propia para no desenfocar el texto.
+                                            -->
+                                            <Popup x:Name="PART_Popup"
+                                                    Placement="Bottom"
+                                                    IsOpen="{TemplateBinding IsSubmenuOpen}"
+                                                    AllowsTransparency="True"
+                                                    Focusable="False"
+                                                    PopupAnimation="Slide">
+                                                <Grid Margin="0,0,14,14" MinWidth="240" SnapsToDevicePixels="True">
+                                                    <Border Background="{StaticResource OverlayShadowBrush}">
+                                                        <Border.Effect>
+                                                            <DropShadowEffect Color="Black" BlurRadius="16" ShadowDepth="5" Direction="290" Opacity="0.55" />
+                                                        </Border.Effect>
+                                                    </Border>
+
+                                                    <Border Background="{DynamicResource PanelOverlayBrush}"
+                                                            BorderBrush="{StaticResource OverlayEdgeBrush}" BorderThickness="1,0,1,1">
+                                                        <DockPanel>
+                                                            <Rectangle DockPanel.Dock="Top" Height="2" Fill="{DynamicResource AccentBrush}" />
+
+                                                            <StackPanel Margin="0,4,0,5" IsItemsHost="True"
+                                                                        KeyboardNavigation.DirectionalNavigation="Cycle" />
+                                                        </DockPanel>
+                                                    </Border>
+                                                </Grid>
+                                            </Popup>
+                                        </Grid>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsHighlighted" Value="True">
+                                                <Trigger.EnterActions>
+                                                    <BeginStoryboard>
+                                                        <Storyboard>
+                                                            <DoubleAnimation Storyboard.TargetName="UnderlineScale"
+                                                                                Storyboard.TargetProperty="ScaleX"
+                                                                                To="1" Duration="0:0:0.18">
+                                                                <DoubleAnimation.EasingFunction>
+                                                                    <CubicEase EasingMode="EaseOut" />
+                                                                </DoubleAnimation.EasingFunction>
+                                                            </DoubleAnimation>
+                                                        </Storyboard>
+                                                    </BeginStoryboard>
+                                                </Trigger.EnterActions>
+                                                <Trigger.ExitActions>
+                                                    <BeginStoryboard>
+                                                        <Storyboard>
+                                                            <DoubleAnimation Storyboard.TargetName="UnderlineScale"
+                                                                                Storyboard.TargetProperty="ScaleX"
+                                                                                To="0" Duration="0:0:0.12" />
+                                                        </Storyboard>
+                                                    </BeginStoryboard>
+                                                </Trigger.ExitActions>
+                                            </Trigger>
+                                            <Trigger Property="IsEnabled" Value="False">
+                                                <Setter Property="Opacity" Value="0.4" />
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </ItemsControl.Resources>
+
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Orientation="Horizontal" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+
+                    <!-- Cada menú raíz va precedido de "|" salvo el primero -->
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal">
+                                <Rectangle x:Name="Separator" Style="{StaticResource MenuSep}" />
+                                <Menu Background="Transparent" VerticalAlignment="Center" Padding="0">
+                                    <MenuItem Style="{StaticResource RootMenuItem}" />
+                                </Menu>
+                            </StackPanel>
+                            <DataTemplate.Triggers>
+                                <DataTrigger Binding="{Binding RelativeSource={RelativeSource PreviousData}}" Value="{x:Null}">
+                                    <Setter TargetName="Separator" Property="Visibility" Value="Collapsed" />
+                                </DataTrigger>
+                            </DataTemplate.Triggers>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+            
+                <!-- Identificación de las ventanas auxiliares -->
+                <TextBlock
+                    Text="AYUDA"
+                    Margin="12,0,0,0"
+                    VerticalAlignment="Center"
+                    FontFamily="{DynamicResource CodeFontFamily}"
+                    FontSize="{DynamicResource FontSizeSmall}"
+                    FontWeight="Medium"
+                    Foreground="{DynamicResource TitleMenuForegroundBrush}">
+
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+
+                            <Setter Property="Visibility"
+                                    Value="Collapsed" />
+
+                            <Style.Triggers>
+                                <DataTrigger
+                                    Binding="{Binding ShowMenus,
+                                            RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                    Value="False">
+
+                                    <Setter Property="Visibility"
+                                            Value="Visible" />
+
+                                </DataTrigger>
+                            </Style.Triggers>
+
+                        </Style>
+                    </TextBlock.Style>
+
+                </TextBlock>
+
+            </Grid>
+
+            <!-- Centro: placa trapezoidal que cuelga de la franja superior con el
+                nombre del archivo abierto encima (decorativa, no interactiva). La fila
+                de 28 es la altura de la placa, para centrar el título sobre ella. -->
+            <Grid IsHitTestVisible="False" ClipToBounds="True">
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="22" />
+                    <RowDefinition Height="28" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
-                <!-- Placa a todo el ancho del segmento, en tres piezas para que los
+                <!-- Placa a todo el ancho del centro, en tres piezas para que los
                     chaflanes laterales mantengan 14px de inclinación a cualquier ancho
                     (un único Path con Stretch=Fill los deformaría). -->
                 <Grid Grid.Row="0">
@@ -250,284 +507,22 @@
                         <ColumnDefinition Width="14" />
                     </Grid.ColumnDefinitions>
                     <Path Grid.Column="0" Fill="{DynamicResource WindowBandBrush}"
-                            Data="M0,0 L14,0 L14,22 Z" />
+                            Data="M0,0 L14,0 L14,28 Z" />
                     <Rectangle Grid.Column="1" Fill="{DynamicResource WindowBandBrush}" />
                     <Path Grid.Column="2" Fill="{DynamicResource WindowBandBrush}"
-                            Data="M0,0 L14,0 L0,22 Z" />
+                            Data="M0,0 L14,0 L0,28 Z" />
                 </Grid>
                 <TextBlock Grid.Row="0" Text="{Binding Title, RelativeSource={RelativeSource AncestorType=Window}}"
                             HorizontalAlignment="Center" VerticalAlignment="Center"
+                            TextTrimming="CharacterEllipsis" Margin="16,0"
                             FontFamily="{DynamicResource HeaderFontFamily}"
                             FontSize="{DynamicResource FontSizeSmall}" FontWeight="Medium"
                             Foreground="{DynamicResource TitlePlateForegroundBrush}" />
             </Grid>
 
-            <!-- Izquierda: menús raíz separados por "|", generados desde MenuBar.Roots
-                (MENU / EDITAR / EJECUCIÓN / VER / AYUDA): añadir un menú en el modelo
-                de vista basta para que aparezca aquí. -->
-            <ItemsControl Grid.Column="0" ItemsSource="{Binding MenuBar.Roots}"
-                          VerticalAlignment="Center" HorizontalAlignment="Left" Margin="3,0,0,0"
-                          Focusable="False">
-
-                <ItemsControl.Style>
-                    <Style TargetType="ItemsControl">
-                        <Style.Triggers>
-                            <DataTrigger
-                                Binding="{Binding ShowMenus,
-                                        RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                Value="False">
-
-                                <Setter Property="Visibility" Value="Collapsed" />
-
-                            </DataTrigger>
-                        </Style.Triggers>
-                    </Style>
-                </ItemsControl.Style>
-
-                <ItemsControl.Resources>
-                    <Style x:Key="MenuSep" TargetType="Rectangle">
-                        <Setter Property="Width" Value="1" />
-                        <Setter Property="Height" Value="14" />
-                        <Setter Property="Margin" Value="10,0" />
-                        <Setter Property="VerticalAlignment" Value="Center" />
-                        <Setter Property="Fill" Value="{DynamicResource TitleMenuForegroundBrush}" />
-                        <Setter Property="Opacity" Value="0.7" />
-                        <Setter Property="SnapsToDevicePixels" Value="True" />
-                    </Style>
-
-                    <!--
-                        Fila del desplegable. Columnas: marcador | etiqueta | atajo.
-                        Al resaltarse, el marcador crece desde el centro y la fila se tiñe
-                        del acento.
-                    -->
-                    <Style x:Key="DropdownEntry" TargetType="MenuItem" BasedOn="{StaticResource MenuEntryStyle}">
-                        <Setter Property="FontFamily" Value="{DynamicResource CodeFontFamily}" />
-                        <Setter Property="FontSize" Value="{DynamicResource FontSizeSmall}" />
-                        <Setter Property="Foreground" Value="{StaticResource OverlaySecondaryTextBrush}" />
-                        <Setter Property="Cursor" Value="Hand" />
-                        <Setter Property="Template">
-                            <Setter.Value>
-                                <ControlTemplate TargetType="MenuItem">
-                                    <Grid Height="28" Background="Transparent" SnapsToDevicePixels="True">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="2" />
-                                            <ColumnDefinition Width="*" />
-                                            <ColumnDefinition Width="Auto" />
-                                        </Grid.ColumnDefinitions>
-
-                                        <!-- Tinte de la fila resaltada -->
-                                        <Rectangle x:Name="Wash" Grid.ColumnSpan="3" Fill="{DynamicResource AccentBrush}" Opacity="0" />
-
-                                        <Rectangle Grid.Column="0" Fill="{DynamicResource AccentBrush}" RenderTransformOrigin="0.5,0.5">
-                                            <Rectangle.RenderTransform>
-                                                <ScaleTransform x:Name="MarkerScale" ScaleX="1" ScaleY="0" />
-                                            </Rectangle.RenderTransform>
-                                        </Rectangle>
-
-                                        <TextBlock x:Name="Label" Grid.Column="1" Margin="12,0,28,0" VerticalAlignment="Center"
-                                                   FontFamily="{TemplateBinding FontFamily}" FontSize="{TemplateBinding FontSize}"
-                                                   Foreground="{TemplateBinding Foreground}"
-                                                   Text="{Binding Header}" />
-
-                                        <TextBlock x:Name="Shortcut" Grid.Column="2" Margin="0,0,12,0" VerticalAlignment="Center"
-                                                   FontFamily="{TemplateBinding FontFamily}" FontSize="{DynamicResource FontSizeCaption}"
-                                                   Foreground="{StaticResource OverlayMutedTextBrush}"
-                                                   Text="{Binding Shortcut}"
-                                                   Visibility="{Binding HasShortcut, Converter={StaticResource BoolToVisibility}}" />
-                                    </Grid>
-
-                                    <ControlTemplate.Triggers>
-                                        <Trigger Property="IsHighlighted" Value="True">
-                                            <Setter TargetName="Label" Property="Foreground" Value="#F2F5F8" />
-                                            <Setter TargetName="Shortcut" Property="Foreground" Value="{StaticResource OverlaySecondaryTextBrush}" />
-                                            <Trigger.EnterActions>
-                                                <BeginStoryboard>
-                                                    <Storyboard>
-                                                        <DoubleAnimation Storyboard.TargetName="MarkerScale" Storyboard.TargetProperty="ScaleY"
-                                                                         To="1" Duration="0:0:0.16">
-                                                            <DoubleAnimation.EasingFunction>
-                                                                <CubicEase EasingMode="EaseOut" />
-                                                            </DoubleAnimation.EasingFunction>
-                                                        </DoubleAnimation>
-                                                        <DoubleAnimation Storyboard.TargetName="Wash" Storyboard.TargetProperty="Opacity"
-                                                                         To="0.16" Duration="0:0:0.12" />
-                                                    </Storyboard>
-                                                </BeginStoryboard>
-                                            </Trigger.EnterActions>
-                                            <Trigger.ExitActions>
-                                                <BeginStoryboard>
-                                                    <Storyboard>
-                                                        <DoubleAnimation Storyboard.TargetName="MarkerScale" Storyboard.TargetProperty="ScaleY"
-                                                                         To="0" Duration="0:0:0.10" />
-                                                        <DoubleAnimation Storyboard.TargetName="Wash" Storyboard.TargetProperty="Opacity"
-                                                                         To="0" Duration="0:0:0.10" />
-                                                    </Storyboard>
-                                                </BeginStoryboard>
-                                            </Trigger.ExitActions>
-                                        </Trigger>
-                                        <Trigger Property="IsEnabled" Value="False">
-                                            <Setter Property="Opacity" Value="0.4" />
-                                        </Trigger>
-                                    </ControlTemplate.Triggers>
-                                </ControlTemplate>
-                            </Setter.Value>
-                        </Setter>
-                    </Style>
-
-                    <Style x:Key="RootMenuItem" TargetType="MenuItem" BasedOn="{StaticResource MenuEntryStyle}">
-                        <Setter Property="FontFamily" Value="{DynamicResource CodeFontFamily}" />
-                        <Setter Property="FontWeight" Value="Medium" />
-                        <Setter Property="FontSize" Value="{DynamicResource FontSizeSmall}" />
-                        <Setter Property="Foreground" Value="{DynamicResource TitleMenuForegroundBrush}" />
-                        <Setter Property="Padding" Value="8,3" />
-                        <Setter Property="ItemContainerStyle" Value="{StaticResource DropdownEntry}" />
-                        <!-- Hover: subrayado inferior que crece de izquierda a derecha,
-                            sin relleno de fondo. -->
-                        <Setter Property="Template">
-                            <Setter.Value>
-                                <ControlTemplate TargetType="MenuItem">
-                                    <Grid x:Name="Chrome" Background="Transparent">
-                                        <ContentPresenter ContentSource="Header"
-                                                            Margin="{TemplateBinding Padding}"
-                                                            VerticalAlignment="Center"
-                                                            RecognizesAccessKey="True" />
-                                        <Rectangle x:Name="Underline"
-                                                Height="2"
-                                                VerticalAlignment="Bottom"
-                                                Fill="{DynamicResource ChromeAccentBrush}"
-                                                RenderTransformOrigin="0,0.5">
-                                            <Rectangle.RenderTransform>
-                                                <ScaleTransform x:Name="UnderlineScale" ScaleX="0" ScaleY="1" />
-                                            </Rectangle.RenderTransform>
-                                        </Rectangle>
-
-                                        <!--
-                                            Desplegable: se desliza bajo el menú raíz. Franja de acento y filas
-                                            de entradas. La sombra va en una capa propia para no desenfocar el texto.
-                                        -->
-                                        <Popup x:Name="PART_Popup"
-                                                Placement="Bottom"
-                                                IsOpen="{TemplateBinding IsSubmenuOpen}"
-                                                AllowsTransparency="True"
-                                                Focusable="False"
-                                                PopupAnimation="Slide">
-                                            <Grid Margin="0,0,14,14" MinWidth="240" SnapsToDevicePixels="True">
-                                                <Border Background="{StaticResource OverlayShadowBrush}">
-                                                    <Border.Effect>
-                                                        <DropShadowEffect Color="Black" BlurRadius="16" ShadowDepth="5" Direction="290" Opacity="0.55" />
-                                                    </Border.Effect>
-                                                </Border>
-
-                                                <Border Background="{DynamicResource PanelOverlayBrush}"
-                                                        BorderBrush="{StaticResource OverlayEdgeBrush}" BorderThickness="1,0,1,1">
-                                                    <DockPanel>
-                                                        <Rectangle DockPanel.Dock="Top" Height="2" Fill="{DynamicResource AccentBrush}" />
-
-                                                        <StackPanel Margin="0,4,0,5" IsItemsHost="True"
-                                                                    KeyboardNavigation.DirectionalNavigation="Cycle" />
-                                                    </DockPanel>
-                                                </Border>
-                                            </Grid>
-                                        </Popup>
-                                    </Grid>
-                                    <ControlTemplate.Triggers>
-                                        <Trigger Property="IsHighlighted" Value="True">
-                                            <Trigger.EnterActions>
-                                                <BeginStoryboard>
-                                                    <Storyboard>
-                                                        <DoubleAnimation Storyboard.TargetName="UnderlineScale"
-                                                                            Storyboard.TargetProperty="ScaleX"
-                                                                            To="1" Duration="0:0:0.18">
-                                                            <DoubleAnimation.EasingFunction>
-                                                                <CubicEase EasingMode="EaseOut" />
-                                                            </DoubleAnimation.EasingFunction>
-                                                        </DoubleAnimation>
-                                                    </Storyboard>
-                                                </BeginStoryboard>
-                                            </Trigger.EnterActions>
-                                            <Trigger.ExitActions>
-                                                <BeginStoryboard>
-                                                    <Storyboard>
-                                                        <DoubleAnimation Storyboard.TargetName="UnderlineScale"
-                                                                            Storyboard.TargetProperty="ScaleX"
-                                                                            To="0" Duration="0:0:0.12" />
-                                                    </Storyboard>
-                                                </BeginStoryboard>
-                                            </Trigger.ExitActions>
-                                        </Trigger>
-                                        <Trigger Property="IsEnabled" Value="False">
-                                            <Setter Property="Opacity" Value="0.4" />
-                                        </Trigger>
-                                    </ControlTemplate.Triggers>
-                                </ControlTemplate>
-                            </Setter.Value>
-                        </Setter>
-                    </Style>
-                </ItemsControl.Resources>
-
-                <ItemsControl.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <StackPanel Orientation="Horizontal" />
-                    </ItemsPanelTemplate>
-                </ItemsControl.ItemsPanel>
-
-                <!-- Cada menú raíz va precedido de "|" salvo el primero -->
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate>
-                        <StackPanel Orientation="Horizontal">
-                            <Rectangle x:Name="Separator" Style="{StaticResource MenuSep}" />
-                            <Menu Background="Transparent" VerticalAlignment="Center" Padding="0">
-                                <MenuItem Style="{StaticResource RootMenuItem}" />
-                            </Menu>
-                        </StackPanel>
-                        <DataTemplate.Triggers>
-                            <DataTrigger Binding="{Binding RelativeSource={RelativeSource PreviousData}}" Value="{x:Null}">
-                                <Setter TargetName="Separator" Property="Visibility" Value="Collapsed" />
-                            </DataTrigger>
-                        </DataTemplate.Triggers>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
-
-            
-            <!-- Identificación de las ventanas auxiliares -->
-            <TextBlock
-                Grid.Column="0"
-                Text="AYUDA"
-                Margin="12,0,0,0"
-                VerticalAlignment="Center"
-                FontFamily="{DynamicResource CodeFontFamily}"
-                FontSize="{DynamicResource FontSizeSmall}"
-                FontWeight="Medium"
-                Foreground="{DynamicResource TitleMenuForegroundBrush}">
-
-                <TextBlock.Style>
-                    <Style TargetType="TextBlock">
-
-                        <Setter Property="Visibility"
-                                Value="Collapsed" />
-
-                        <Style.Triggers>
-                            <DataTrigger
-                                Binding="{Binding ShowMenus,
-                                        RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                Value="False">
-
-                                <Setter Property="Visibility"
-                                        Value="Visible" />
-
-                            </DataTrigger>
-                        </Style.Triggers>
-
-                    </Style>
-                </TextBlock.Style>
-
-            </TextBlock>
-
-
-            <!-- Derecha: toggle PIANO y operaciones de ventana. Botones de 24 en una
-                barra de 28: 2px arriba y abajo. -->
-            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center"
+            <!-- Fin: toggle PIANO y operaciones de ventana. Botones de 24 en una
+                barra de 34: 5px arriba y abajo. -->
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center"
                         HorizontalAlignment="Right" Margin="0,0,3,0">
                 <!-- Toggle musical junto a los botones de ventana: siempre a la vista sin
                     competir con los menús. No aparece en ventanas auxiliares (ShowMenus=False). -->
@@ -904,6 +899,6 @@
                             Data="{StaticResource IconCaptionClose}" />
                 </Button>
             </StackPanel>
-        </Grid>
+        </controls:SymmetricBarPanel>
     </Grid>
 </UserControl>

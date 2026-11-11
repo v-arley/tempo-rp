@@ -49,6 +49,8 @@
     <SolidColorBrush x:Key="TitleMenuForegroundBrush"   Color="#4F5E7C" />
     <SolidColorBrush x:Key="ChromeShapeBrush"           Color="#1B212A" />
     <SolidColorBrush x:Key="ChromeShapeHoverBrush"      Color="#2A323D" />
+    <!-- Figura decorativa que cierra el grupo COMPILE / RUN / STOP -->
+    <SolidColorBrush x:Key="StatusActionsTailBrush"     Color="#1B212A" />
 
     <!-- Explorador de archivos: cuerpo del árbol y texto de sus entradas -->
     <SolidColorBrush x:Key="ExplorerBackgroundBrush"         Color="#20262E" />
@@ -56,9 +58,9 @@
     <SolidColorBrush x:Key="ExplorerMainFileForegroundBrush" Color="#8ED8FF" />
 
     <!-- Pestañas del editor: la activa toma el tono de la ruta, las demás el oscuro -->
-    <SolidColorBrush x:Key="ActiveTabBackgroundBrush"        Color="#A4B1C7" />
+    <SolidColorBrush x:Key="ActiveTabBackgroundBrush"        Color="#C3C9D1" />
     <SolidColorBrush x:Key="ActiveTabForegroundBrush"        Color="#23303A" />
-    <SolidColorBrush x:Key="ActiveTabCloseIconBrush"         Color="#B6C1D3" />
+    <SolidColorBrush x:Key="ActiveTabCloseIconBrush"         Color="#4E5B65" />
     <SolidColorBrush x:Key="InactiveTabBackgroundBrush"      Color="#1B212A" />
     <SolidColorBrush x:Key="InactiveTabHoverBackgroundBrush" Color="#2A323D" />
     <SolidColorBrush x:Key="InactiveTabForegroundBrush"      Color="#B6C1D3" />
@@ -71,7 +73,7 @@
     <SolidColorBrush x:Key="ExplorerSplitterBrush" Color="#1B212A" />
 
     <!-- Ruta del archivo, bajo las pestañas -->
-    <SolidColorBrush x:Key="DocumentPathBackgroundBrush"   Color="#A4B1C7" />
+    <SolidColorBrush x:Key="DocumentPathBackgroundBrush"   Color="#C3C9D1" />
     <SolidColorBrush x:Key="DocumentPathForegroundBrush"   Color="#4E5B65" />
     <SolidColorBrush x:Key="DocumentPathSeparatorBrush"    Color="#7C8890" />
 

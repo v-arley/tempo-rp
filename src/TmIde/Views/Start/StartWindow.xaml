@@ -19,480 +19,488 @@
         UseLayoutRounding="True">
 
     <Window.Resources>
-        <!-- Acción principal "Nuevo proyecto": bloque rojo pegado al borde izquierdo
-            con el lateral derecho inclinado (pieza de 20px estirada en alto), como la
-            cabecera TMIDE. Se aclara en hover, se oscurece al pulsar y se atenúa
-            deshabilitado. Los estados van en Style.Triggers (no en la plantilla)
-            para que las variantes puedan cambiar sus colores. -->
-        <Style x:Key="StartActionLeftButton" TargetType="Button">
-            <Setter Property="Background" Value="#BF3B2C" />
-            <Setter Property="Foreground" Value="#E4E9F0" />
-            <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="20" />
-                            </Grid.ColumnDefinitions>
-                            <Rectangle Grid.Column="0" Fill="{TemplateBinding Background}" />
-                            <Path Grid.Column="1" Stretch="Fill" Fill="{TemplateBinding Background}"
-                                    Data="M0,0 L1,0 L0,1 Z" />
-                            <ContentPresenter Grid.Column="0" Margin="20,10,16,10"
-                                    HorizontalAlignment="Left" VerticalAlignment="Center" />
-                        </Grid>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-            <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#D14636" />
-                </Trigger>
-                <Trigger Property="IsPressed" Value="True">
-                    <Setter Property="Background" Value="#A33223" />
-                </Trigger>
-                <Trigger Property="IsEnabled" Value="False">
-                    <Setter Property="Opacity" Value="0.45" />
-                    <Setter Property="Cursor" Value="Arrow" />
-                </Trigger>
-            </Style.Triggers>
-        </Style>
+        <ResourceDictionary>
+            <!-- La pantalla de inicio conserva siempre el tema oscuro: los recursos
+                de la ventana tienen prioridad sobre el tema activo de la aplicación. -->
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/Resources/Theme.Dark.xaml" />
+            </ResourceDictionary.MergedDictionaries>
 
-        <!-- Variante oscura (#20262E) de la acción izquierda, para acciones
-            secundarias ("VOLVER"). -->
-        <Style x:Key="StartSecondaryLeftButton" TargetType="Button"
-                BasedOn="{StaticResource StartActionLeftButton}">
-            <Setter Property="Background" Value="{DynamicResource StartBarBrush}" />
-            <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#2A323D" />
-                </Trigger>
-                <Trigger Property="IsPressed" Value="True">
-                    <Setter Property="Background" Value="#12171D" />
-                </Trigger>
-            </Style.Triggers>
-        </Style>
-
-        <!-- Acción principal "Abrir proyecto": reflejo de la anterior (pegada al
-            borde derecho, lateral izquierdo inclinado), como la cabecera RECIENTES. -->
-        <Style x:Key="StartActionRightButton" TargetType="Button"
-                BasedOn="{StaticResource StartActionLeftButton}">
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="20" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
-                            <Path Grid.Column="0" Stretch="Fill" Fill="{TemplateBinding Background}"
-                                    Data="M1,0 L1,1 L0,1 Z" />
-                            <Rectangle Grid.Column="1" Fill="{TemplateBinding Background}" />
-                            <ContentPresenter Grid.Column="1" Margin="16,10,20,10"
-                                    HorizontalAlignment="Right" VerticalAlignment="Center" />
-                        </Grid>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <!-- Cerrar del header: 24x24 con glifo de 8, rojo en hover (como el cerrar
-            de la ventana principal) -->
-        <Style x:Key="StartCloseButton" TargetType="Button">
-            <Setter Property="Background" Value="Transparent" />
-            <Setter Property="Width" Value="24" />
-            <Setter Property="Height" Value="24" />
-            <Setter Property="Margin" Value="0,0,3,0" />
-            <Setter Property="Cursor" Value="Arrow" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Grid x:Name="Chrome" Background="{TemplateBinding Background}">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
-                        </Grid>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Chrome" Property="Background" Value="{DynamicResource CloseButtonHoverBrush}" />
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <Style x:Key="StartCloseGlyph" TargetType="Path">
-            <Setter Property="StrokeThickness" Value="1" />
-            <Setter Property="Stretch" Value="None" />
-            <Setter Property="SnapsToDevicePixels" Value="True" />
-            <!-- Claro: la barra del header es oscura (#20262E) -->
-            <Setter Property="Stroke" Value="#8C99AD" />
-            <Style.Triggers>
-                <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=Button}}" Value="True">
-                    <Setter Property="Stroke" Value="White" />
-                </DataTrigger>
-            </Style.Triggers>
-        </Style>
-
-        <!-- Proyecto reciente: contenedor de tres filas.
-                Fila 0: franja #1B212A de 3px (separación superior).
-                Fila 1: tres columnas:
-                            0 · lateral #BF3B2C
-                            1 · información (nombre + ruta) sobre #1B212A
-                            2 · lateral #BF3B2C
-                Fila 2: franja #1B212A de 3px (separación inferior).
-            En hover y seleccionado (IsSelected) se aclara la celda de información;
-            al pulsar se oscurece. Entre accesos hay un gap de 8px (margen inferior)
-            además de las franjas. -->
-        <Style x:Key="RecentProjectButton" TargetType="Button">
-            <Setter Property="Background" Value="#1B212A" />
-            <Setter Property="Margin" Value="0,0,0,8" />
-            <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Grid Background="#1B212A">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="3" />
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="3" />
-                            </Grid.RowDefinitions>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="3" />
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="3" />
-                            </Grid.ColumnDefinitions>
-                            <Rectangle Grid.Row="1" Grid.Column="0" Fill="#BF3B2C" />
-                            <Grid Grid.Row="1" Grid.Column="1" Background="{TemplateBinding Background}">
-                                <ContentPresenter Margin="17,6" />
-                            </Grid>
-                            <Rectangle Grid.Row="1" Grid.Column="2" Fill="#BF3B2C" />
-                        </Grid>
-                        <ControlTemplate.Triggers>
-                            <DataTrigger Binding="{Binding IsSelected}" Value="True">
-                                <Setter Property="Background" Value="#2A323D" />
-                            </DataTrigger>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="#2A323D" />
-                            </Trigger>
-                            <Trigger Property="IsPressed" Value="True">
-                                <Setter Property="Background" Value="#12171D" />
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <!-- Plantilla "tarjetas": cada proyecto reciente es un botón con nombre, ruta y fecha
-            (estilo RecentProjectButton). -->
-        <DataTemplate x:Key="RecentItemClassic">
-            <Button Style="{StaticResource RecentProjectButton}"
-                    Command="{Binding DataContext.ActivateRecentCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                    CommandParameter="{Binding}">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-                    <StackPanel Grid.Column="0">
-                        <TextBlock Text="{Binding Name}" FontSize="{DynamicResource FontSizeBody}" FontWeight="Medium"
-                                    Foreground="#E4E9F0" />
-                        <TextBlock Text="{Binding Path}" FontSize="{DynamicResource FontSizeCaption}" Margin="0,2,0,0"
-                                    FontFamily="{DynamicResource CodeFontFamily}"
-                                    Foreground="#8C99AD"
-                                    TextTrimming="CharacterEllipsis" />
-                    </StackPanel>
-                    <TextBlock Grid.Column="1" Text="{Binding LastOpened}" FontSize="{DynamicResource FontSizeCaption}"
-                                VerticalAlignment="Top" Margin="12,1,0,0"
-                                Foreground="#8C99AD" />
-                    <Path Grid.Column="2" Margin="16,0,0,0" VerticalAlignment="Center"
-                            Stroke="#8C99AD" StrokeThickness="1.5"
-                            Data="M0,5 L12,5 M8,1 L12,5 L8,9" />
-                </Grid>
-            </Button>
-        </DataTemplate>
-
-        <!-- Plantilla "filas planas": sin tarjeta, solo una línea fina como
-            separador. Icono de carpeta, nombre y ruta, fecha a la derecha. La marca
-            roja de 3px a la izquierda y la flecha aparecen en hover / selección. -->
-        <Style x:Key="RecentRowButton" TargetType="Button">
-            <Setter Property="Background" Value="Transparent" />
-            <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Grid Background="{TemplateBinding Background}">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="3" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
-                            <Rectangle x:Name="Mark" Grid.Column="0" Fill="#BF3B2C" Visibility="Hidden" />
-                            <ContentPresenter Grid.Column="1" Margin="14,10,12,10" />
-                            <Rectangle Grid.ColumnSpan="2" Height="1" VerticalAlignment="Bottom"
-                                    Fill="{DynamicResource StartCaptionBrush}" Opacity="0.18" />
-                        </Grid>
-                        <ControlTemplate.Triggers>
-                            <DataTrigger Binding="{Binding IsSelected}" Value="True">
-                                <Setter Property="Background" Value="#14FFFFFF" />
-                                <Setter TargetName="Mark" Property="Visibility" Value="Visible" />
-                            </DataTrigger>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="#0DFFFFFF" />
-                                <Setter TargetName="Mark" Property="Visibility" Value="Visible" />
-                            </Trigger>
-                            <Trigger Property="IsPressed" Value="True">
-                                <Setter Property="Background" Value="#1F000000" />
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <DataTemplate x:Key="RecentItemRows">
-            <Button Style="{StaticResource RecentRowButton}"
-                    Command="{Binding DataContext.ActivateRecentCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                    CommandParameter="{Binding}">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="24" />
-                    </Grid.ColumnDefinitions>
-                    <Path Grid.Column="0" Width="16" Height="16" Stretch="Uniform" Margin="0,0,14,0"
-                            VerticalAlignment="Center" Fill="#8C99AD" Data="{StaticResource IconFolder}" />
-                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                        <TextBlock Text="{Binding Name}" FontSize="{DynamicResource FontSizeBody}" FontWeight="Medium"
-                                    Foreground="{DynamicResource PrimaryForegroundBrush}" />
-                        <TextBlock Text="{Binding Path}" FontSize="{DynamicResource FontSizeCaption}" Margin="0,2,0,0"
-                                    FontFamily="{DynamicResource CodeFontFamily}"
-                                    Foreground="#8C99AD" TextTrimming="CharacterEllipsis" />
-                    </StackPanel>
-                    <TextBlock Grid.Column="2" Text="{Binding LastOpened}" FontSize="{DynamicResource FontSizeCaption}"
-                                VerticalAlignment="Center" Margin="12,0,0,0" Foreground="#8C99AD" />
-                    <Path Grid.Column="3" HorizontalAlignment="Right" VerticalAlignment="Center"
-                            StrokeThickness="1.5" Stroke="#BF3B2C" Data="M0,5 L12,5 M8,1 L12,5 L8,9"
-                            Visibility="{Binding IsSelected, Converter={StaticResource BoolToVisibility}}" />
-                </Grid>
-            </Button>
-        </DataTemplate>
-
-        <!-- Plantilla "línea de tiempo": cada proyecto es un nodo con la fecha a
-            la derecha. El nodo seleccionado se rellena de rojo con un halo. -->
-        <Style x:Key="RecentTimelineButton" TargetType="Button">
-            <Setter Property="Background" Value="Transparent" />
-            <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Grid Background="{TemplateBinding Background}">
-                            <ContentPresenter />
-                        </Grid>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsPressed" Value="True">
-                                <Setter Property="Background" Value="#1F000000" />
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <DataTemplate x:Key="RecentItemTimeline">
-            <Button x:Name="Row" Style="{StaticResource RecentTimelineButton}"
-                    Command="{Binding DataContext.ActivateRecentCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                    CommandParameter="{Binding}">
-                <Grid MinHeight="54">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="6" />
-                        <ColumnDefinition Width="36" />
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-
-                    <!-- Nodo -->
-                    <Grid Grid.Column="1" Width="22" Height="22" HorizontalAlignment="Center"
-                            VerticalAlignment="Center">
-                        <Ellipse x:Name="Halo" Stroke="#BF3B2C" StrokeThickness="1" Opacity="0" />
-                        <Ellipse x:Name="Node" Width="9" Height="9"
-                                Fill="{DynamicResource StartCentralBrush}"
-                                Stroke="{DynamicResource StartTextDimBrush}" StrokeThickness="1.5" />
-                    </Grid>
-
-                    <StackPanel x:Name="TextStack" Grid.Column="2" VerticalAlignment="Center" Margin="0,0,12,0">
-                        <StackPanel.RenderTransform>
-                            <TranslateTransform X="0" />
-                        </StackPanel.RenderTransform>
-                        <TextBlock x:Name="Title" Text="{Binding Name}" FontSize="{DynamicResource FontSizeEmphasis}" FontWeight="Medium"
-                                    Foreground="{DynamicResource StartTextBrush}" />
-                        <TextBlock x:Name="PathText" Text="{Binding Path}" FontSize="{DynamicResource FontSizeCaption}" Margin="0,2,0,0"
-                                    FontFamily="{DynamicResource CodeFontFamily}"
-                                    Foreground="{DynamicResource StartTextMutedBrush}" TextTrimming="CharacterEllipsis" />
-                    </StackPanel>
-
-                    <!-- A la derecha: pista de apertura (solo en la fila seleccionada) y
-                        fecha relativa -->
-                    <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center"
-                            Margin="0,0,16,0">
-                        <StackPanel x:Name="OpenHint" Orientation="Horizontal" Visibility="Collapsed"
-                                Margin="0,0,14,0" VerticalAlignment="Center">
-                            <TextBlock Text="ABRIR" FontSize="{DynamicResource FontSizeCaption}" FontWeight="Medium" Foreground="{DynamicResource StartAccentTextBrush}"
-                                        FontFamily="{DynamicResource CodeFontFamily}" Margin="0,0,8,0"
-                                        VerticalAlignment="Center" />
+            <!-- Acción principal "Nuevo proyecto": bloque rojo pegado al borde izquierdo
+                con el lateral derecho inclinado (pieza de 20px estirada en alto), como la
+                cabecera TMIDE. Se aclara en hover, se oscurece al pulsar y se atenúa
+                deshabilitado. Los estados van en Style.Triggers (no en la plantilla)
+                para que las variantes puedan cambiar sus colores. -->
+            <Style x:Key="StartActionLeftButton" TargetType="Button">
+                <Setter Property="Background" Value="#BF3B2C" />
+                <Setter Property="Foreground" Value="#E4E9F0" />
+                <Setter Property="Cursor" Value="Hand" />
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="Button">
                             <Grid>
-                                <Rectangle Fill="{DynamicResource StartVeilSelectedBrush}" Stroke="{DynamicResource StartTextDimBrush}" StrokeThickness="1"
-                                        RadiusX="3" RadiusY="3" />
-                                <TextBlock Text="ENTER ↵" Margin="8,3" FontSize="{DynamicResource FontSizeCaption}" FontWeight="Medium"
-                                            FontFamily="{DynamicResource CodeFontFamily}" Foreground="{DynamicResource StartTextStrongBrush}" />
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="20" />
+                                </Grid.ColumnDefinitions>
+                                <Rectangle Grid.Column="0" Fill="{TemplateBinding Background}" />
+                                <Path Grid.Column="1" Stretch="Fill" Fill="{TemplateBinding Background}"
+                                        Data="M0,0 L1,0 L0,1 Z" />
+                                <ContentPresenter Grid.Column="0" Margin="20,10,16,10"
+                                        HorizontalAlignment="Left" VerticalAlignment="Center" />
                             </Grid>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+                <Style.Triggers>
+                    <Trigger Property="IsMouseOver" Value="True">
+                        <Setter Property="Background" Value="#D14636" />
+                    </Trigger>
+                    <Trigger Property="IsPressed" Value="True">
+                        <Setter Property="Background" Value="#A33223" />
+                    </Trigger>
+                    <Trigger Property="IsEnabled" Value="False">
+                        <Setter Property="Opacity" Value="0.45" />
+                        <Setter Property="Cursor" Value="Arrow" />
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+
+            <!-- Variante oscura (#20262E) de la acción izquierda, para acciones
+                secundarias ("VOLVER"). -->
+            <Style x:Key="StartSecondaryLeftButton" TargetType="Button"
+                    BasedOn="{StaticResource StartActionLeftButton}">
+                <Setter Property="Background" Value="{DynamicResource StartBarBrush}" />
+                <Style.Triggers>
+                    <Trigger Property="IsMouseOver" Value="True">
+                        <Setter Property="Background" Value="#2A323D" />
+                    </Trigger>
+                    <Trigger Property="IsPressed" Value="True">
+                        <Setter Property="Background" Value="#12171D" />
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+
+            <!-- Acción principal "Abrir proyecto": reflejo de la anterior (pegada al
+                borde derecho, lateral izquierdo inclinado), como la cabecera RECIENTES. -->
+            <Style x:Key="StartActionRightButton" TargetType="Button"
+                    BasedOn="{StaticResource StartActionLeftButton}">
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="Button">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="20" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Path Grid.Column="0" Stretch="Fill" Fill="{TemplateBinding Background}"
+                                        Data="M1,0 L1,1 L0,1 Z" />
+                                <Rectangle Grid.Column="1" Fill="{TemplateBinding Background}" />
+                                <ContentPresenter Grid.Column="1" Margin="16,10,20,10"
+                                        HorizontalAlignment="Right" VerticalAlignment="Center" />
+                            </Grid>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <!-- Cerrar del header: 24x24 con glifo de 8, rojo en hover (como el cerrar
+                de la ventana principal) -->
+            <Style x:Key="StartCloseButton" TargetType="Button">
+                <Setter Property="Background" Value="Transparent" />
+                <Setter Property="Width" Value="24" />
+                <Setter Property="Height" Value="24" />
+                <Setter Property="Margin" Value="0,0,3,0" />
+                <Setter Property="Cursor" Value="Arrow" />
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="Button">
+                            <Grid x:Name="Chrome" Background="{TemplateBinding Background}">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Grid>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="Chrome" Property="Background" Value="{DynamicResource CloseButtonHoverBrush}" />
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <Style x:Key="StartCloseGlyph" TargetType="Path">
+                <Setter Property="StrokeThickness" Value="1" />
+                <Setter Property="Stretch" Value="None" />
+                <Setter Property="SnapsToDevicePixels" Value="True" />
+                <!-- Claro: la barra del header es oscura (#20262E) -->
+                <Setter Property="Stroke" Value="#8C99AD" />
+                <Style.Triggers>
+                    <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=Button}}" Value="True">
+                        <Setter Property="Stroke" Value="White" />
+                    </DataTrigger>
+                </Style.Triggers>
+            </Style>
+
+            <!-- Proyecto reciente: contenedor de tres filas.
+                    Fila 0: franja #1B212A de 3px (separación superior).
+                    Fila 1: tres columnas:
+                                0 · lateral #BF3B2C
+                                1 · información (nombre + ruta) sobre #1B212A
+                                2 · lateral #BF3B2C
+                    Fila 2: franja #1B212A de 3px (separación inferior).
+                En hover y seleccionado (IsSelected) se aclara la celda de información;
+                al pulsar se oscurece. Entre accesos hay un gap de 8px (margen inferior)
+                además de las franjas. -->
+            <Style x:Key="RecentProjectButton" TargetType="Button">
+                <Setter Property="Background" Value="#1B212A" />
+                <Setter Property="Margin" Value="0,0,0,8" />
+                <Setter Property="Cursor" Value="Hand" />
+                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="Button">
+                            <Grid Background="#1B212A">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="3" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="3" />
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="3" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="3" />
+                                </Grid.ColumnDefinitions>
+                                <Rectangle Grid.Row="1" Grid.Column="0" Fill="#BF3B2C" />
+                                <Grid Grid.Row="1" Grid.Column="1" Background="{TemplateBinding Background}">
+                                    <ContentPresenter Margin="17,6" />
+                                </Grid>
+                                <Rectangle Grid.Row="1" Grid.Column="2" Fill="#BF3B2C" />
+                            </Grid>
+                            <ControlTemplate.Triggers>
+                                <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                    <Setter Property="Background" Value="#2A323D" />
+                                </DataTrigger>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Background" Value="#2A323D" />
+                                </Trigger>
+                                <Trigger Property="IsPressed" Value="True">
+                                    <Setter Property="Background" Value="#12171D" />
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <!-- Plantilla "tarjetas": cada proyecto reciente es un botón con nombre, ruta y fecha
+                (estilo RecentProjectButton). -->
+            <DataTemplate x:Key="RecentItemClassic">
+                <Button Style="{StaticResource RecentProjectButton}"
+                        Command="{Binding DataContext.ActivateRecentCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                        CommandParameter="{Binding}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="{Binding Name}" FontSize="{DynamicResource FontSizeBody}" FontWeight="Medium"
+                                        Foreground="#E4E9F0" />
+                            <TextBlock Text="{Binding Path}" FontSize="{DynamicResource FontSizeCaption}" Margin="0,2,0,0"
+                                        FontFamily="{DynamicResource CodeFontFamily}"
+                                        Foreground="#8C99AD"
+                                        TextTrimming="CharacterEllipsis" />
                         </StackPanel>
-                        <TextBlock Text="{Binding LastOpened}" VerticalAlignment="Center" FontSize="{DynamicResource FontSizeCaption}"
-                                    FontFamily="{DynamicResource CodeFontFamily}" Foreground="{DynamicResource StartTextDimBrush}" />
-                    </StackPanel>
-                </Grid>
-            </Button>
-            <DataTemplate.Triggers>
-                <!-- Hover: solo cambia el color de la tipografía (sin fondo) -->
-                <Trigger SourceName="Row" Property="IsMouseOver" Value="True">
-                    <Setter TargetName="Title" Property="Foreground" Value="{DynamicResource StartAccentTextBrush}" />
-                    <Setter TargetName="PathText" Property="Foreground" Value="{DynamicResource StartTextStrongBrush}" />
-                    <Trigger.EnterActions>
-                        <BeginStoryboard>
-                            <Storyboard>
-                                <DoubleAnimation Storyboard.TargetName="TextStack" Storyboard.TargetProperty="RenderTransform.X"
-                                                 To="6" Duration="0:0:0.12" />
-                            </Storyboard>
-                        </BeginStoryboard>
-                    </Trigger.EnterActions>
-                    <Trigger.ExitActions>
-                        <BeginStoryboard>
-                            <Storyboard>
-                                <DoubleAnimation Storyboard.TargetName="TextStack" Storyboard.TargetProperty="RenderTransform.X"
-                                                 To="0" Duration="0:0:0.12" />
-                            </Storyboard>
-                        </BeginStoryboard>
-                    </Trigger.ExitActions>
-                </Trigger>
-                <DataTrigger Binding="{Binding IsSelected}" Value="True">
-                    <Setter TargetName="Node" Property="Fill" Value="#BF3B2C" />
-                    <Setter TargetName="Node" Property="Stroke" Value="#BF3B2C" />
-                    <Setter TargetName="Halo" Property="Opacity" Value="0.7" />
-                    <Setter TargetName="Title" Property="Foreground" Value="{DynamicResource StartTextStrongBrush}" />
-                    <Setter TargetName="OpenHint" Property="Visibility" Value="Visible" />
-                </DataTrigger>
-            </DataTemplate.Triggers>
-        </DataTemplate>
+                        <TextBlock Grid.Column="1" Text="{Binding LastOpened}" FontSize="{DynamicResource FontSizeCaption}"
+                                    VerticalAlignment="Top" Margin="12,1,0,0"
+                                    Foreground="#8C99AD" />
+                        <Path Grid.Column="2" Margin="16,0,0,0" VerticalAlignment="Center"
+                                Stroke="#8C99AD" StrokeThickness="1.5"
+                                Data="M0,5 L12,5 M8,1 L12,5 L8,9" />
+                    </Grid>
+                </Button>
+            </DataTemplate>
 
-        <!-- Etiquetas / valores del detalle: monoespaciado como el footer -->
-        <Style x:Key="DetailLabel" TargetType="TextBlock">
-            <Setter Property="FontFamily" Value="{DynamicResource CodeFontFamily}" />
-            <Setter Property="FontWeight" Value="Medium" />
-            <Setter Property="FontSize" Value="{DynamicResource FontSizeSmall}" />
-            <Setter Property="Foreground" Value="#8C99AD" />
-            <Setter Property="Margin" Value="0,0,16,4" />
-        </Style>
-        <Style x:Key="DetailValue" TargetType="TextBlock" BasedOn="{StaticResource DetailLabel}">
-            <Setter Property="Foreground" Value="#E4E9F0" />
-            <Setter Property="Margin" Value="0,0,0,4" />
-            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
-        </Style>
-
-        <!-- Título de sección sobre el fondo claro del central ("PROYECTOS
-            RECIENTES", "NUEVO PROYECTO") y etiquetas de campo del formulario -->
-        <Style x:Key="SectionCaption" TargetType="TextBlock">
-            <Setter Property="FontFamily" Value="{DynamicResource CodeFontFamily}" />
-            <Setter Property="FontSize" Value="{DynamicResource FontSizeSmall}" />
-            <Setter Property="FontWeight" Value="Medium" />
-            <Setter Property="Foreground" Value="{DynamicResource StartCaptionBrush}" />
-        </Style>
-        <Style x:Key="FieldLabel" TargetType="TextBlock" BasedOn="{StaticResource SectionCaption}">
-            <Setter Property="Margin" Value="0,0,0,6" />
-        </Style>
-
-        <!-- Campo de texto del formulario: mismo contenedor que los accesos a
-            recientes (laterales #BF3B2C de 3px y celda #1B212A), que se aclara al
-            tener el foco. -->
-        <Style x:Key="StartTextBox" TargetType="TextBox">
-            <Setter Property="Background" Value="#1B212A" />
-            <Setter Property="Foreground" Value="#E4E9F0" />
-            <Setter Property="CaretBrush" Value="#E4E9F0" />
-            <Setter Property="SelectionBrush" Value="#BF3B2C" />
-            <Setter Property="FontSize" Value="{DynamicResource FontSizeBody}" />
-            <Setter Property="Height" Value="32" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="TextBox">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="3" />
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="3" />
-                            </Grid.ColumnDefinitions>
-                            <Rectangle Grid.Column="0" Fill="#BF3B2C" />
-                            <Grid Grid.Column="1" Background="{TemplateBinding Background}">
-                                <ScrollViewer x:Name="PART_ContentHost" Margin="14,0"
-                                        VerticalAlignment="Center" />
+            <!-- Plantilla "filas planas": sin tarjeta, solo una línea fina como
+                separador. Icono de carpeta, nombre y ruta, fecha a la derecha. La marca
+                roja de 3px a la izquierda y la flecha aparecen en hover / selección. -->
+            <Style x:Key="RecentRowButton" TargetType="Button">
+                <Setter Property="Background" Value="Transparent" />
+                <Setter Property="Cursor" Value="Hand" />
+                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="Button">
+                            <Grid Background="{TemplateBinding Background}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="3" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Rectangle x:Name="Mark" Grid.Column="0" Fill="#BF3B2C" Visibility="Hidden" />
+                                <ContentPresenter Grid.Column="1" Margin="14,10,12,10" />
+                                <Rectangle Grid.ColumnSpan="2" Height="1" VerticalAlignment="Bottom"
+                                        Fill="{DynamicResource StartCaptionBrush}" Opacity="0.18" />
                             </Grid>
-                            <Rectangle Grid.Column="2" Fill="#BF3B2C" />
-                        </Grid>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-            <Style.Triggers>
-                <Trigger Property="IsKeyboardFocused" Value="True">
-                    <Setter Property="Background" Value="#2A323D" />
-                </Trigger>
-            </Style.Triggers>
-        </Style>
+                            <ControlTemplate.Triggers>
+                                <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                    <Setter Property="Background" Value="#14FFFFFF" />
+                                    <Setter TargetName="Mark" Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Background" Value="#0DFFFFFF" />
+                                    <Setter TargetName="Mark" Property="Visibility" Value="Visible" />
+                                </Trigger>
+                                <Trigger Property="IsPressed" Value="True">
+                                    <Setter Property="Background" Value="#1F000000" />
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
 
-        <!-- Botón pequeño junto a un campo ("EXAMINAR"): bloque #20262E del alto
-            del campo -->
-        <Style x:Key="StartFieldButton" TargetType="Button">
-            <Setter Property="Background" Value="{DynamicResource StartBarBrush}" />
-            <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Grid Background="{TemplateBinding Background}">
-                            <ContentPresenter Margin="14,0" HorizontalAlignment="Center" VerticalAlignment="Center" />
-                        </Grid>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-            <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#2A323D" />
-                </Trigger>
-                <Trigger Property="IsPressed" Value="True">
-                    <Setter Property="Background" Value="#12171D" />
-                </Trigger>
-            </Style.Triggers>
-        </Style>
+            <DataTemplate x:Key="RecentItemRows">
+                <Button Style="{StaticResource RecentRowButton}"
+                        Command="{Binding DataContext.ActivateRecentCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                        CommandParameter="{Binding}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="24" />
+                        </Grid.ColumnDefinitions>
+                        <Path Grid.Column="0" Width="16" Height="16" Stretch="Uniform" Margin="0,0,14,0"
+                                VerticalAlignment="Center" Fill="#8C99AD" Data="{StaticResource IconFolder}" />
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding Name}" FontSize="{DynamicResource FontSizeBody}" FontWeight="Medium"
+                                        Foreground="{DynamicResource PrimaryForegroundBrush}" />
+                            <TextBlock Text="{Binding Path}" FontSize="{DynamicResource FontSizeCaption}" Margin="0,2,0,0"
+                                        FontFamily="{DynamicResource CodeFontFamily}"
+                                        Foreground="#8C99AD" TextTrimming="CharacterEllipsis" />
+                        </StackPanel>
+                        <TextBlock Grid.Column="2" Text="{Binding LastOpened}" FontSize="{DynamicResource FontSizeCaption}"
+                                    VerticalAlignment="Center" Margin="12,0,0,0" Foreground="#8C99AD" />
+                        <Path Grid.Column="3" HorizontalAlignment="Right" VerticalAlignment="Center"
+                                StrokeThickness="1.5" Stroke="#BF3B2C" Data="M0,5 L12,5 M8,1 L12,5 L8,9"
+                                Visibility="{Binding IsSelected, Converter={StaticResource BoolToVisibility}}" />
+                    </Grid>
+                </Button>
+            </DataTemplate>
 
-        <!-- Paneles del central: se ocultan con Collapsed. La ventana tiene alto
-            fijo (360): cabe el header, las acciones y el máximo de tres recientes
-            (StartViewModel.MaxVisibleRecents), y también el formulario de nuevo proyecto. -->
-        <Style x:Key="StartPanel" TargetType="Grid">
-            <Style.Triggers>
-                <DataTrigger Binding="{Binding IsNewProjectMode}" Value="True">
-                    <Setter Property="Visibility" Value="Collapsed" />
-                </DataTrigger>
-            </Style.Triggers>
-        </Style>
-        <Style x:Key="NewProjectPanel" TargetType="Grid">
-            <Setter Property="Visibility" Value="Collapsed" />
-            <Style.Triggers>
-                <DataTrigger Binding="{Binding IsNewProjectMode}" Value="True">
-                    <Setter Property="Visibility" Value="Visible" />
-                </DataTrigger>
-            </Style.Triggers>
-        </Style>
+            <!-- Plantilla "línea de tiempo": cada proyecto es un nodo con la fecha a
+                la derecha. El nodo seleccionado se rellena de rojo con un halo. -->
+            <Style x:Key="RecentTimelineButton" TargetType="Button">
+                <Setter Property="Background" Value="Transparent" />
+                <Setter Property="Cursor" Value="Hand" />
+                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="Button">
+                            <Grid Background="{TemplateBinding Background}">
+                                <ContentPresenter />
+                            </Grid>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsPressed" Value="True">
+                                    <Setter Property="Background" Value="#1F000000" />
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <DataTemplate x:Key="RecentItemTimeline">
+                <Button x:Name="Row" Style="{StaticResource RecentTimelineButton}"
+                        Command="{Binding DataContext.ActivateRecentCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                        CommandParameter="{Binding}">
+                    <Grid MinHeight="54">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="6" />
+                            <ColumnDefinition Width="36" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Nodo -->
+                        <Grid Grid.Column="1" Width="22" Height="22" HorizontalAlignment="Center"
+                                VerticalAlignment="Center">
+                            <Ellipse x:Name="Halo" Stroke="#BF3B2C" StrokeThickness="1" Opacity="0" />
+                            <Ellipse x:Name="Node" Width="9" Height="9"
+                                    Fill="{DynamicResource StartCentralBrush}"
+                                    Stroke="{DynamicResource StartTextDimBrush}" StrokeThickness="1.5" />
+                        </Grid>
+
+                        <StackPanel x:Name="TextStack" Grid.Column="2" VerticalAlignment="Center" Margin="0,0,12,0">
+                            <StackPanel.RenderTransform>
+                                <TranslateTransform X="0" />
+                            </StackPanel.RenderTransform>
+                            <TextBlock x:Name="Title" Text="{Binding Name}" FontSize="{DynamicResource FontSizeEmphasis}" FontWeight="Medium"
+                                        Foreground="{DynamicResource StartTextBrush}" />
+                            <TextBlock x:Name="PathText" Text="{Binding Path}" FontSize="{DynamicResource FontSizeCaption}" Margin="0,2,0,0"
+                                        FontFamily="{DynamicResource CodeFontFamily}"
+                                        Foreground="{DynamicResource StartTextMutedBrush}" TextTrimming="CharacterEllipsis" />
+                        </StackPanel>
+
+                        <!-- A la derecha: pista de apertura (solo en la fila seleccionada) y
+                            fecha relativa -->
+                        <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center"
+                                Margin="0,0,16,0">
+                            <StackPanel x:Name="OpenHint" Orientation="Horizontal" Visibility="Collapsed"
+                                    Margin="0,0,14,0" VerticalAlignment="Center">
+                                <TextBlock Text="ABRIR" FontSize="{DynamicResource FontSizeCaption}" FontWeight="Medium" Foreground="{DynamicResource StartAccentTextBrush}"
+                                            FontFamily="{DynamicResource CodeFontFamily}" Margin="0,0,8,0"
+                                            VerticalAlignment="Center" />
+                                <Grid>
+                                    <Rectangle Fill="{DynamicResource StartVeilSelectedBrush}" Stroke="{DynamicResource StartTextDimBrush}" StrokeThickness="1"
+                                            RadiusX="3" RadiusY="3" />
+                                    <TextBlock Text="ENTER ↵" Margin="8,3" FontSize="{DynamicResource FontSizeCaption}" FontWeight="Medium"
+                                                FontFamily="{DynamicResource CodeFontFamily}" Foreground="{DynamicResource StartTextStrongBrush}" />
+                                </Grid>
+                            </StackPanel>
+                            <TextBlock Text="{Binding LastOpened}" VerticalAlignment="Center" FontSize="{DynamicResource FontSizeCaption}"
+                                        FontFamily="{DynamicResource CodeFontFamily}" Foreground="{DynamicResource StartTextDimBrush}" />
+                        </StackPanel>
+                    </Grid>
+                </Button>
+                <DataTemplate.Triggers>
+                    <!-- Hover: solo cambia el color de la tipografía (sin fondo) -->
+                    <Trigger SourceName="Row" Property="IsMouseOver" Value="True">
+                        <Setter TargetName="Title" Property="Foreground" Value="{DynamicResource StartAccentTextBrush}" />
+                        <Setter TargetName="PathText" Property="Foreground" Value="{DynamicResource StartTextStrongBrush}" />
+                        <Trigger.EnterActions>
+                            <BeginStoryboard>
+                                <Storyboard>
+                                    <DoubleAnimation Storyboard.TargetName="TextStack" Storyboard.TargetProperty="RenderTransform.X"
+                                                     To="6" Duration="0:0:0.12" />
+                                </Storyboard>
+                            </BeginStoryboard>
+                        </Trigger.EnterActions>
+                        <Trigger.ExitActions>
+                            <BeginStoryboard>
+                                <Storyboard>
+                                    <DoubleAnimation Storyboard.TargetName="TextStack" Storyboard.TargetProperty="RenderTransform.X"
+                                                     To="0" Duration="0:0:0.12" />
+                                </Storyboard>
+                            </BeginStoryboard>
+                        </Trigger.ExitActions>
+                    </Trigger>
+                    <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                        <Setter TargetName="Node" Property="Fill" Value="#BF3B2C" />
+                        <Setter TargetName="Node" Property="Stroke" Value="#BF3B2C" />
+                        <Setter TargetName="Halo" Property="Opacity" Value="0.7" />
+                        <Setter TargetName="Title" Property="Foreground" Value="{DynamicResource StartTextStrongBrush}" />
+                        <Setter TargetName="OpenHint" Property="Visibility" Value="Visible" />
+                    </DataTrigger>
+                </DataTemplate.Triggers>
+            </DataTemplate>
+
+            <!-- Etiquetas / valores del detalle: monoespaciado como el footer -->
+            <Style x:Key="DetailLabel" TargetType="TextBlock">
+                <Setter Property="FontFamily" Value="{DynamicResource CodeFontFamily}" />
+                <Setter Property="FontWeight" Value="Medium" />
+                <Setter Property="FontSize" Value="{DynamicResource FontSizeSmall}" />
+                <Setter Property="Foreground" Value="#8C99AD" />
+                <Setter Property="Margin" Value="0,0,16,4" />
+            </Style>
+            <Style x:Key="DetailValue" TargetType="TextBlock" BasedOn="{StaticResource DetailLabel}">
+                <Setter Property="Foreground" Value="#E4E9F0" />
+                <Setter Property="Margin" Value="0,0,0,4" />
+                <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+            </Style>
+
+            <!-- Título de sección sobre el fondo claro del central ("PROYECTOS
+                RECIENTES", "NUEVO PROYECTO") y etiquetas de campo del formulario -->
+            <Style x:Key="SectionCaption" TargetType="TextBlock">
+                <Setter Property="FontFamily" Value="{DynamicResource CodeFontFamily}" />
+                <Setter Property="FontSize" Value="{DynamicResource FontSizeSmall}" />
+                <Setter Property="FontWeight" Value="Medium" />
+                <Setter Property="Foreground" Value="{DynamicResource StartCaptionBrush}" />
+            </Style>
+            <Style x:Key="FieldLabel" TargetType="TextBlock" BasedOn="{StaticResource SectionCaption}">
+                <Setter Property="Margin" Value="0,0,0,6" />
+            </Style>
+
+            <!-- Campo de texto del formulario: mismo contenedor que los accesos a
+                recientes (laterales #BF3B2C de 3px y celda #1B212A), que se aclara al
+                tener el foco. -->
+            <Style x:Key="StartTextBox" TargetType="TextBox">
+                <Setter Property="Background" Value="#1B212A" />
+                <Setter Property="Foreground" Value="#E4E9F0" />
+                <Setter Property="CaretBrush" Value="#E4E9F0" />
+                <Setter Property="SelectionBrush" Value="#BF3B2C" />
+                <Setter Property="FontSize" Value="{DynamicResource FontSizeBody}" />
+                <Setter Property="Height" Value="32" />
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="TextBox">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="3" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="3" />
+                                </Grid.ColumnDefinitions>
+                                <Rectangle Grid.Column="0" Fill="#BF3B2C" />
+                                <Grid Grid.Column="1" Background="{TemplateBinding Background}">
+                                    <ScrollViewer x:Name="PART_ContentHost" Margin="14,0"
+                                            VerticalAlignment="Center" />
+                                </Grid>
+                                <Rectangle Grid.Column="2" Fill="#BF3B2C" />
+                            </Grid>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+                <Style.Triggers>
+                    <Trigger Property="IsKeyboardFocused" Value="True">
+                        <Setter Property="Background" Value="#2A323D" />
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+
+            <!-- Botón pequeño junto a un campo ("EXAMINAR"): bloque #20262E del alto
+                del campo -->
+            <Style x:Key="StartFieldButton" TargetType="Button">
+                <Setter Property="Background" Value="{DynamicResource StartBarBrush}" />
+                <Setter Property="Cursor" Value="Hand" />
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="Button">
+                            <Grid Background="{TemplateBinding Background}">
+                                <ContentPresenter Margin="14,0" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Grid>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+                <Style.Triggers>
+                    <Trigger Property="IsMouseOver" Value="True">
+                        <Setter Property="Background" Value="#2A323D" />
+                    </Trigger>
+                    <Trigger Property="IsPressed" Value="True">
+                        <Setter Property="Background" Value="#12171D" />
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+
+            <!-- Paneles del central: se ocultan con Collapsed. La ventana tiene alto
+                fijo (360): cabe el header, las acciones y el máximo de tres recientes
+                (StartViewModel.MaxVisibleRecents), y también el formulario de nuevo proyecto. -->
+            <Style x:Key="StartPanel" TargetType="Grid">
+                <Style.Triggers>
+                    <DataTrigger Binding="{Binding IsNewProjectMode}" Value="True">
+                        <Setter Property="Visibility" Value="Collapsed" />
+                    </DataTrigger>
+                </Style.Triggers>
+            </Style>
+            <Style x:Key="NewProjectPanel" TargetType="Grid">
+                <Setter Property="Visibility" Value="Collapsed" />
+                <Style.Triggers>
+                    <DataTrigger Binding="{Binding IsNewProjectMode}" Value="True">
+                        <Setter Property="Visibility" Value="Visible" />
+                    </DataTrigger>
+                </Style.Triggers>
+            </Style>
+        </ResourceDictionary>
     </Window.Resources>
 
     <Window.InputBindings>
