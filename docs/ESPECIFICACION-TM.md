@@ -638,6 +638,10 @@ session >                        # 4. Punto de entrada
 exactamente una sesión: su ausencia o su repetición producen **E011**. Un
 módulo `.tm` no puede declarar `session` (**E015**).
 
+La sesión se analiza como el cuerpo de una función `void`: admite `ret;`, que
+termina el programa sin ejecutar las sentencias restantes, y rechaza `ret` con
+un valor (**E006**).
+
 ### 6.4 La declaración `tempo`
 
 `tempo` fija el ritmo del proyecto en pulsos por minuto. Es opcional; sin ella
@@ -948,7 +952,7 @@ de todos los archivos visibles desde él.
 | `repeat [c]` | Mientras `c` sea verdadera, ejecuta el cuerpo. La condición se evalúa antes de cada iteración. |
 | `loop [decl; c; act]` | Ejecuta la declaración una vez; después, mientras `c` sea verdadera, ejecuta el cuerpo y a continuación la actualización. |
 | `mix e` | Evalúa `e` y la compara con cada `case` en orden; ejecuta el bloque del primero que coincide y termina. Si ninguno coincide, ejecuta `default`, si existe. |
-| `ret` | Termina la función en curso y, si lleva expresión, devuelve su valor. |
+| `ret` | Termina la función en curso y, si lleva expresión, devuelve su valor. En `session`, `ret;` termina el programa con normalidad. |
 
 ### 9.4 Funciones
 
