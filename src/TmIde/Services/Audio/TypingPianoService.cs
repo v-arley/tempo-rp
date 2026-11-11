@@ -37,6 +37,7 @@ public sealed class TypingPianoService : ObservableObject, IDisposable
     private bool _enabled;
     private bool _isPerformanceMode;
     private int _octave;
+    private bool _longReleaseEnabled;
 
     private static readonly int[] EnterChord =
     [
@@ -54,6 +55,10 @@ public sealed class TypingPianoService : ObservableObject, IDisposable
         _enabled = saved.PianoEnabled;
         _isPerformanceMode = saved.PianoPerformanceMode;
         _octave = Math.Clamp(saved.PianoOctave, 2, 6);
+
+        _longReleaseEnabled = saved.PianoLongRelease;
+        _synth.LongReleaseEnabled = _longReleaseEnabled;
+
     }
 
     /// <summary>
@@ -119,9 +124,36 @@ public sealed class TypingPianoService : ObservableObject, IDisposable
         }
     }
 
-    /// <summary>
-    /// Octava del modo de interpretación (2 a 6).
-    /// </summary>
+
+    /// Permite activar o desactivar la
+    /// resonancia prolongada del piano.
+    public bool LongReleaseEnabled
+    {
+        get => _longReleaseEnabled;
+
+        set
+        {
+            if (!SetProperty(
+                ref _longReleaseEnabled,
+                value))
+            {
+                return;
+            }
+
+            // Aplicar el cambio al sintetizador.
+            _synth.LongReleaseEnabled = value;
+
+            // Guardar la preferencia.
+            _settings.Save(
+                _settings.Load() with
+                {
+                    PianoLongRelease = value
+                });
+        }
+    }
+
+
+    /// /// Octava del modo de interpretación (2 a 6).
     public int Octave
     {
         get => _octave;

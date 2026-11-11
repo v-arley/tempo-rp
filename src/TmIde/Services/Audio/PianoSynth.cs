@@ -26,6 +26,12 @@ public sealed class PianoSynth : IDisposable
     private MixingSampleProvider? _mixer;
     private WaveOutEvent? _output;
 
+
+    /// True: resonancia larga.
+    /// False: apagado rapido.
+    public bool LongReleaseEnabled { get; set; } = true;
+
+
     /// <summary>
     /// Reproduce una nota corta para escritura musical.
     /// </summary>
@@ -39,7 +45,8 @@ public sealed class PianoSynth : IDisposable
                 new PianoVoice(
                     midiNote,
                     _format,
-                    sustained: false));
+                    sustained: false,
+                    longRelease: LongReleaseEnabled));
 
             _output!.Play();
             return true;
@@ -72,7 +79,8 @@ public sealed class PianoSynth : IDisposable
             var voice = new PianoVoice(
                 midiNote,
                 _format,
-                sustained: true);
+                sustained: true,
+                longRelease: LongReleaseEnabled);
 
             _mixer!.AddMixerInput(voice);
             _heldNotes.Add(keyId, voice);
@@ -177,19 +185,20 @@ public sealed class PianoSynth : IDisposable
     /// </summary>
     private sealed class PianoVoice : ISampleProvider
     {
-        private const double OneShotSeconds = 0.34;
-
         /// <summary>
         /// Resonancia tras soltar la tecla: segundos que tarda la nota en caer
         /// 60 dB (RT60). Valores mayores alargan la cola, como un pedal de resonancia.
         /// </summary>
-        private const double ReleaseSeconds = 7.3;
-
-        /// <summary>Exponente que lleva la amplitud a -60 dB (1/1000) en ReleaseSeconds: ln(1000).</summary>
+        
+        private const double OneShotSeconds = 0.34;
+        private const double ShortReleaseSeconds = 0.16;
+        private const double LongReleaseSeconds = 7.3;
         private static readonly double SixtyDecibelDecay = Math.Log(1000.0);
+
 
         private readonly double _frequency;
         private readonly bool _sustained;
+        private readonly bool _longRelease;
         private readonly int _oneShotSamples;
         private readonly int _releaseSamples;
 
@@ -200,23 +209,32 @@ public sealed class PianoSynth : IDisposable
         // interfaz y el hilo que genera el audio.
         private int _releaseRequested;
 
+        
         public PianoVoice(
             int midiNote,
             WaveFormat format,
-            bool sustained)
+            bool sustained,
+            bool longRelease)
         {
             WaveFormat = format;
+
             _frequency =
                 PianoNoteMap.GetFrequency(midiNote);
 
             _sustained = sustained;
+            _longRelease = longRelease;
 
             _oneShotSamples = (int)(
                 format.SampleRate * OneShotSeconds);
 
+            var releaseSeconds = _longRelease
+                ? LongReleaseSeconds
+                : ShortReleaseSeconds;
+
             _releaseSamples = (int)(
-                format.SampleRate * ReleaseSeconds);
+                format.SampleRate * releaseSeconds);
         }
+
 
         public WaveFormat WaveFormat { get; }
 
@@ -279,14 +297,27 @@ public sealed class PianoSynth : IDisposable
 
                 var fade = 1.0;
 
+                
                 if (_sustained && _releaseStart >= 0)
                 {
                     var progress =
                         (_sampleIndex - _releaseStart) /
                         (double)_releaseSamples;
 
-                    // Caída exponencial: llega a -60 dB al completar ReleaseSeconds
-                    fade = Math.Exp(-SixtyDecibelDecay * progress);
+                    if (_longRelease)
+                    {
+                        // Resonancia larga y exponencial.
+                        fade = Math.Exp(
+                            -SixtyDecibelDecay * progress);
+                    }
+                    else
+                    {
+                        // Apagado rapido del piano original.
+                        var remaining =
+                            Math.Max(0.0, 1.0 - progress);
+
+                        fade = remaining * remaining;
+                    }
                 }
                 else if (!_sustained)
                 {

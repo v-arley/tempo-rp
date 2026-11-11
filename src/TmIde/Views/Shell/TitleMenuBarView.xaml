@@ -710,6 +710,16 @@
                                                     Mode=TwoWay,
                                                     UpdateSourceTrigger=PropertyChanged}" />
 
+                             
+                            <!-- Activar o desactivar resonancia prolongada -->
+                            <MenuItem
+                                Header="Resonancia prolongada (7.3 s)"
+                                IsCheckable="True"
+                                IsChecked="{Binding Piano.LongReleaseEnabled,
+                                                    Mode=TwoWay,
+                                                    UpdateSourceTrigger=PropertyChanged}" />
+                       
+
                             <Separator />
 
                             <!-- Octava actual -->

@@ -22,6 +22,11 @@ public sealed record UserSettings
     /// False: escuchar notas mientras se programa.
     public bool PianoPerformanceMode { get; init; }
 
+
+    /// Activa la resonancia prolongada del piano.
+    public bool PianoLongRelease { get; init; } = true;
+
+
     /// Octava musical del modo interpretación.
     public int PianoOctave { get; init; } = 4;
 
