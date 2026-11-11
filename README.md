@@ -98,6 +98,20 @@ Compilar, Ejecutar y Detener están en el menú EJECUCIÓN.
 dotnet test tempo-rp.slnx
 ```
 
+### Generar el ejecutable de TmIde
+
+```powershell
+.\publish.ps1                            # Autocontenido: un único TmIde.exe
+.\publish.ps1 -Variante Dependiente      # Liviano: requiere .NET Desktop Runtime 10
+```
+
+| Variante | Resultado en `publish/` | Requisito en el equipo de destino |
+|---|---|---|
+| `Autocontenido` | `TmIde.exe` y `appsettings.json` | Ninguno |
+| `Dependiente` | Carpeta con el programa y sus bibliotecas | .NET Desktop Runtime 10 |
+
+El parámetro `-Plataforma win-arm64` genera la versión para equipos ARM.
+
 ## Estructura del repositorio
 
 ```text
@@ -112,6 +126,7 @@ tempo-rp/
 │   └── TmIde.Tests/
 ├── samples/                 Programas de ejemplo y de diagnóstico
 ├── docs/                    Documentación técnica
+├── publish.ps1              Generación del ejecutable de TmIde
 ├── tempo-rp.slnx            Solución
 ├── global.json              Versión del SDK
 ├── Directory.Build.props    Propiedades comunes de compilación

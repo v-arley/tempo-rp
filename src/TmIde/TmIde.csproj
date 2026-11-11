@@ -7,6 +7,7 @@
     <RootNamespace>TmIde</RootNamespace>
     <AssemblyName>TmIde</AssemblyName>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>..\Assets\Tempo.ico</ApplicationIcon>
     <!-- La mayoría de propiedades comunes (Nullable, LangVersion, analizadores,
          TreatWarningsAsErrors, CPM) vienen de ../../Directory.Build.props -->
   </PropertyGroup>
@@ -15,26 +16,19 @@
     <PackageReference Include="AvalonEdit" />
     <PackageReference Include="CommunityToolkit.Mvvm" />
     <PackageReference Include="NAudio" />
-    <!-- Behaviors de XAML: comportamiento de vista reutilizable fuera del code-behind. -->
     <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" />
-    <!-- Generic Host: contenedor de DI, logging, configuración y ciclo de vida. -->
     <PackageReference Include="Microsoft.Extensions.Hosting" />
-    <!-- Log interno a archivo en %LOCALAPPDATA%\TmIde\logs. -->
     <PackageReference Include="Serilog.Extensions.Hosting" />
     <PackageReference Include="Serilog.Sinks.File" />
   </ItemGroup>
 
   <ItemGroup>
     <!-- Configuración de la app (sección "Ide" → IdeOptions); el Host la lee
-         junto al ejecutable. -->
+        junto al ejecutable. -->
     <None Update="appsettings.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>
-    <!-- Tipografía IBM Plex Mono compartida en src/Assets/ (origen único), en sus
-         cuatro pesos. Se embebe en TmIde como recurso; se referencia en XAML como
-         "../Assets/#IBM Plex Mono" (la ruta es relativa al XAML que la declara,
-         Resources/Styles.xaml). Con FontWeight WPF elige Thin, Light, Medium o Bold. -->
     <Resource Include="..\Assets\IBMPlexMono-Thin.ttf" Link="Assets\IBMPlexMono-Thin.ttf" />
     <Resource Include="..\Assets\IBMPlexMono-Light.ttf" Link="Assets\IBMPlexMono-Light.ttf" />
     <Resource Include="..\Assets\IBMPlexMono-Medium.ttf" Link="Assets\IBMPlexMono-Medium.ttf" />
@@ -42,7 +36,7 @@
   </ItemGroup>
 
   <!-- Pipeline del compilador (Lexer, Parser, analizador semántico) para los
-       diagnósticos del editor. -->
+      diagnósticos del editor. -->
   <ItemGroup>
     <ProjectReference Include="..\Tempo.Language\Tempo.Language.csproj" />
   </ItemGroup>
