@@ -103,11 +103,14 @@
                                        FontSize="{DynamicResource CodeFontSize}"
                                        Foreground="{DynamicResource SurfaceAccentBrush}" />
                             <TextBox Grid.Column="1"
-                                     Text="{Binding CurrentInput, UpdateSourceTrigger=PropertyChanged}"
-                                     Background="Transparent" Padding="0" BorderThickness="0"
-                                     FontFamily="{DynamicResource CodeFontFamily}"
-                                     FontSize="{DynamicResource CodeFontSize}"
-                                     Foreground="{DynamicResource PrimaryForegroundBrush}">
+                                    Text="{Binding CurrentInput, UpdateSourceTrigger=PropertyChanged}"
+                                    Background="Transparent"
+                                    Padding="0"
+                                    BorderThickness="0"
+                                    FontFamily="{DynamicResource CodeFontFamily}"
+                                    FontSize="{DynamicResource CodeFontSize}"
+                                    Foreground="{DynamicResource PrimaryForegroundBrush}"
+                                    IsEnabledChanged="OnRunInputEnabledChanged">
                                 <TextBox.InputBindings>
                                     <KeyBinding Key="Enter" Command="{Binding SubmitCommand}" />
                                 </TextBox.InputBindings>
