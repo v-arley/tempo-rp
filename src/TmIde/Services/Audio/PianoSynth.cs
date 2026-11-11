@@ -178,7 +178,15 @@ public sealed class PianoSynth : IDisposable
     private sealed class PianoVoice : ISampleProvider
     {
         private const double OneShotSeconds = 0.34;
-        private const double ReleaseSeconds = 0.16;
+
+        /// <summary>
+        /// Resonancia tras soltar la tecla: segundos que tarda la nota en caer
+        /// 60 dB (RT60). Valores mayores alargan la cola, como un pedal de resonancia.
+        /// </summary>
+        private const double ReleaseSeconds = 7.3;
+
+        /// <summary>Exponente que lleva la amplitud a -60 dB (1/1000) en ReleaseSeconds: ln(1000).</summary>
+        private static readonly double SixtyDecibelDecay = Math.Log(1000.0);
 
         private readonly double _frequency;
         private readonly bool _sustained;
@@ -246,8 +254,7 @@ public sealed class PianoSynth : IDisposable
                     break;
                 }
 
-                // Terminar la nota sostenida
-                // después del desvanecimiento.
+                // La nota sostenida termina al completar su resonancia
                 if (_sustained &&
                     _releaseStart >= 0 &&
                     _sampleIndex - _releaseStart >=
@@ -278,11 +285,8 @@ public sealed class PianoSynth : IDisposable
                         (_sampleIndex - _releaseStart) /
                         (double)_releaseSamples;
 
-                    // Liberación gradual y suave.
-                    var remaining =
-                        Math.Max(0.0, 1.0 - progress);
-
-                    fade = remaining * remaining;
+                    // Caída exponencial: llega a -60 dB al completar ReleaseSeconds
+                    fade = Math.Exp(-SixtyDecibelDecay * progress);
                 }
                 else if (!_sustained)
                 {

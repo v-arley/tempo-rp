@@ -3,6 +3,8 @@
             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+            xmlns:b="http://schemas.microsoft.com/xaml/behaviors"
+            xmlns:behaviors="clr-namespace:TmIde.Views.Behaviors"
             xmlns:controls="clr-namespace:TmIde.Controls"
             xmlns:design="clr-namespace:TmIde.Design"
             mc:Ignorable="d"
@@ -44,12 +46,43 @@
                 <Path Grid.Column="1" Stretch="Fill" Fill="{DynamicResource TabStripLeadBrush}" Data="M0,0 L1,1 L0,1 Z" />
             </Grid>
 
-            <!-- El TabControl genera un contenedor (TabItem) por cada documento de
-                Documents: abrir un archivo añade uno nuevo. -->
+            <!-- Un TabItem por cada documento de Documents, en una sola fila
+                desplazable: la rueda la recorre en horizontal y la pestaña activa
+                se mantiene a la vista. El margen de -8 mete la fila bajo el lateral
+                inclinado de la figura decorativa. -->
             <TabControl Grid.Row="1" Grid.Column="1" HorizontalAlignment="Left"
+                        Margin="-8,0,0,0"
                         Background="Transparent"
                         ItemsSource="{Binding Documents}"
                         SelectedItem="{Binding SelectedDocument, Mode=TwoWay}">
+                <b:Interaction.Behaviors>
+                    <behaviors:TabStripScrollBehavior />
+                </b:Interaction.Behaviors>
+                <TabControl.Template>
+                    <ControlTemplate TargetType="TabControl">
+                        <!-- Fila desplazable con dos cuñas de 8px que cortan sus bordes con
+                            la diagonal de las pestañas. Cada cuña ocupa el hueco que deja
+                            el lateral inclinado de una pestaña, por eso solo se ve cuando
+                            corta una pestaña parcialmente visible. -->
+                        <Grid>
+                            <!-- Desplazamiento horizontal sin barra visible -->
+                            <ScrollViewer x:Name="PART_HeaderScroller"
+                                          HorizontalScrollBarVisibility="Hidden"
+                                          VerticalScrollBarVisibility="Disabled"
+                                          CanContentScroll="False"
+                                          Focusable="False">
+                                <!-- Margen de 8: la primera pestaña empieza justo después de la figura decorativa -->
+                                <StackPanel Orientation="Horizontal" IsItemsHost="True" Margin="8,0,0,0" />
+                            </ScrollViewer>
+                            <!-- Cuña izquierda: prolonga el lateral inclinado de la figura decorativa -->
+                            <Path Width="8" HorizontalAlignment="Left" Stretch="Fill" IsHitTestVisible="False"
+                                  Fill="{DynamicResource TabStripLeadBrush}" Data="M0,0 L1,1 L0,1 Z" />
+                            <!-- Cuña derecha: del color de la franja, recorta la pestaña en diagonal -->
+                            <Path Width="8" HorizontalAlignment="Right" Stretch="Fill" IsHitTestVisible="False"
+                                  Fill="{DynamicResource AccentBrush}" Data="M0,0 L1,0 L1,1 Z" />
+                        </Grid>
+                    </ControlTemplate>
+                </TabControl.Template>
                 <TabControl.Resources>
                     <Style TargetType="TabItem" BasedOn="{StaticResource {x:Type TabItem}}">
                         <!-- Pestaña inactiva; la activa la redefinen los triggers -->

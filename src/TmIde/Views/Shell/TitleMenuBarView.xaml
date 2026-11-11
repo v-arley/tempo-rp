@@ -747,7 +747,6 @@
                                 Background="Transparent"
                                 BorderBrush="{DynamicResource SecondaryForegroundBrush}"
                                 BorderThickness="1"
-                                CornerRadius="3"
                                 Padding="{TemplateBinding Padding}">
 
                                 <StackPanel
