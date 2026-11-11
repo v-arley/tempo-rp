@@ -1,5 +1,4 @@
 using System.Globalization;
-using System.Text;
 using Tempo.Language.Syntax;
 
 namespace Tempo.Language.Evaluation;
@@ -204,13 +203,14 @@ public sealed class ExpressionEvaluator : IExpressionEvaluator
                         NumberStyles.Float,
                         CultureInfo.InvariantCulture)),
 
+            // El lexer entrega cadenas y caracteres sin comillas y con los escapes resueltos
             TokenType.StringLiteral =>
                 RuntimeValue.Phrase(
-                    DecodeString(literal.Value)),
+                    literal.Value),
 
             TokenType.CharLiteral =>
                 RuntimeValue.Tone(
-                    DecodeTone(literal.Value)),
+                    literal.Value[0]),
 
             TokenType.True =>
                 RuntimeValue.Signal(true),
@@ -695,69 +695,4 @@ public sealed class ExpressionEvaluator : IExpressionEvaluator
         return text;
     }
 
-    private static string DecodeString(
-        string value)
-    {
-        string content = value;
-
-        if (content.Length >= 2 &&
-            content[0] == '"' &&
-            content[^1] == '"')
-        {
-            content = content[1..^1];
-        }
-
-        var result = new StringBuilder();
-
-        for (int index = 0;
-             index < content.Length;
-             index++)
-        {
-            char current = content[index];
-
-            if (current != '\\' ||
-                index + 1 >= content.Length)
-            {
-                result.Append(current);
-                continue;
-            }
-
-            char escaped = content[++index];
-
-            result.Append(
-                escaped switch
-                {
-                    'n' => '\n',
-                    't' => '\t',
-                    '"' => '"',
-                    '\\' => '\\',
-                    _ => escaped
-                });
-        }
-
-        return result.ToString();
-    }
-
-    private static char DecodeTone(
-        string value)
-    {
-        string content = value;
-
-        if (content.Length >= 2 &&
-            content[0] == '\'' &&
-            content[^1] == '\'')
-        {
-            content = content[1..^1];
-        }
-
-        string decoded = DecodeString(content);
-
-        if (decoded.Length != 1)
-        {
-            throw new InvalidOperationException(
-                "Un literal tone debe representar un único carácter.");
-        }
-
-        return decoded[0];
-    }
 }

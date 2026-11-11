@@ -126,6 +126,25 @@ public sealed class CanonicalProgramTests
             output);
     }
 
+    [Fact]
+    public void EscapeSequencesAreResolvedOnce()
+    {
+        const string source = """
+            session >
+                output >> "\"a\" \\n \\ fin";
+                output >> '\\';
+                output >> '\'';
+            <
+            """;
+
+        string output =
+            Execute(source);
+
+        Assert.Equal(
+            "\"a\" \\n \\ fin\\'",
+            output);
+    }
+
     private static string Execute(
         string source)
     {
